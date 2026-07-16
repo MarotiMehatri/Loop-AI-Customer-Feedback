@@ -1,52 +1,148 @@
+# ==================================================
 # Dependencies
+# ==================================================
 node_modules/
 frontend/node_modules/
 backend/node_modules/
 shared/node_modules/
 
-# Environment variables
+.pnp
+.pnp.js
+.yarn/
+.yarn/install-state.gz
+
+
+# ==================================================
+# Environment variables and secrets
+# ==================================================
 .env
 .env.*
 !.env.example
+
+frontend/.env
 frontend/.env.local
+frontend/.env.development
 frontend/.env.production
+frontend/.env.test
+
 backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.production
 backend/.env.test
 
-# Next.js
+shared/.env
+
+*.pem
+
+
+# ==================================================
+# Next.js frontend
+# ==================================================
 frontend/.next/
 frontend/out/
+frontend/build/
+frontend/next-env.d.ts
 
-# Backend build
+
+# ==================================================
+# Backend build files
+# ==================================================
 backend/dist/
 backend/build/
 
-# Shared build
-shared/dist/
 
-# Prisma/local database
+# ==================================================
+# Shared package build files
+# ==================================================
+shared/dist/
+shared/build/
+
+
+# ==================================================
+# Prisma generated files and local databases
+# ==================================================
+backend/src/generated/prisma/
+backend/app/generated/prisma/
+backend/prisma/generated/
+
 backend/prisma/*.db
 backend/prisma/*.db-journal
 
-# Uploads
+*.db
+*.db-journal
+
+
+# ==================================================
+# Uploaded files
+# ==================================================
 backend/uploads/*
 !backend/uploads/.gitkeep
 
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
 
+# ==================================================
 # Testing
+# ==================================================
 coverage/
+frontend/coverage/
+backend/coverage/
+shared/coverage/
+
 playwright-report/
 test-results/
+.nyc_output/
 
-# IDE
+
+# ==================================================
+# Logs and debug files
+# ==================================================
+*.log
+logs/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# ==================================================
+# TypeScript
+# ==================================================
+*.tsbuildinfo
+
+
+# ==================================================
+# Vercel
+# ==================================================
+.vercel/
+frontend/.vercel/
+
+
+# ==================================================
+# IDE and editor files
+# ==================================================
 .vscode/
 .idea/
 
-# Operating system
+*.swp
+*.swo
+
+
+# ==================================================
+# Operating system files
+# ==================================================
 .DS_Store
 Thumbs.db
+desktop.ini
+
+
+# ==================================================
+# Temporary and cache files
+# ==================================================
+.cache/
+.temp/
+tmp/
+temp/
+
+.eslintcache
+.turbo/
