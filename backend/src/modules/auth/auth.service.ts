@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-import bcrypt from "bcrypt";
-import jwt, { type SignOptions } from "jsonwebtoken";
+import * as bcrypt from "bcrypt";
+import * as jwt from "jsonwebtoken";
+import type { SignOptions } from "jsonwebtoken";
 
 import { env } from "../../config/env.js";
 import { ApiError } from "../../utils/apiError.js";

@@ -14,6 +14,30 @@ enum Role {
   VIEWER
 }
 
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  ACTIONED
+  ARCHIVED
+}
+
+enum FeedbackChannel {
+  SUPPORT
+  APP_STORE
+  SURVEY
+  SALES
+  SOCIAL
+  WEBSITE
+  EMAIL
+  MANUAL
+}
+
 model Workspace {
   id        String   @id @default(cuid())
   name      String
@@ -21,7 +45,8 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users User[]
+  users     User[]
+  feedbacks Feedback[]
 }
 
 model User {
@@ -40,7 +65,45 @@ model User {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
+  createdFeedback Feedback[] @relation("FeedbackCreatedBy")
+
   @@index([workspaceId])
   @@index([workspaceId, role])
   @@index([workspaceId, isActive])
+}
+
+model Feedback {
+  id String @id @default(cuid())
+
+  source    FeedbackChannel
+  sentiment Sentiment
+  status    FeedbackStatus  @default(NEW)
+
+  customerName  String?
+  customerEmail String?
+
+  content String @db.Text
+
+  tags        String[] @default([])
+  category    String?
+  isImportant Boolean  @default(false)
+
+  metadata Json?
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("FeedbackCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, source])
+  @@index([workspaceId, sentiment])
+  @@index([workspaceId, isImportant])
+  @@index([workspaceId, createdAt])
+  @@index([createdById])
 }

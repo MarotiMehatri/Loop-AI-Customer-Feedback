@@ -16,6 +16,8 @@ const startServer = async (): Promise<void> => {
       console.log(`🚀 LOOP backend running at http://localhost:${env.PORT}`);
 
       console.log(`❤️ Health check: http://localhost:${env.PORT}/health`);
+
+      console.log(`Feedback API: http://localhost:${env.PORT}/api/v1/feedback`);
     });
   } catch (error) {
     console.error("❌ Failed to start LOOP backend:", error);

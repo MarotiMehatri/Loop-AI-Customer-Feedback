@@ -1,6 +1,7 @@
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly details?: unknown;
+
   constructor(statusCode: number, message: string, details?: unknown) {
     super(message);
 
