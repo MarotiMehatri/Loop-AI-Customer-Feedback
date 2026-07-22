@@ -3,11 +3,9 @@ import express from "express";
 import helmet from "helmet";
 
 import { env } from "./config/env.js";
-import routes from "./routes/index.js";
-
-import { errorHandler } from "./middleware/error.middleware.js";
-
-import { notFound } from "./middleware/notFound.middleware.js";
+import { errorMiddleware } from "./middleware/error.middleware.js";
+import { notFoundMiddleware } from "./middleware/notFound.middleware.js";
+import { apiRouter } from "./routes/index.js";
 
 export const app = express();
 
@@ -19,36 +17,28 @@ app.use(
   cors({
     origin: env.FRONTEND_URL,
     credentials: true,
-
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-
-    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
-app.use(
-  express.json({
-    limit: "1mb",
-  }),
-);
+app.use(express.json({ limit: "1mb" }));
 
 app.use(
   express.urlencoded({
     extended: true,
+    limit: "1mb",
   }),
 );
 
-app.get("/health", (_req, res) => {
-  res.status(200).json({
+app.get("/health", (_request, response) => {
+  response.status(200).json({
     success: true,
-    message: "LOOP backend server is running",
+    message: "LOOP backend is healthy",
     environment: env.NODE_ENV,
     timestamp: new Date().toISOString(),
   });
 });
 
-app.use("/api/v1", routes);
+app.use("/api/v1", apiRouter);
 
-app.use(notFound);
-
-app.use(errorHandler);
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);

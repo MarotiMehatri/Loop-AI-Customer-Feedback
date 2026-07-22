@@ -1,28 +1,14 @@
 import { Router } from "express";
 
-import { prisma } from "../config/prisma.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { authRouter } from "../modules/auth/auth.routes.js";
 
-const router = Router();
+export const apiRouter = Router();
 
-router.get(
-  "/database-check",
+apiRouter.get("/", (_request, response) => {
+  response.status(200).json({
+    success: true,
+    message: "LOOP API is running",
+  });
+});
 
-  asyncHandler(async (_req, res) => {
-    const workspaceCount = await prisma.workspace.count();
-
-    const userCount = await prisma.user.count();
-
-    res.status(200).json({
-      success: true,
-      message: "PostgreSQL and Prisma are connected successfully",
-
-      data: {
-        workspaces: workspaceCount,
-        users: userCount,
-      },
-    });
-  }),
-);
-
-export default router;
+apiRouter.use("/auth", authRouter);
