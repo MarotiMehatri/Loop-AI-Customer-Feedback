@@ -15,3 +15,5 @@ apiRouter.get("/", (_request, response) => {
 
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/feedback", feedbackRouter);
+
+apiRouter.use("/feedback-import", feedbackRouter);

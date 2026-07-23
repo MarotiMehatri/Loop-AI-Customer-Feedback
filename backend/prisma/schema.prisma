@@ -45,8 +45,9 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  feedbacks Feedback[]
+  users           User[]
+  feedbacks       Feedback[]
+  feedbackImports FeedbackImport[]
 }
 
 model User {
@@ -65,7 +66,8 @@ model User {
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  createdFeedback Feedback[] @relation("FeedbackCreatedBy")
+  createdFeedback Feedback[]       @relation("FeedbackCreatedBy")
+  feedbackImports FeedbackImport[]
 
   @@index([workspaceId])
   @@index([workspaceId, role])
@@ -106,4 +108,62 @@ model Feedback {
   @@index([workspaceId, isImportant])
   @@index([workspaceId, createdAt])
   @@index([createdById])
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  PARTIALLY_COMPLETED
+  FAILED
+}
+
+model FeedbackImport {
+  id           String @id @default(cuid())
+  fileName     String
+  originalName String
+  fileType     String
+  fileSize     Int
+
+  status ImportStatus @default(PENDING)
+
+  totalRows      Int @default(0)
+  successfulRows Int @default(0)
+  failedRows     Int @default(0)
+  duplicateRows  Int @default(0)
+
+  errorMessage String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  workspaceId  String
+  importedById String
+
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  importedBy User      @relation(fields: [importedById], references: [id], onDelete: Cascade)
+
+  errors FeedbackImportError[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([importedById])
+  @@index([workspaceId, status])
+  @@index([createdAt])
+}
+
+model FeedbackImportError {
+  id           String  @id @default(cuid())
+  rowNumber    Int
+  field        String?
+  rawData      Json?
+  errorMessage String
+
+  feedbackImportId String
+  feedbackImport   FeedbackImport @relation(fields: [feedbackImportId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([feedbackImportId])
 }
