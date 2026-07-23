@@ -9,7 +9,7 @@ const checkAnalystRole = (
   _res: Response,
   next: NextFunction,
 ): void => {
-  if (!req.role || !(ALLOWED_ROLES as readonly string[]).includes(req.role)) {
+  if (!req.user?.role || !(ALLOWED_ROLES as readonly string[]).includes(req.user.role)) {
     next(new ApiError(403, "Access denied. Analyst or admin role required."));
     return;
   }

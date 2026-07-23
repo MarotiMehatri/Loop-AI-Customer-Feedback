@@ -1,22 +1,30 @@
-import type { NextFunction, Request, Response } from "express";
+import type {
+  ErrorRequestHandler,
+  NextFunction,
+  Request,
+  Response,
+} from "express";
 
 import { Prisma } from "../generated/prisma/client.js";
+import { ZodError } from "zod";
 
+import { env } from "../config/env.js";
 import { ApiError } from "../utils/apiError.js";
 
-export const errorHandler = (
+export const errorMiddleware: ErrorRequestHandler = (
   error: unknown,
-  _req: Request,
-  res: Response,
+  _request: Request,
+  response: Response,
   _next: NextFunction,
 ): void => {
-  console.error(error);
-
-  if (error instanceof ApiError) {
-    res.status(error.statusCode).json({
+  if (error instanceof ZodError) {
+    response.status(400).json({
       success: false,
-      message: error.message,
-      details: error.details,
+      message: "Request validation failed",
+      errors: error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
     });
 
     return;
@@ -24,16 +32,17 @@ export const errorHandler = (
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2002") {
-      res.status(409).json({
+      response.status(409).json({
         success: false,
-        message: "A record with this value already exists",
+        message: "A record with this unique value already exists",
+        fields: error.meta?.target,
       });
 
       return;
     }
 
     if (error.code === "P2025") {
-      res.status(404).json({
+      response.status(404).json({
         success: false,
         message: "Requested record was not found",
       });
@@ -42,8 +51,27 @@ export const errorHandler = (
     }
   }
 
-  res.status(500).json({
+  if (error instanceof ApiError) {
+    response.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+      details: error.details,
+    });
+
+    return;
+  }
+
+  console.error("❌ Unhandled application error:", error);
+
+  response.status(500).json({
     success: false,
     message: "Internal server error",
+
+    ...(env.NODE_ENV === "development" && error instanceof Error
+      ? {
+          error: error.message,
+          stack: error.stack,
+        }
+      : {}),
   });
 };

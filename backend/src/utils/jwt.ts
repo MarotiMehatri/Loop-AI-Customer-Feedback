@@ -48,7 +48,7 @@ export function generateToken(payload: TokenPayload): string {
 export async function verifyToken(token: string): Promise<DecodedToken> {
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Invalid token");
-  const [header, body, sig] = parts;
+  const [header, body, sig] = parts as [string, string, string];
   const expected = base64url(
     crypto
       .createHmac("sha256", env.JWT_SECRET)

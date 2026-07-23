@@ -1,10 +1,14 @@
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: string;
-      workspaceId?: string;
-      role?: string;
-    }
+import type { Role } from "../generated/prisma/client.js";
+
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: {
+      userId: string;
+      email: string;
+      role: Role;
+      workspaceId: string;
+    };
   }
 }
+
 export {};

@@ -14,16 +14,36 @@ enum Role {
   VIEWER
 }
 
-enum ShipmentStatus {
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  ACTIONED
+  ARCHIVED
+}
+
+enum FeedbackChannel {
+  SUPPORT
+  APP_STORE
+  SURVEY
+  SALES
+  SOCIAL
+  WEBSITE
+  EMAIL
+  MANUAL
+}
+
+enum ImportStatus {
   PENDING
-  PICKED_UP
-  IN_TRANSIT
-  OUT_FOR_DELIVERY
-  DELIVERED
+  PROCESSING
+  COMPLETED
+  PARTIALLY_COMPLETED
   FAILED
-  RETURNED
-  CANCELLED
-  DELAYED
 }
 
 enum NotificationType {
@@ -34,29 +54,6 @@ enum NotificationType {
   REPORT_READY
 }
 
-enum FeedbackChannel {
-  APP_STORE
-  SURVEY
-  SUPPORT
-  EMAIL
-  SOCIAL
-  DIRECT
-  API
-}
-
-enum FeedbackStatus {
-  NEW
-  REVIEWED
-  ACTIONED
-  ARCHIVED
-}
-
-enum Sentiment {
-  POSITIVE
-  NEGATIVE
-  NEUTRAL
-}
-
 model Workspace {
   id        String   @id @default(cuid())
   name      String
@@ -65,13 +62,10 @@ model Workspace {
   updatedAt DateTime @updatedAt
 
   users           User[]
-  shipments       Shipment[]
-  customers       Customer[]
-  courierPartners CourierPartner[]
+  feedbacks       Feedback[]
+  feedbackImports FeedbackImport[]
   notifications   Notification[]
   reports         Report[]
-  feedbacks       Feedback[]
-  themes          Theme[]
 }
 
 model User {
@@ -92,100 +86,98 @@ model User {
   notifications Notification[]
   reports       Report[]
 
+  createdFeedback Feedback[]       @relation("FeedbackCreatedBy")
+  feedbackImports FeedbackImport[]
+
   @@index([workspaceId])
   @@index([workspaceId, role])
   @@index([workspaceId, isActive])
 }
 
-model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  email     String?
-  phone     String?
-  address   String?
-  city      String?
-  region    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Feedback {
+  id String @id @default(cuid())
+
+  source    FeedbackChannel
+  sentiment Sentiment
+  status    FeedbackStatus  @default(NEW)
+
+  customerName  String?
+  customerEmail String?
+
+  content String @db.Text
+
+  tags        String[] @default([])
+  category    String?
+  isImportant Boolean  @default(false)
+
+  metadata Json?
 
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  shipments Shipment[]
+  createdById String
+  createdBy   User   @relation("FeedbackCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
 
-  @@index([workspaceId])
-}
-
-model CourierPartner {
-  id        String   @id @default(cuid())
-  name      String
-  api_key   String?
-  rating    Float?
-  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  shipments Shipment[]
-
-  @@index([workspaceId])
-}
-
-model Shipment {
-  id                String         @id @default(cuid())
-  trackingNumber    String         @unique
-  status            ShipmentStatus @default(PENDING)
-  originCity        String?
-  destinationCity   String?
-  shippingCost      Float?
-  codAmount         Float?
-  estimatedDelivery DateTime?
-  actualDelivery    DateTime?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-
-  workspaceId      String
-  workspace        Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  customerId       String?
-  customer         Customer?       @relation(fields: [customerId], references: [id])
-  courierPartnerId String?
-  courierPartner   CourierPartner? @relation(fields: [courierPartnerId], references: [id])
-
-  trackingEvents TrackingEvent[]
-  delivery       Delivery?
 
   @@index([workspaceId])
   @@index([workspaceId, status])
+  @@index([workspaceId, source])
+  @@index([workspaceId, sentiment])
+  @@index([workspaceId, isImportant])
   @@index([workspaceId, createdAt])
-  @@index([trackingNumber])
-  @@index([customerId])
-  @@index([courierPartnerId])
+  @@index([createdById])
 }
 
-model TrackingEvent {
-  id          String   @id @default(cuid())
-  status      String
-  location    String?
-  description String?
-  timestamp   DateTime @default(now())
+model FeedbackImport {
+  id           String @id @default(cuid())
+  fileName     String
+  originalName String
+  fileType     String
+  fileSize     Int
 
-  shipmentId String
-  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  status ImportStatus @default(PENDING)
 
-  @@index([shipmentId])
+  totalRows      Int @default(0)
+  successfulRows Int @default(0)
+  failedRows     Int @default(0)
+  duplicateRows  Int @default(0)
+
+  errorMessage String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  workspaceId  String
+  importedById String
+
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  importedBy User      @relation(fields: [importedById], references: [id], onDelete: Cascade)
+
+  errors FeedbackImportError[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([importedById])
+  @@index([workspaceId, status])
+  @@index([createdAt])
 }
 
-model Delivery {
-  id            String    @id @default(cuid())
-  completedAt   DateTime?
-  failureReason String?
-  attemptedAt   DateTime?
-  createdAt     DateTime  @default(now())
+model FeedbackImportError {
+  id           String  @id @default(cuid())
+  rowNumber    Int
+  field        String?
+  rawData      Json?
+  errorMessage String
 
-  shipmentId String   @unique
-  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  feedbackImportId String
+  feedbackImport   FeedbackImport @relation(fields: [feedbackImportId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([feedbackImportId])
 }
 
 model Notification {
@@ -224,49 +216,4 @@ model Report {
 
   @@index([workspaceId])
   @@index([workspaceId, type])
-}
-
-model Theme {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  color       String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-
-  feedbacks Feedback[]
-
-  @@unique([workspaceId, name])
-  @@index([workspaceId])
-}
-
-model Feedback {
-  id             String          @id @default(cuid())
-  content        String
-  channel        FeedbackChannel @default(DIRECT)
-  sentiment      Sentiment       @default(NEUTRAL)
-  sentimentScore Float?
-  status         FeedbackStatus  @default(NEW)
-  customerName   String?
-  customerEmail  String?
-  tags           String[]
-  sourceUrl      String?
-  metadata       Json?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  themeId     String?
-  theme       Theme?    @relation(fields: [themeId], references: [id])
-
-  @@index([workspaceId])
-  @@index([workspaceId, status])
-  @@index([workspaceId, sentiment])
-  @@index([workspaceId, channel])
-  @@index([themeId])
 }

@@ -1,11 +1,11 @@
-import type { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
 
-import { ApiError } from "../utils/apiError.js";
-
-export const notFound = (
-  req: Request,
-  _res: Response,
-  next: NextFunction,
+export const notFoundMiddleware = (
+  request: Request,
+  response: Response,
 ): void => {
-  next(new ApiError(404, `Route ${req.method} ${req.originalUrl} not found`));
+  response.status(404).json({
+    success: false,
+    message: `Route not found: ${request.method} ${request.originalUrl}`,
+  });
 };

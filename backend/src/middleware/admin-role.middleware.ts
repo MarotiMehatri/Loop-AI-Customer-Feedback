@@ -6,7 +6,7 @@ export const requireAdmin = (
   _res: Response,
   next: NextFunction,
 ): void => {
-  if (!req.role || req.role !== "ADMIN") {
+  if (!req.user?.role || req.user.role !== "ADMIN") {
     next(new ApiError(403, "Access denied. Admin role required."));
     return;
   }
