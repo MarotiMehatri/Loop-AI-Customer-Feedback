@@ -1,36 +1,111 @@
 {
-  "name": "@loop-backend",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "main": "dist/server.js",
-  "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "lint": "eslint .",
-    "type-check": "tsc --noEmit",
-    "prisma:generate": "prisma generate",
-    "prisma:format": "prisma format",
-    "prisma:validate": "prisma validate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.19.3",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "helmet": "^8.3.0",
-    "zod": "^4.4.3"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "^26.1.1",
-    "prisma": "^6.19.3",
-    "tsx": "^4.23.1",
-    "typescript": "^5.9.3"
-  }
+  
+ "version": "1.0.0",
+  
+ "private": true,
+  
+ "type": "module",
+  
+ "main": "dist/server.js",
+  
+ "scripts": {
+  
+   
+ "dev": "tsx watch src/server.ts",
+  
+   
+ "build": "tsc",
+  
+   
+ "start": "node dist/server.js",
+  
+   
+ "lint": "eslint .",
+  
+   
+ "type-check": "tsc --noEmit",
+  
+   
+ "prisma:generate": "prisma generate",
+  
+   
+ "prisma:format": "prisma format",
+  
+   
+ "prisma:validate": "prisma validate",
+  
+   
+ "prisma:migrate": "prisma migrate dev",
+  
+   
+ "prisma:studio": "prisma studio",
+  
+   
+ "seed": "tsx prisma/seed.ts"
+  
+ },
+  
+ "dependencies": {
+  
+   
+ "@prisma/client": "^6.19.3",
+  
+   
+ "cors": "^2.8.6",
+  
+   
+ "dotenv": "^17.4.2",
+  
+   
+ "express": "^5.2.1",
+  
+   
+ "helmet": "^8.3.0",
+  
+   
+ "zod": "^4.4.3"
+  
+ },
+  
+ "devDependencies": {
+  
+   
+ "@types/cors": "^2.8.19",
+  
+   
+ "@types/express": "^5.0.6",
+  
+   
+ "@types/node": "^26.1.1",
+  
+   
+ "prisma": "^6.19.3",
+  
+   
+ "tsx": "^4.23.1",
+  
+   
+ "typescript": "^5.9.3"
+  
+ },
+  
+ "name": "backend",
+  
+ "description": "",
+  
+ "directories": {
+  
+   
+ "doc": "docs",
+  
+   
+ "test": "tests"
+  
+ },
+  
+ "keywords": [],
+  
+ "author": "",
+  
+ "license": "ISC"
 }

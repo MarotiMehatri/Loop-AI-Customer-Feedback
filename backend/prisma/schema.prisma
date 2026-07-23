@@ -5,13 +5,56 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABA SE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
   ADMIN
   ANALYST
   VIEWER
+}
+
+enum ShipmentStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+  CANCELLED
+  DELAYED
+}
+
+enum NotificationType {
+  DAILY_SUMMARY
+  DELIVERY_ALERT
+  FAILED_DELIVERY
+  SYSTEM
+  REPORT_READY
+}
+
+enum FeedbackChannel {
+  APP_STORE
+  SURVEY
+  SUPPORT
+  EMAIL
+  SOCIAL
+  DIRECT
+  API
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  ACTIONED
+  ARCHIVED
+}
+
+enum Sentiment {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
 }
 
 model Workspace {
@@ -21,7 +64,14 @@ model Workspace {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users User[]
+  users           User[]
+  shipments       Shipment[]
+  customers       Customer[]
+  courierPartners CourierPartner[]
+  notifications   Notification[]
+  reports         Report[]
+  feedbacks       Feedback[]
+  themes          Theme[]
 }
 
 model User {
@@ -37,10 +87,186 @@ model User {
   updatedAt    DateTime  @updatedAt
 
   workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+  reports       Report[]
 
   @@index([workspaceId])
   @@index([workspaceId, role])
   @@index([workspaceId, isActive])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  region    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  shipments Shipment[]
+
+  @@index([workspaceId])
+}
+
+model CourierPartner {
+  id        String   @id @default(cuid())
+  name      String
+  api_key   String?
+  rating    Float?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  shipments Shipment[]
+
+  @@index([workspaceId])
+}
+
+model Shipment {
+  id                String         @id @default(cuid())
+  trackingNumber    String         @unique
+  status            ShipmentStatus @default(PENDING)
+  originCity        String?
+  destinationCity   String?
+  shippingCost      Float?
+  codAmount         Float?
+  estimatedDelivery DateTime?
+  actualDelivery    DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  workspaceId      String
+  workspace        Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customerId       String?
+  customer         Customer?       @relation(fields: [customerId], references: [id])
+  courierPartnerId String?
+  courierPartner   CourierPartner? @relation(fields: [courierPartnerId], references: [id])
+
+  trackingEvents TrackingEvent[]
+  delivery       Delivery?
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt])
+  @@index([trackingNumber])
+  @@index([customerId])
+  @@index([courierPartnerId])
+}
+
+model TrackingEvent {
+  id          String   @id @default(cuid())
+  status      String
+  location    String?
+  description String?
+  timestamp   DateTime @default(now())
+
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId])
+}
+
+model Delivery {
+  id            String    @id @default(cuid())
+  completedAt   DateTime?
+  failureReason String?
+  attemptedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  shipmentId String   @unique
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType @default(SYSTEM)
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([userId, type])
+}
+
+model Report {
+  id        String    @id @default(cuid())
+  title     String
+  type      String
+  data      Json?
+  startDate DateTime?
+  endDate   DateTime?
+  createdAt DateTime  @default(now())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, type])
+}
+
+model Theme {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  feedbacks Feedback[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+}
+
+model Feedback {
+  id             String          @id @default(cuid())
+  content        String
+  channel        FeedbackChannel @default(DIRECT)
+  sentiment      Sentiment       @default(NEUTRAL)
+  sentimentScore Float?
+  status         FeedbackStatus  @default(NEW)
+  customerName   String?
+  customerEmail  String?
+  tags           String[]
+  sourceUrl      String?
+  metadata       Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  themeId     String?
+  theme       Theme?    @relation(fields: [themeId], references: [id])
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, sentiment])
+  @@index([workspaceId, channel])
+  @@index([themeId])
 }
