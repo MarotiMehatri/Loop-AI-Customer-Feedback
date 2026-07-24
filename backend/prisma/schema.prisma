@@ -53,7 +53,6 @@ enum NotificationType {
   SYSTEM
   REPORT_READY
 }
-
 model Workspace {
   id        String   @id @default(cuid())
   name      String
@@ -66,6 +65,10 @@ model Workspace {
   feedbackImports FeedbackImport[]
   notifications   Notification[]
   reports         Report[]
+
+  @@index([name])
+  @@index([createdAt])
+
 }
 
 model User {
@@ -86,48 +89,106 @@ model User {
   notifications Notification[]
   reports       Report[]
 
-  createdFeedback Feedback[]       @relation("FeedbackCreatedBy")
+  createdFeedback  Feedback[] @relation("FeedbackCreatedBy")
+  assignedFeedback Feedback[] @relation("FeedbackAssignedTo")
+
   feedbackImports FeedbackImport[]
 
   @@index([workspaceId])
   @@index([workspaceId, role])
   @@index([workspaceId, isActive])
+  @@index([workspaceId, createdAt])
 }
 
 model Feedback {
   id String @id @default(cuid())
 
+  // Feedback source and classification
   source    FeedbackChannel
-  sentiment Sentiment
+  sentiment Sentiment       @default(NEUTRAL)
   status    FeedbackStatus  @default(NEW)
 
-  customerName  String?
-  customerEmail String?
+  // Customer information
+  customerName   String?
+  customerEmail  String?
+  customerAvatar String?
 
+  // Main feedback content
   content String @db.Text
 
-  tags        String[] @default([])
-  category    String?
-  isImportant Boolean  @default(false)
+  // Optional feedback details
+  subject  String?
+  category String?
+  tags     String[] @default([])
 
+  // External platform information
+  externalId  String?
+  externalUrl String?
+
+  // Rating for reviews, surveys, or app stores
+  rating Int?
+
+  // Language detected from feedback
+  language String? @default("en")
+
+  // Feedback Inbox flags
+  isImportant Boolean @default(false)
+  isRead      Boolean @default(false)
+  isPinned    Boolean @default(false)
+
+  // AI classification fields
+  isClassified  Boolean   @default(false)
+  aiSummary     String?   @db.Text
+  aiCategory    String?
+  aiConfidence  Float?
+  aiProcessedAt DateTime?
+
+  // Additional provider-specific data
   metadata Json?
 
+  // Workspace relation
   workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // User who created/imported feedback
   createdById String
-  createdBy   User   @relation("FeedbackCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdBy User @relation("FeedbackCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
 
+  // Analyst assigned to feedback
+  assignedToId String?
+
+  assignedTo User? @relation("FeedbackAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  // Dates
+  feedbackDate DateTime?
+  reviewedAt   DateTime?
+  actionedAt   DateTime?
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Prevent duplicate imported feedback
+  @@unique([workspaceId, source, externalId])
+  // Feedback Inbox filters
   @@index([workspaceId])
   @@index([workspaceId, status])
   @@index([workspaceId, source])
   @@index([workspaceId, sentiment])
+  @@index([workspaceId, category])
   @@index([workspaceId, isImportant])
+  @@index([workspaceId, isRead])
+  @@index([workspaceId, isPinned])
+  @@index([workspaceId, assignedToId])
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, updatedAt])
+  @@index([workspaceId, sentiment, status])
+  @@index([workspaceId, source, sentiment])
   @@index([createdById])
+
+
+  @@index([assignedToId])
 }
 
 model FeedbackImport {
@@ -139,20 +200,22 @@ model FeedbackImport {
 
   status ImportStatus @default(PENDING)
 
-  totalRows      Int @default(0)
-  successfulRows Int @default(0)
-  failedRows     Int @default(0)
-  duplicateRows  Int @default(0)
+  totalRows      Int     @default(0)
+  successfulRows Int     @default(0)
+  failedRows     Int     @default(0)
+  duplicateRows  Int     @default(0)
+  skippedRows    Int     @default(0)
+  errorMessage   String? @db.Text
 
-  errorMessage String?
-  startedAt    DateTime?
-  completedAt  DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
 
   workspaceId  String
   importedById String
 
-  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  importedBy User      @relation(fields: [importedById], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  importedBy User @relation(fields: [importedById], references: [id], onDelete: Cascade)
 
   errors FeedbackImportError[]
 
@@ -166,18 +229,26 @@ model FeedbackImport {
 }
 
 model FeedbackImportError {
-  id           String  @id @default(cuid())
-  rowNumber    Int
-  field        String?
-  rawData      Json?
-  errorMessage String
+  id String @id @default(cuid())
+
+  rowNumber Int
+  field     String?
+
+  rawValue String?
+  rawData  Json?
+
+  errorCode    String?
+  errorMessage String  @db.Text
 
   feedbackImportId String
-  feedbackImport   FeedbackImport @relation(fields: [feedbackImportId], references: [id], onDelete: Cascade)
+
+  feedbackImport FeedbackImport @relation(fields: [feedbackImportId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@index([feedbackImportId])
+  @@index([feedbackImportId, rowNumber])
+  @@index([createdAt])
 }
 
 model Notification {
