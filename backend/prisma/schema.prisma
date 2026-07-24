@@ -59,6 +59,12 @@ enum ThemeStatus {
   ARCHIVED
 }
 
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
 model Workspace {
   id        String   @id @default(cuid())
   name      String
@@ -72,7 +78,8 @@ model Workspace {
   notifications   Notification[]
   reports         Report[]
 
-  themes Theme[]
+  themes        Theme[]
+  conversations Conversation[]
 
   @@index([name])
   @@index([createdAt])
@@ -99,7 +106,9 @@ model User {
   createdFeedback  Feedback[] @relation("FeedbackCreatedBy")
   assignedFeedback Feedback[] @relation("FeedbackAssignedTo")
 
-  feedbackImports FeedbackImport[]
+  feedbackImports    FeedbackImport[]
+  conversations      Conversation[]
+  aimessageFeedbacks AIMessageFeedback[]
 
   @@index([workspaceId])
   @@index([workspaceId, role])
@@ -332,4 +341,65 @@ model FeedbackTheme {
   @@unique([feedbackId, themeId])
   @@index([feedbackId])
   @@index([themeId])
+}
+
+model Conversation {
+  id          String @id @default(uuid())
+  workspaceId String
+  userId      String
+  title       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messages ConversationMessage[]
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([workspaceId, userId])
+  @@index([workspaceId, userId, updatedAt])
+}
+
+model ConversationMessage {
+  id             String      @id @default(uuid())
+  conversationId String
+  role           MessageRole
+  content        String      @db.Text
+
+  chart    Json?
+  metadata Json?
+
+  promptTokens     Int?
+  completionTokens Int?
+
+  createdAt DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  userFeedback AIMessageFeedback[]
+
+  @@index([conversationId])
+  @@index([conversationId, createdAt])
+}
+
+model AIMessageFeedback {
+  id        String  @id @default(uuid())
+  messageId String
+  userId    String
+  helpful   Boolean
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId])
 }

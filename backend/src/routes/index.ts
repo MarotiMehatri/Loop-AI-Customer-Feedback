@@ -5,6 +5,7 @@ import { feedbackImportRouter } from "../modules/feedback-import/index.js";
 import { feedbackRouter } from "../modules/feedback/feedback.routes.js";
 import { feedbackInboxRouter } from "../modules/feedback-inbox/feedbackInbox.routes.js";
 import { analyticsRouter } from "../modules/analytics/analytics.routes.js";
+import { askLoopRouter } from "../modules/ask-loop/askLoop.routes.js";
 
 export const apiRouter = Router();
 
@@ -20,5 +21,5 @@ apiRouter.use("/auth", authRouter);
 apiRouter.use("/feedback", feedbackRouter);
 apiRouter.use("/feedback-import", feedbackImportRouter);
 apiRouter.use("/feedback-inbox", feedbackInboxRouter);
-apiRouter.use("/analytics", analyticsRouter)
-
+apiRouter.use("/analytics", analyticsRouter);
+apiRouter.use("/ask-loop", askLoopRouter)
