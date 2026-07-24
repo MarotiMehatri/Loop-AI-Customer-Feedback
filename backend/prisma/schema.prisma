@@ -53,6 +53,12 @@ enum NotificationType {
   SYSTEM
   REPORT_READY
 }
+
+enum ThemeStatus {
+  ACTIVE
+  ARCHIVED
+}
+
 model Workspace {
   id        String   @id @default(cuid())
   name      String
@@ -66,9 +72,10 @@ model Workspace {
   notifications   Notification[]
   reports         Report[]
 
+  themes Theme[]
+
   @@index([name])
   @@index([createdAt])
-
 }
 
 model User {
@@ -162,12 +169,13 @@ model Feedback {
   assignedTo User? @relation("FeedbackAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
 
   // Dates
-  feedbackDate DateTime?
-  reviewedAt   DateTime?
-  actionedAt   DateTime?
-  archivedAt   DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  feedbackDate   DateTime?
+  reviewedAt     DateTime?
+  actionedAt     DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  feedbackThemes FeedbackTheme[]
 
   // Prevent duplicate imported feedback
   @@unique([workspaceId, source, externalId])
@@ -186,8 +194,6 @@ model Feedback {
   @@index([workspaceId, sentiment, status])
   @@index([workspaceId, source, sentiment])
   @@index([createdById])
-
-
   @@index([assignedToId])
 }
 
@@ -287,4 +293,43 @@ model Report {
 
   @@index([workspaceId])
   @@index([workspaceId, type])
+}
+
+model Theme {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?     @db.Text
+  status        ThemeStatus @default(ACTIVE)
+  color         String?
+  isAiGenerated Boolean     @default(false)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  feedbackThemes FeedbackTheme[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+}
+
+model FeedbackTheme {
+  id         String  @id @default(cuid())
+  confidence Float?
+  isPrimary  Boolean @default(false)
+
+  feedbackId String
+  feedback   Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+
+  themeId String
+  theme   Theme  @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([feedbackId, themeId])
+  @@index([feedbackId])
+  @@index([themeId])
 }

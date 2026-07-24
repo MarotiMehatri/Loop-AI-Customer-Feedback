@@ -4,6 +4,7 @@ import { authRouter } from "../modules/auth/auth.routes.js";
 import { feedbackImportRouter } from "../modules/feedback-import/index.js";
 import { feedbackRouter } from "../modules/feedback/feedback.routes.js";
 import { feedbackInboxRouter } from "../modules/feedback-inbox/feedbackInbox.routes.js";
+import { analyticsRouter } from "../modules/analytics/analytics.routes.js";
 
 export const apiRouter = Router();
 
@@ -17,9 +18,7 @@ apiRouter.get("/", (_request, response) => {
 
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/feedback", feedbackRouter);
-<<<<<<< HEAD
 apiRouter.use("/feedback-import", feedbackImportRouter);
-=======
-apiRouter.use("/feedback-inbox", feedbackInboxRouter)
-apiRouter.use("/feedback-import", feedbackRouter);
->>>>>>> f61cfff (feat(feedback): implement feedback Inbox CURD APIs)
+apiRouter.use("/feedback-inbox", feedbackInboxRouter);
+apiRouter.use("/analytics", analyticsRouter)
+
