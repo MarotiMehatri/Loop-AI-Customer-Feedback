@@ -82,6 +82,8 @@ model Workspace {
   conversations   Conversation[]
   reportTemplates ReportTemplate[]
 
+  workspaceInvites WorkspaceInvite[]
+
   @@index([name])
   @@index([createdAt])
 }
@@ -112,6 +114,8 @@ model User {
   aimessageFeedbacks AIMessageFeedback[]
   reportTemplates    ReportTemplate[]
   reportExports      ReportExport[]
+
+  createdWorkspaceInvites WorkspaceInvite[] @relation("WorkspaceInviteCreator")
 
   @@index([workspaceId])
   @@index([workspaceId, role])
@@ -537,4 +541,35 @@ model ScheduledReport {
 
   @@index([isActive])
   @@index([nextRunAt])
+}
+
+enum WorkspaceInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model WorkspaceInvite {
+  id         String                @id @default(cuid())
+  email      String
+  role       Role                  @default(VIEWER)
+  tokenHash  String                @unique
+  status     WorkspaceInviteStatus @default(PENDING)
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  invitedById String
+  invitedBy   User   @relation("WorkspaceInviteCreator", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, email, status])
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([email])
+  @@index([expiresAt])
 }

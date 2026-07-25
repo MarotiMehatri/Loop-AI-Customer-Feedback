@@ -7,6 +7,8 @@ import { feedbackInboxRouter } from "../modules/feedback-inbox/feedbackInbox.rou
 import { analyticsRouter } from "../modules/analytics/analytics.routes.js";
 import { askLoopRouter } from "../modules/ask-loop/askLoop.routes.js";
 import reportRouter from "../modules/reports/report.routes.js";
+import { authenticate } from "../middleware/authenticate.middleware.js";
+import memberRouter from "../modules/members/member.routes.js";
 
 export const apiRouter = Router();
 
@@ -24,4 +26,5 @@ apiRouter.use("/feedback-import", feedbackImportRouter);
 apiRouter.use("/feedback-inbox", feedbackInboxRouter);
 apiRouter.use("/analytics", analyticsRouter);
 apiRouter.use("/ask-loop", askLoopRouter);
-apiRouter.use("/reports", reportRouter)
+apiRouter.use("/reports", reportRouter);
+apiRouter.use("/members", authenticate, memberRouter);
