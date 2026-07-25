@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "node:path"
 
 import { corsOptions } from "./config/cors.js";
 import { env } from "./config/env.js";
@@ -68,6 +69,7 @@ app.get("/health", (_request, response) => {
  * API routes
  */
 app.use("/api/v1", apiRouter);
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 /**
  * 404 middleware must remain after all valid routes.

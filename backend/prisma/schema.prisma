@@ -84,21 +84,31 @@ model Workspace {
 
   workspaceInvites WorkspaceInvite[]
 
+  activityLogs ActivityLog[]
+
   @@index([name])
   @@index([createdAt])
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String  @id @default(cuid())
   name         String
-  email        String    @unique
+  email        String  @unique
   passwordHash String
-  role         Role      @default(VIEWER)
+  role         Role    @default(VIEWER)
   avatarUrl    String?
-  isActive     Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+
+  phone      String?
+  bio        String? @db.Text
+  jobTitle   String?
+  department String?
+  location   String?
+  timezone   String? @default("Asia/Kolkata")
+
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -114,6 +124,9 @@ model User {
   aimessageFeedbacks AIMessageFeedback[]
   reportTemplates    ReportTemplate[]
   reportExports      ReportExport[]
+
+  preferences  UserPreference?
+  activityLogs ActivityLog[]
 
   createdWorkspaceInvites WorkspaceInvite[] @relation("WorkspaceInviteCreator")
 
@@ -572,4 +585,74 @@ model WorkspaceInvite {
   @@index([workspaceId, status])
   @@index([email])
   @@index([expiresAt])
+}
+
+enum UserTheme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum Language {
+  ENGLISH
+  HINDI
+}
+
+model UserPreference {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emailNotifications  Boolean @default(true)
+  pushNotifications   Boolean @default(true)
+  reportNotifications Boolean @default(true)
+  weeklySummary       Boolean @default(true)
+
+  theme    UserTheme @default(SYSTEM)
+  language Language  @default(ENGLISH)
+
+  timezone String @default("Asia/Kolkata")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ActivityType {
+  PROFILE_UPDATED
+  PASSWORD_CHANGED
+  AVATAR_UPDATED
+  LOGIN
+  LOGOUT
+  REPORT_CREATED
+  REPORT_EXPORTED
+  FEEDBACK_CREATED
+  FEEDBACK_UPDATED
+  TEAM_MEMBER_INVITED
+  PREFERENCES_UPDATED
+}
+
+model ActivityLog {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  type ActivityType
+
+  title String
+
+  description String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([type])
+  @@index([workspaceId, createdAt])
 }
