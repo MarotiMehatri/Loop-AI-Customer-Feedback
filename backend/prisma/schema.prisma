@@ -75,8 +75,8 @@ model Workspace {
   reportTemplates ReportTemplate[]
 
   workspaceInvites WorkspaceInvite[]
-
-  activityLogs ActivityLog[]
+  settings         WorkspaceSettings?
+  activityLogs     ActivityLog[]
 
   @@index([name])
   @@index([createdAt])
@@ -722,4 +722,24 @@ model Notification {
   @@index([workspaceId, type])
   @@index([workspaceId, createdAt])
   @@index([entityType, entityId])
+}
+
+model WorkspaceSettings {
+  id String @id @default(cuid())
+
+  general       Json
+  ai            Json
+  feedback      Json
+  reports       Json
+  security      Json
+  retention     Json
+  notifications Json
+
+  workspaceId String    @unique
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
 }
