@@ -14,6 +14,7 @@ import activityRouter from "../modules/activity/activity.routes.js";
 import notificationRouter from "../modules/notifications/notification.routes.js";
 import settingsRouter from "../modules/settings/settings.routes.js";
 import themeRouter from "../modules/themes/theme.routes.js";
+import dashboardRouter from "../modules/dashboard/dashboard.routes.js";
 
 export const apiRouter = Router();
 
@@ -26,6 +27,7 @@ apiRouter.get("/", (_request, response) => {
 });
 
 apiRouter.use("/auth", authRouter);
+apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/feedback", feedbackRouter);
 apiRouter.use("/feedback-import", feedbackImportRouter);
 apiRouter.use("/feedback-inbox", feedbackInboxRouter);
