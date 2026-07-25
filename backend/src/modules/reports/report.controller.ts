@@ -18,6 +18,7 @@ function getRequestContext(request: Request): {
   workspaceId: string;
 } {
   const userId = request.user?.userId;
+
   const workspaceId = request.workspaceId ?? request.user?.workspaceId;
 
   if (!userId) {
@@ -89,10 +90,9 @@ export const reportController = {
     try {
       const { workspaceId } = getRequestContext(request);
 
-      const result = await reportService.getById(
-        request.params.reportId as string,
-        workspaceId,
-      );
+      const reportId = request.params.reportId as string;
+
+      const result = await reportService.getById(reportId, workspaceId);
 
       response.status(200).json({
         success: true,
@@ -109,12 +109,17 @@ export const reportController = {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const { userId, workspaceId } = getRequestContext(request);
+
+      const reportId = request.params.reportId as string;
+
+      const input = request.body as UpdateReportInput;
 
       const result = await reportService.update(
-        request.params.reportId as string,
+        reportId,
         workspaceId,
-        request.body as UpdateReportInput,
+        userId,
+        input,
       );
 
       response.status(200).json({
@@ -133,12 +138,11 @@ export const reportController = {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const { userId, workspaceId } = getRequestContext(request);
 
-      await reportService.delete(
-        request.params.reportId as string,
-        workspaceId,
-      );
+      const reportId = request.params.reportId as string;
+
+      await reportService.delete(reportId, workspaceId, userId);
 
       response.status(200).json({
         success: true,
@@ -176,7 +180,12 @@ export const reportController = {
     try {
       const { workspaceId } = getRequestContext(request);
 
-      const limit = Math.min(Math.max(Number(request.query.limit) || 5, 1), 20);
+      const requestedLimit = Number(request.query.limit);
+
+      const limit = Math.min(
+        Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 5, 1),
+        20,
+      );
 
       const result = await reportService.getRecent(workspaceId, limit);
 
@@ -217,11 +226,14 @@ export const reportController = {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const { userId, workspaceId } = getRequestContext(request);
+
+      const reportId = request.params.reportId as string;
 
       const result = await reportService.generate(
-        request.params.reportId as string,
+        reportId,
         workspaceId,
+        userId,
       );
 
       response.status(200).json({
@@ -240,15 +252,18 @@ export const reportController = {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const { userId, workspaceId } = getRequestContext(request);
+
+      const reportId = request.params.reportId as string;
 
       const format = String(
         request.query.format ?? "CSV",
       ).toUpperCase() as ReportExportFormat;
 
       const result = await reportService.export(
-        request.params.reportId as string,
+        reportId,
         workspaceId,
+        userId,
         format,
       );
 
@@ -271,12 +286,17 @@ export const reportController = {
     next: NextFunction,
   ): Promise<void> {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const { userId, workspaceId } = getRequestContext(request);
+
+      const reportId = request.params.reportId as string;
+
+      const input = request.body as ReportScheduleInput;
 
       const result = await reportService.schedule(
-        request.params.reportId as string,
+        reportId,
         workspaceId,
-        request.body as ReportScheduleInput,
+        userId,
+        input,
       );
 
       response.status(200).json({

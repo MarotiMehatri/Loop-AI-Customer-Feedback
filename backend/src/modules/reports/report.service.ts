@@ -1,6 +1,8 @@
-import { ReportStatus } from "../../generated/prisma/client.js";
+import { ActivityType, ReportStatus } from "../../generated/prisma/client.js";
 
 import { ApiError } from "../../utils/apiError.js";
+
+import { activityLogger } from "../activity/activity.logger.js";
 
 import { REPORT_MESSAGES } from "./report.constants.js";
 
@@ -38,6 +40,24 @@ export const reportService = {
 
     reportCache.deleteWorkspace(workspaceId);
 
+    await activityLogger.logSafe({
+      userId,
+      workspaceId,
+
+      type: ActivityType.REPORT_CREATED,
+
+      title: "Report created",
+
+      description: `Report "${report.title}" was created.`,
+
+      entityType: "REPORT",
+      entityId: report.id,
+
+      metadata: {
+        status: report.status,
+      },
+    });
+
     return mapReport(report);
   },
 
@@ -70,6 +90,7 @@ export const reportService = {
   async update(
     reportId: string,
     workspaceId: string,
+    userId: string,
     input: UpdateReportInput,
   ) {
     const updated = await reportRepository.update(reportId, workspaceId, {
@@ -84,10 +105,39 @@ export const reportService = {
 
     reportCache.deleteWorkspace(workspaceId);
 
+    await activityLogger.logSafe({
+      userId,
+      workspaceId,
+
+      type: ActivityType.REPORT_UPDATED,
+
+      title: "Report updated",
+
+      description: `Report "${updated.title}" was updated.`,
+
+      entityType: "REPORT",
+      entityId: updated.id,
+
+      metadata: {
+        updatedFields: Object.keys(input),
+        status: updated.status,
+      },
+    });
+
     return mapReport(updated);
   },
 
-  async delete(reportId: string, workspaceId: string): Promise<void> {
+  async delete(
+    reportId: string,
+    workspaceId: string,
+    userId: string,
+  ): Promise<void> {
+    const report = await reportRepository.findById(reportId, workspaceId);
+
+    if (!report) {
+      throw new ApiError(404, REPORT_MESSAGES.notFound);
+    }
+
     const result = await reportRepository.delete(reportId, workspaceId);
 
     if (result.count === 0) {
@@ -95,6 +145,24 @@ export const reportService = {
     }
 
     reportCache.deleteWorkspace(workspaceId);
+
+    await activityLogger.logSafe({
+      userId,
+      workspaceId,
+
+      type: ActivityType.REPORT_DELETED,
+
+      title: "Report deleted",
+
+      description: `Report "${report.title}" was deleted.`,
+
+      entityType: "REPORT",
+      entityId: report.id,
+
+      metadata: {
+        previousStatus: report.status,
+      },
+    });
   },
 
   async getSummary(workspaceId: string) {
@@ -123,12 +191,33 @@ export const reportService = {
     return createReportPreview(workspaceId, input);
   },
 
-  async generate(reportId: string, workspaceId: string) {
+  async generate(reportId: string, workspaceId: string, userId: string) {
     const generated = await generateReport(reportId, workspaceId);
 
     if (!generated) {
       throw new ApiError(404, REPORT_MESSAGES.notFound);
     }
+
+    reportCache.deleteWorkspace(workspaceId);
+
+    await activityLogger.logSafe({
+      userId,
+      workspaceId,
+
+      type: ActivityType.REPORT_GENERATED,
+
+      title: "Report generated",
+
+      description: `Report "${generated.title}" was generated successfully.`,
+
+      entityType: "REPORT",
+      entityId: generated.id,
+
+      metadata: {
+        status: generated.status,
+        generatedAt: new Date().toISOString(),
+      },
+    });
 
     return mapReport(generated);
   },
@@ -136,6 +225,7 @@ export const reportService = {
   async export(
     reportId: string,
     workspaceId: string,
+    userId: string,
     format: ReportExportFormat,
   ) {
     const report = await reportRepository.findById(reportId, workspaceId);
@@ -148,12 +238,33 @@ export const reportService = {
       throw new ApiError(400, "Only completed reports can be exported");
     }
 
-    return exportReport(report, format);
+    const exported = await exportReport(report, format);
+
+    await activityLogger.logSafe({
+      userId,
+      workspaceId,
+
+      type: ActivityType.REPORT_EXPORTED,
+
+      title: "Report exported",
+
+      description: `Report "${report.title}" was exported as ${format}.`,
+
+      entityType: "REPORT",
+      entityId: report.id,
+
+      metadata: {
+        format,
+      },
+    });
+
+    return exported;
   },
 
   async schedule(
     reportId: string,
     workspaceId: string,
+    userId: string,
     input: ReportScheduleInput,
   ) {
     const scheduledAt = input.scheduledAt ?? calculateNextRun(input.frequency);
@@ -168,6 +279,26 @@ export const reportService = {
     }
 
     reportCache.deleteWorkspace(workspaceId);
+
+    await activityLogger.logSafe({
+      userId,
+      workspaceId,
+
+      type: ActivityType.REPORT_UPDATED,
+
+      title: "Report scheduled",
+
+      description: `Report "${report.title}" was scheduled.`,
+
+      entityType: "REPORT",
+      entityId: report.id,
+
+      metadata: {
+        action: "REPORT_SCHEDULED",
+        frequency: input.frequency,
+        scheduledAt: scheduledAt.toISOString(),
+      },
+    });
 
     return mapReport(report);
   },

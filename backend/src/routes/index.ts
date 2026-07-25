@@ -10,6 +10,7 @@ import reportRouter from "../modules/reports/report.routes.js";
 import { authenticate } from "../middleware/authenticate.middleware.js";
 import memberRouter from "../modules/members/member.routes.js";
 import profileRouter from "../modules/profile/profile.routes.js";
+import activityRouter from "../modules/activity/activity.routes.js";
 
 export const apiRouter = Router();
 
@@ -30,3 +31,4 @@ apiRouter.use("/ask-loop", askLoopRouter);
 apiRouter.use("/reports", reportRouter);
 apiRouter.use("/members", authenticate, memberRouter);
 apiRouter.use("/profile", profileRouter);
+apiRouter.use("/activity", activityRouter);
