@@ -11,6 +11,7 @@ import { authenticate } from "../middleware/authenticate.middleware.js";
 import memberRouter from "../modules/members/member.routes.js";
 import profileRouter from "../modules/profile/profile.routes.js";
 import activityRouter from "../modules/activity/activity.routes.js";
+import notificationRouter from "../modules/notifications/notification.routes.js";
 
 export const apiRouter = Router();
 
@@ -32,3 +33,4 @@ apiRouter.use("/reports", reportRouter);
 apiRouter.use("/members", authenticate, memberRouter);
 apiRouter.use("/profile", profileRouter);
 apiRouter.use("/activity", activityRouter);
+apiRouter.use("/notificationRoutes", notificationRouter);

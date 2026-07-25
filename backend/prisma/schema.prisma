@@ -46,14 +46,6 @@ enum ImportStatus {
   FAILED
 }
 
-enum NotificationType {
-  DAILY_SUMMARY
-  DELIVERY_ALERT
-  FAILED_DELIVERY
-  SYSTEM
-  REPORT_READY
-}
-
 enum ThemeStatus {
   ACTIVE
   ARCHIVED
@@ -284,26 +276,6 @@ model FeedbackImportError {
   @@index([feedbackImportId])
   @@index([feedbackImportId, rowNumber])
   @@index([createdAt])
-}
-
-model Notification {
-  id        String           @id @default(cuid())
-  type      NotificationType @default(SYSTEM)
-  title     String
-  message   String
-  isRead    Boolean          @default(false)
-  metadata  Json?
-  createdAt DateTime         @default(now())
-
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([workspaceId])
-  @@index([userId])
-  @@index([userId, isRead])
-  @@index([userId, type])
 }
 
 model Theme {
@@ -686,4 +658,68 @@ model ActivityLog {
   @@index([workspaceId])
   @@index([workspaceId, type])
   @@index([workspaceId, createdAt])
+}
+
+enum NotificationType {
+  SYSTEM
+
+  REPORT_CREATED
+  REPORT_COMPLETED
+  REPORT_FAILED
+  REPORT_EXPORTED
+
+  FEEDBACK_CREATED
+  FEEDBACK_ASSIGNED
+  FEEDBACK_IMPORTED
+
+  MEMBER_INVITED
+  MEMBER_JOINED
+  MEMBER_ROLE_CHANGED
+  MEMBER_REMOVED
+
+  WORKSPACE_UPDATED
+  SETTINGS_UPDATED
+
+  SECURITY_ALERT
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model Notification {
+  id       String               @id @default(cuid())
+  type     NotificationType
+  priority NotificationPriority @default(NORMAL)
+
+  title   String
+  message String @db.Text
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  entityType String?
+  entityId   String?
+
+  metadata Json?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([userId, workspaceId])
+  @@index([userId, workspaceId, isRead])
+  @@index([workspaceId, type])
+  @@index([workspaceId, createdAt])
+  @@index([entityType, entityId])
 }

@@ -30,6 +30,7 @@ import type {
   ReportScheduleInput,
   UpdateReportInput,
 } from "./report.types.js";
+import { reportNotificationPublisher } from "./report.notification.js";
 
 export const reportService = {
   async create(workspaceId: string, userId: string, input: CreateReportInput) {
@@ -56,6 +57,16 @@ export const reportService = {
       metadata: {
         status: report.status,
       },
+    });
+
+    await reportNotificationPublisher.created({
+      userId,
+      workspaceId,
+
+      reportId: report.id,
+      reportTitle: report.title,
+
+      status: String(report.status),
     });
 
     return mapReport(report);
@@ -192,34 +203,64 @@ export const reportService = {
   },
 
   async generate(reportId: string, workspaceId: string, userId: string) {
-    const generated = await generateReport(reportId, workspaceId);
+    const existingReport = await reportRepository.findById(
+      reportId,
+      workspaceId,
+    );
 
-    if (!generated) {
+    if (!existingReport) {
       throw new ApiError(404, REPORT_MESSAGES.notFound);
     }
 
-    reportCache.deleteWorkspace(workspaceId);
+    try {
+      const generated = await generateReport(reportId, workspaceId);
 
-    await activityLogger.logSafe({
-      userId,
-      workspaceId,
+      if (!generated) {
+        throw new ApiError(500, "Report generation failed");
+      }
 
-      type: ActivityType.REPORT_GENERATED,
+      reportCache.deleteWorkspace(workspaceId);
 
-      title: "Report generated",
+      await activityLogger.logSafe({
+        userId,
+        workspaceId,
 
-      description: `Report "${generated.title}" was generated successfully.`,
+        type: ActivityType.REPORT_GENERATED,
 
-      entityType: "REPORT",
-      entityId: generated.id,
+        title: "Report generated",
 
-      metadata: {
-        status: generated.status,
-        generatedAt: new Date().toISOString(),
-      },
-    });
+        description: `Report "${generated.title}" was generated successfully.`,
 
-    return mapReport(generated);
+        entityType: "REPORT",
+        entityId: generated.id,
+
+        metadata: {
+          status: generated.status,
+
+          generatedAt: new Date().toISOString(),
+        },
+      });
+
+      await reportNotificationPublisher.completed({
+        userId,
+        workspaceId,
+
+        reportId: generated.id,
+        reportTitle: generated.title,
+      });
+
+      return mapReport(generated);
+    } catch (error) {
+      await reportNotificationPublisher.failed({
+        userId,
+        workspaceId,
+
+        reportId: existingReport.id,
+        reportTitle: existingReport.title,
+      });
+
+      throw error;
+    }
   },
 
   async export(
@@ -256,6 +297,17 @@ export const reportService = {
       metadata: {
         format,
       },
+    });
+
+    await reportNotificationPublisher.exported({
+      userId,
+      workspaceId,
+
+      reportId: report.id,
+      reportTitle: report.title,
+
+      format: String(format),
+      fileName: exported.fileName,
     });
 
     return exported;
