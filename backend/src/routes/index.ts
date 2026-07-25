@@ -13,6 +13,7 @@ import profileRouter from "../modules/profile/profile.routes.js";
 import activityRouter from "../modules/activity/activity.routes.js";
 import notificationRouter from "../modules/notifications/notification.routes.js";
 import settingsRouter from "../modules/settings/settings.routes.js";
+import themeRouter from "../modules/themes/theme.routes.js";
 
 export const apiRouter = Router();
 
@@ -35,4 +36,5 @@ apiRouter.use("/members", authenticate, memberRouter);
 apiRouter.use("/profile", profileRouter);
 apiRouter.use("/activity", activityRouter);
 apiRouter.use("/notificationRoutes", notificationRouter);
-apiRouter.use("/settings", settingsRouter)
+apiRouter.use("/settings", settingsRouter);
+apiRouter.use("/theme", themeRouter);
