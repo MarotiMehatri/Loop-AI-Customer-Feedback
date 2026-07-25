@@ -78,8 +78,9 @@ model Workspace {
   notifications   Notification[]
   reports         Report[]
 
-  themes        Theme[]
-  conversations Conversation[]
+  themes          Theme[]
+  conversations   Conversation[]
+  reportTemplates ReportTemplate[]
 
   @@index([name])
   @@index([createdAt])
@@ -109,6 +110,8 @@ model User {
   feedbackImports    FeedbackImport[]
   conversations      Conversation[]
   aimessageFeedbacks AIMessageFeedback[]
+  reportTemplates    ReportTemplate[]
+  reportExports      ReportExport[]
 
   @@index([workspaceId])
   @@index([workspaceId, role])
@@ -286,24 +289,6 @@ model Notification {
   @@index([userId, type])
 }
 
-model Report {
-  id        String    @id @default(cuid())
-  title     String
-  type      String
-  data      Json?
-  startDate DateTime?
-  endDate   DateTime?
-  createdAt DateTime  @default(now())
-
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  userId      String?
-  user        User?     @relation(fields: [userId], references: [id])
-
-  @@index([workspaceId])
-  @@index([workspaceId, type])
-}
-
 model Theme {
   id            String      @id @default(cuid())
   name          String
@@ -402,4 +387,154 @@ model AIMessageFeedback {
 
   @@unique([messageId, userId])
   @@index([userId])
+}
+
+// Reports
+
+enum ReportStatus {
+  DRAFT
+  GENERATING
+  COMPLETED
+  FAILED
+  SCHEDULED
+}
+
+enum ReportType {
+  VOICE_OF_CUSTOMER
+  INSIGHTS
+  ANALYTICS
+  SUMMARY
+  SENTIMENT
+  THEMES
+  CUSTOM
+}
+
+enum ReportExportFormat {
+  PDF
+  CSV
+  XLSX
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  type        ReportType
+  status      ReportStatus @default(DRAFT)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  // Selected feedback sources:
+  // SUPPORT, APP_STORE, SURVEY, SALES, SOCIAL, etc.
+  sources Json?
+
+  // Filters and segments selected in step 2
+  filters Json?
+
+  // Metrics selected in step 3
+  metrics Json?
+
+  // Chart and visual configuration
+  charts Json?
+
+  // Final generated report data
+  data Json?
+
+  // Gemini-generated report summary
+  aiSummary String?
+
+  // Optional report tags
+  tags String[]
+
+  generatedAt DateTime?
+  scheduledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  templateId String?
+  template   ReportTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  exports  ReportExport[]
+  schedule ScheduledReport?
+
+  @@index([workspaceId])
+  @@index([workspaceId, type])
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt])
+  @@index([userId])
+}
+
+model ReportTemplate {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  type        ReportType
+
+  sources Json?
+  filters Json?
+  metrics Json?
+  charts  Json?
+
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  reports Report[]
+
+  @@index([workspaceId])
+  @@index([workspaceId, type])
+}
+
+model ReportExport {
+  id           String             @id @default(cuid())
+  format       ReportExportFormat
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  downloadedAt DateTime?
+  createdAt    DateTime           @default(now())
+
+  reportId String
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([reportId])
+  @@index([createdAt])
+}
+
+model ScheduledReport {
+  id             String   @id @default(cuid())
+  frequency      String
+  cronExpression String?
+  recipients     String[]
+  isActive       Boolean  @default(true)
+
+  nextRunAt DateTime?
+  lastRunAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reportId String @unique
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([nextRunAt])
 }
