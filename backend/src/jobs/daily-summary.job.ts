@@ -1,82 +1,228 @@
-import { prisma } from "../lib/prisma.js";
-import { logger } from "../config/logger.js";
+import {
+  FeedbackStatus,
+  NotificationType,
+  Role,
+  Sentiment,
+} from "../generated/prisma/client.js";
 
-export const runDailySummaryJob = async (): Promise<void> => {
+import { logger } from "../config/logger.js";
+import { prisma } from "../config/prisma.js";
+
+import { notificationPublisher } from "../modules/notifications/notification.publisher.js";
+
+function getTodayDateRange(): {
+  startDate: Date;
+  endDate: Date;
+} {
+  const startDate = new Date();
+
+  startDate.setHours(0, 0, 0, 0);
+
+  const endDate = new Date(startDate);
+
+  endDate.setDate(endDate.getDate() + 1);
+
+  return {
+    startDate,
+    endDate,
+  };
+}
+
+export async function runDailySummaryJob(): Promise<void> {
   try {
-    logger.info("[DailySummaryJob] Starting daily shipment summary generation");
+    logger.info({
+      module: "DailySummaryJob",
+      message: "Starting daily feedback summary generation",
+    });
 
     const workspaces = await prisma.workspace.findMany({
-      select: { id: true, name: true },
+      select: {
+        id: true,
+        name: true,
+      },
     });
+
+    const { startDate, endDate } = getTodayDateRange();
 
     for (const workspace of workspaces) {
       try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const createdTodayFilter = {
+          workspaceId: workspace.id,
 
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const totalShipments = await prisma.shipment.count({
-          where: {
-            workspaceId: workspace.id,
-            createdAt: { gte: today, lt: tomorrow },
+          createdAt: {
+            gte: startDate,
+            lt: endDate,
           },
-        });
+        };
 
-        const deliveredCount = await prisma.shipment.count({
-          where: {
+        const [
+          totalFeedback,
+          positiveFeedback,
+          neutralFeedback,
+          negativeFeedback,
+          newFeedback,
+          reviewedFeedback,
+          actionedFeedback,
+          administrators,
+        ] = await prisma.$transaction([
+          prisma.feedback.count({
+            where: createdTodayFilter,
+          }),
+
+          prisma.feedback.count({
+            where: {
+              ...createdTodayFilter,
+              sentiment: Sentiment.POSITIVE,
+            },
+          }),
+
+          prisma.feedback.count({
+            where: {
+              ...createdTodayFilter,
+              sentiment: Sentiment.NEUTRAL,
+            },
+          }),
+
+          prisma.feedback.count({
+            where: {
+              ...createdTodayFilter,
+              sentiment: Sentiment.NEGATIVE,
+            },
+          }),
+
+          prisma.feedback.count({
+            where: {
+              ...createdTodayFilter,
+              status: FeedbackStatus.NEW,
+            },
+          }),
+
+          prisma.feedback.count({
+            where: {
+              ...createdTodayFilter,
+              status: FeedbackStatus.REVIEWED,
+            },
+          }),
+
+          prisma.feedback.count({
+            where: {
+              ...createdTodayFilter,
+              status: FeedbackStatus.ACTIONED,
+            },
+          }),
+
+          prisma.user.findMany({
+            where: {
+              workspaceId: workspace.id,
+              role: Role.ADMIN,
+              isActive: true,
+            },
+
+            select: {
+              id: true,
+            },
+          }),
+        ]);
+
+        if (administrators.length === 0) {
+          logger.info({
+            module: "DailySummaryJob",
+            message: "No active administrator found; notification skipped",
             workspaceId: workspace.id,
-            status: "DELIVERED",
-            updatedAt: { gte: today, lt: tomorrow },
-          },
-        });
+          });
 
-        const failedCount = await prisma.shipment.count({
-          where: {
+          continue;
+        }
+
+        const negativePercentage =
+          totalFeedback > 0
+            ? Number(((negativeFeedback / totalFeedback) * 100).toFixed(2))
+            : 0;
+
+        const summaryMessage = [
+          `${totalFeedback} feedback records were received today.`,
+          `Positive: ${positiveFeedback},`,
+          `Neutral: ${neutralFeedback},`,
+          `Negative: ${negativeFeedback}.`,
+          `New: ${newFeedback},`,
+          `Reviewed: ${reviewedFeedback},`,
+          `Actioned: ${actionedFeedback}.`,
+        ].join(" ");
+
+        await notificationPublisher.publishManySafe(
+          administrators.map((administrator) => ({
+            userId: administrator.id,
             workspaceId: workspace.id,
-            status: "FAILED",
-            updatedAt: { gte: today, lt: tomorrow },
-          },
-        });
 
-        const delayedCount = await prisma.shipment.count({
-          where: {
-            workspaceId: workspace.id,
-            status: "DELAYED",
-            updatedAt: { gte: today, lt: tomorrow },
-          },
-        });
+            type: NotificationType.SYSTEM,
 
-        const adminUser = await prisma.user.findFirst({
-          where: { workspaceId: workspace.id },
-        });
-        if (!adminUser) continue;
+            title: `Daily Feedback Summary — ${workspace.name}`,
 
-        await prisma.notification.create({
-          data: {
-            workspaceId: workspace.id,
-            userId: adminUser.id,
-            type: "DAILY_SUMMARY",
-            title: `Daily Shipment Summary - ${today.toLocaleDateString()}`,
-            message: JSON.stringify({
-              total: totalShipments,
-              delivered: deliveredCount,
-              failed: failedCount,
-              delayed: delayedCount,
-            }),
-          },
-        });
+            message: summaryMessage,
 
-        logger.info(`[DailySummaryJob] Summary generated for workspace ${workspace.id}`);
+            entityType: "DAILY_FEEDBACK_SUMMARY",
+
+            entityId: workspace.id,
+
+            metadata: {
+              summaryDate: startDate.toISOString(),
+
+              totalFeedback,
+
+              sentiment: {
+                positive: positiveFeedback,
+
+                neutral: neutralFeedback,
+
+                negative: negativeFeedback,
+
+                negativePercentage,
+              },
+
+              status: {
+                new: newFeedback,
+
+                reviewed: reviewedFeedback,
+
+                actioned: actionedFeedback,
+              },
+            },
+          })),
+        );
+
+        logger.info({
+          module: "DailySummaryJob",
+          message: "Daily feedback summary generated successfully",
+
+          workspaceId: workspace.id,
+          workspaceName: workspace.name,
+
+          administratorCount: administrators.length,
+
+          totalFeedback,
+        });
       } catch (error) {
-        logger.error(`[DailySummaryJob] Failed for workspace ${workspace.id}:`, error);
+        logger.error({
+          module: "DailySummaryJob",
+          message: "Daily summary generation failed for workspace",
+          workspaceId: workspace.id,
+          error,
+        });
       }
     }
 
-    logger.info("[DailySummaryJob] Daily summary generation completed");
+    logger.info({
+      module: "DailySummaryJob",
+      message: "Daily feedback summary generation completed",
+      workspaceCount: workspaces.length,
+    });
   } catch (error) {
-    logger.error("[DailySummaryJob] Failed to run daily summary job:", error);
+    logger.error({
+      module: "DailySummaryJob",
+      message: "Daily summary job failed",
+      error,
+    });
+
     throw error;
   }
-};
+}

@@ -2,10 +2,11 @@ import * as analyticsService from "../services/analytics.service.js";
 import { success } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import type { Request, Response } from "express";
+import { getWorkspaceId } from "../utils/requestContext.js";
 
 export const analyticsController = {
   getShipmentAnalytics: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, groupBy } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -16,7 +17,7 @@ export const analyticsController = {
   }),
 
   getCourierAnalytics: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, courierId } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -27,7 +28,7 @@ export const analyticsController = {
   }),
 
   getCustomerAnalytics: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, customerId } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -38,7 +39,7 @@ export const analyticsController = {
   }),
 
   getDeliveryAnalytics: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, status } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -49,7 +50,7 @@ export const analyticsController = {
   }),
 
   getRevenueAnalytics: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, groupBy } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -60,7 +61,7 @@ export const analyticsController = {
   }),
 
   getTrendData: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, metric, interval } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -72,14 +73,14 @@ export const analyticsController = {
   }),
 
   getHeatmapData: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
     const result = await analyticsService.getHeatmapData(workspaceId, startDate, endDate);
     success(res, "Heatmap data fetched", result);
   }),
 
   getComparisonData: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, compareBy, entities } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -92,7 +93,7 @@ export const analyticsController = {
   }),
 
   getFilters: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const result = await analyticsService.getFilters(workspaceId);
     success(res, "Filters fetched", result);
   }),

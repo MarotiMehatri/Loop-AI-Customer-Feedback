@@ -1,22 +1,23 @@
-import type { RequestHandler } from "express";
+import type { NextFunction, Request, Response } from "express";
+
 import { ApiError } from "../utils/apiError.js";
 
-export const workspaceMiddleware: RequestHandler = (req, _res, next) => {
+export function workspaceMiddleware(
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void {
   try {
-    const workspaceId = req.user?.workspaceId ?? req.headers["x-workspace-id"];
+    const workspaceId = req.headers["x-workspace-id"] ?? req.user?.workspaceId;
 
-    const normalizedWorkspaceId = Array.isArray(workspaceId)
-      ? workspaceId[0]
-      : workspaceId;
-
-    if (!normalizedWorkspaceId) {
-      throw new ApiError(400, "Workspace context is missing");
+    if (!workspaceId || typeof workspaceId !== "string") {
+      throw new ApiError(400, "Workspace is required");
     }
 
-    req.workspaceId = normalizedWorkspaceId;
+    req.workspaceId = workspaceId;
 
     next();
   } catch (error) {
     next(error);
   }
-};
+}

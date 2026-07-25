@@ -1,15 +1,136 @@
-import { prisma } from "../lib/prisma.js";
-import { logger } from "../config/logger.js";
+import { FeedbackStatus, Sentiment } from "../generated/prisma/client.js";
 
-export const runAnalyticsJob = async (workspaceId: string): Promise<void> => {
+import { logger } from "../config/logger.js";
+import { prisma } from "../config/prisma.js";
+
+export async function runAnalyticsJob(workspaceId: string): Promise<void> {
   try {
-    logger.info(`[AnalyticsJob] Starting analytics refresh for workspace ${workspaceId}`);
-    const totalShipments = await prisma.shipment.count({ where: { workspaceId } });
-    const deliveredCount = await prisma.shipment.count({ where: { workspaceId, status: "DELIVERED" } });
-    logger.info(`[AnalyticsJob] Workspace ${workspaceId}: ${totalShipments} total, ${deliveredCount} delivered`);
-    logger.info(`[AnalyticsJob] Analytics refresh completed for workspace ${workspaceId}`);
+    logger.info({
+      module: "AnalyticsJob",
+      message: "Starting analytics refresh",
+      workspaceId,
+    });
+
+    const [
+      totalFeedback,
+      positiveFeedback,
+      neutralFeedback,
+      negativeFeedback,
+      newFeedback,
+      reviewedFeedback,
+      actionedFeedback,
+      activeUsers,
+      totalThemes,
+      totalReports,
+    ] = await prisma.$transaction([
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+        },
+      }),
+
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          sentiment: Sentiment.POSITIVE,
+        },
+      }),
+
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          sentiment: Sentiment.NEUTRAL,
+        },
+      }),
+
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          sentiment: Sentiment.NEGATIVE,
+        },
+      }),
+
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          status: FeedbackStatus.NEW,
+        },
+      }),
+
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          status: FeedbackStatus.REVIEWED,
+        },
+      }),
+
+      prisma.feedback.count({
+        where: {
+          workspaceId,
+          status: FeedbackStatus.ACTIONED,
+        },
+      }),
+
+      prisma.user.count({
+        where: {
+          workspaceId,
+          isActive: true,
+        },
+      }),
+
+      prisma.theme.count({
+        where: {
+          workspaceId,
+        },
+      }),
+
+      prisma.report.count({
+        where: {
+          workspaceId,
+        },
+      }),
+    ]);
+
+    const negativePercentage =
+      totalFeedback > 0
+        ? Number(((negativeFeedback / totalFeedback) * 100).toFixed(2))
+        : 0;
+
+    logger.info({
+      module: "AnalyticsJob",
+      message: "Analytics refresh completed successfully",
+
+      workspaceId,
+
+      analytics: {
+        totalFeedback,
+
+        sentiment: {
+          positive: positiveFeedback,
+          neutral: neutralFeedback,
+          negative: negativeFeedback,
+          negativePercentage,
+        },
+
+        status: {
+          new: newFeedback,
+          reviewed: reviewedFeedback,
+          actioned: actionedFeedback,
+        },
+
+        activeUsers,
+        totalThemes,
+        totalReports,
+      },
+    });
   } catch (error) {
-    logger.error(`[AnalyticsJob] Failed:`, error);
+    logger.error({
+      module: "AnalyticsJob",
+      message: "Analytics refresh failed",
+      workspaceId,
+      error,
+    });
+
     throw error;
   }
-};
+}

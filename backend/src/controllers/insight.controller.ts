@@ -2,10 +2,11 @@ import * as insightService from "../services/insight.service.js";
 import { success } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import type { Request, Response } from "express";
+import { getWorkspaceId } from "../utils/requestContext.js";
 
 export const insightController = {
   getTopCouriers: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, limit } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -16,7 +17,7 @@ export const insightController = {
   }),
 
   getWorstPerforming: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, limit } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -27,21 +28,21 @@ export const insightController = {
   }),
 
   getFrequentDelays: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
     const result = await insightService.getFrequentDelays(workspaceId, startDate, endDate);
     success(res, "Frequent delays fetched", result);
   }),
 
   getRegionAnalysis: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate } = req.query as { startDate?: string; endDate?: string };
     const result = await insightService.getRegionAnalysis(workspaceId, startDate, endDate);
     success(res, "Region analysis fetched", result);
   }),
 
   getCustomerAnalysis: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { startDate, endDate, customerId } = req.query as {
       startDate?: string;
       endDate?: string;
@@ -52,7 +53,7 @@ export const insightController = {
   }),
 
   getRecommendations: asyncHandler(async (req: Request, res: Response) => {
-    const workspaceId = req.workspaceId!;
+    const workspaceId = getWorkspaceId(req);
     const { category } = req.query as { category?: string };
     const result = await insightService.getRecommendations(workspaceId, category);
     success(res, "Recommendations fetched", result);
