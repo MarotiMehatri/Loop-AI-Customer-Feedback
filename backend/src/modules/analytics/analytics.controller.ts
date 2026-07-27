@@ -1,13 +1,19 @@
-import type { NextFunction, Request, Response, RequestHandler } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { analyticsService } from "./analytics.service.js";
 import {
   analyticsExportSchema,
   analyticsQuerySchema,
 } from "./analytics.validator.js";
+import {
+  createLiveUrl,
+  getLiveAnalytics,
+} from "./analytics.liveUrl.js";
+import { registerAnalyticsStream } from "./analytics.socket.js";
+import { ApiError } from "../../utils/apiError.js";
 
 function workspaceId(req: Request): string {
-  const id = req.user?.workspaceId ?? req.user?.workspaceId;
-  if (!id) throw new Error("Workspace context is missing");
+  const id = req.user?.workspaceId;
+  if (!id) throw new ApiError(400, "Workspace context is missing");
   return id;
 }
 
@@ -147,4 +153,53 @@ export const analyticsController = {
       next(e);
     }
   },
+
+  async createLiveUrl(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user!;
+      const { expiresInHours, filters } = req.body as {
+        expiresInHours?: number;
+        filters?: Record<string, string>;
+      };
+
+      const liveUrl = createLiveUrl(
+        user.workspaceId,
+        user.userId,
+        { expiresInHours, filters: filters as CreateLiveUrlInput["filters"] },
+      );
+
+      res.status(201).json({
+        success: true,
+        message: "Live URL created successfully",
+        data: liveUrl,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async accessLiveUrl(req: Request, res: Response, next: NextFunction) {
+    try {
+      const token = req.params.token as string;
+      const result = await getLiveAnalytics(token);
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (e) {
+      next(e);
+    }
+  },
+
+  async streamAnalytics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const analyticsInput = input(req);
+      registerAnalyticsStream(res, analyticsInput.workspaceId, analyticsInput);
+    } catch (e) {
+      next(e);
+    }
+  },
 };
+
+import type { CreateLiveUrlInput } from "./analytics.types.js";

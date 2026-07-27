@@ -88,3 +88,35 @@ export interface AnalyticsCacheEntry<T> {
   value: T;
   expiresAt: number;
 }
+
+export interface LiveUrlPayload {
+  workspaceId: string;
+  userId: string;
+  filters?: Partial<AnalyticsQueryInput>;
+  expiresAt: number;
+  createdAt: number;
+}
+
+export interface CreateLiveUrlInput {
+  expiresInHours?: number;
+  filters?: {
+    source?: FeedbackChannel;
+    sentiment?: Sentiment;
+    status?: FeedbackStatus;
+    category?: string;
+    themeId?: string;
+  };
+}
+
+export interface LiveUrlInfo {
+  token: string;
+  url: string;
+  expiresAt: string;
+  createdAt: string;
+  filters?: CreateLiveUrlInput["filters"];
+}
+
+export interface LiveUrlStats {
+  accessCount: number;
+  lastAccessedAt: string | null;
+}
