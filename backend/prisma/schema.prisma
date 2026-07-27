@@ -78,6 +78,10 @@ model Workspace {
   settings         WorkspaceSettings?
   activityLogs     ActivityLog[]
 
+  savedViews   SavedView[]
+  dataSources  DataSource[]
+  exportJobs   ExportJob[]
+
   @@index([name])
   @@index([createdAt])
 }
@@ -121,6 +125,10 @@ model User {
   activityLogs ActivityLog[]
 
   createdWorkspaceInvites WorkspaceInvite[] @relation("WorkspaceInviteCreator")
+
+  createdSavedViews  SavedView[]
+  createdDataSources DataSource[]
+  createdExportJobs  ExportJob[]
 
   @@index([workspaceId])
   @@index([workspaceId, role])
@@ -742,4 +750,110 @@ model WorkspaceSettings {
   updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
+}
+
+enum DataSourceType {
+  API
+  WEBHOOK
+  CSV
+  DATABASE
+  EMAIL
+  SOCIAL_MEDIA
+  CUSTOM
+}
+
+enum DataSourceStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+  SYNCING
+}
+
+enum ExportFormat {
+  CSV
+  XLSX
+  JSON
+  PDF
+}
+
+enum ExportJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model SavedView {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+  filters     Json
+  isDefault   Boolean @default(false)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([workspaceId, createdById])
+  @@index([createdAt])
+}
+
+model DataSource {
+  id          String         @id @default(cuid())
+  name        String
+  type        DataSourceType
+  description String?        @db.Text
+  config      Json
+  isActive    Boolean        @default(true)
+  status      DataSourceStatus @default(INACTIVE)
+
+  lastSyncAt DateTime?
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([workspaceId, type])
+  @@index([workspaceId, status])
+  @@index([createdAt])
+}
+
+model ExportJob {
+  id       String       @id @default(cuid())
+  name     String
+  format   ExportFormat
+  type     String
+  status   ExportJobStatus @default(PENDING)
+  filters  Json?
+  filePath String?
+  fileSize Int?
+  error    String?      @db.Text
+
+  completedAt DateTime?
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([workspaceId, status])
+  @@index([workspaceId, format])
+  @@index([createdAt])
 }

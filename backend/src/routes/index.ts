@@ -16,6 +16,13 @@ import settingsRouter from "../modules/settings/settings.routes.js";
 import themeRouter from "../modules/themes/theme.routes.js";
 import dashboardRouter from "../modules/dashboard/dashboard.routes.js";
 
+import { healthRouter } from "../modules/health/index.js";
+import { savedViewsRouter } from "../modules/saved-views/index.js";
+import { trendsRouter } from "../modules/trends/index.js";
+import { aiClassificationRouter } from "../modules/ai-classification/index.js";
+import { dataSourcesRouter } from "../modules/data-sources/index.js";
+import { exportsRouter } from "../modules/exports/index.js";
+
 export const apiRouter = Router();
 
 apiRouter.get("/", (_request, response) => {
@@ -26,6 +33,7 @@ apiRouter.get("/", (_request, response) => {
   });
 });
 
+apiRouter.use("/health", healthRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/dashboard", dashboardRouter);
 apiRouter.use("/feedback", feedbackRouter);
@@ -40,3 +48,8 @@ apiRouter.use("/activity", activityRouter);
 apiRouter.use("/notificationRoutes", notificationRouter);
 apiRouter.use("/settings", settingsRouter);
 apiRouter.use("/theme", themeRouter);
+apiRouter.use("/saved-views", savedViewsRouter);
+apiRouter.use("/trends", trendsRouter);
+apiRouter.use("/ai-classification", aiClassificationRouter);
+apiRouter.use("/data-sources", dataSourcesRouter);
+apiRouter.use("/exports", exportsRouter);

@@ -1,0 +1,66 @@
+export const FEEDBACK_STATUSES = {
+  NEW: "NEW",
+  IN_PROGRESS: "IN_PROGRESS",
+  REVIEWED: "REVIEWED",
+  RESOLVED: "RESOLVED",
+  DISMISSED: "DISMISSED",
+} as const;
+
+export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[keyof typeof FEEDBACK_STATUSES];
+
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
+  [FEEDBACK_STATUSES.NEW]: "New",
+  [FEEDBACK_STATUSES.IN_PROGRESS]: "In Progress",
+  [FEEDBACK_STATUSES.REVIEWED]: "Reviewed",
+  [FEEDBACK_STATUSES.RESOLVED]: "Resolved",
+  [FEEDBACK_STATUSES.DISMISSED]: "Dismissed",
+};
+
+export const FEEDBACK_CHANNELS = {
+  SUPPORT_TICKET: "SUPPORT_TICKET",
+  APP_STORE: "APP_STORE",
+  SURVEY: "SURVEY",
+  EMAIL: "EMAIL",
+  CHAT: "CHAT",
+  PHONE: "PHONE",
+  SOCIAL_MEDIA: "SOCIAL_MEDIA",
+  IN_APP: "IN_APP",
+} as const;
+
+export type FeedbackChannel = (typeof FEEDBACK_CHANNELS)[keyof typeof FEEDBACK_CHANNELS];
+
+export const FEEDBACK_CHANNEL_LABELS: Record<FeedbackChannel, string> = {
+  [FEEDBACK_CHANNELS.SUPPORT_TICKET]: "Support Ticket",
+  [FEEDBACK_CHANNELS.APP_STORE]: "App Store",
+  [FEEDBACK_CHANNELS.SURVEY]: "Survey",
+  [FEEDBACK_CHANNELS.EMAIL]: "Email",
+  [FEEDBACK_CHANNELS.CHAT]: "Chat",
+  [FEEDBACK_CHANNELS.PHONE]: "Phone",
+  [FEEDBACK_CHANNELS.SOCIAL_MEDIA]: "Social Media",
+  [FEEDBACK_CHANNELS.IN_APP]: "In-App",
+};
+
+export const FEEDBACK_SENTIMENTS = {
+  POSITIVE: "POSITIVE",
+  NEUTRAL: "NEUTRAL",
+  NEGATIVE: "NEGATIVE",
+} as const;
+
+export type FeedbackSentiment = (typeof FEEDBACK_SENTIMENTS)[keyof typeof FEEDBACK_SENTIMENTS];
+
+export const FEEDBACK_SENTIMENT_LABELS: Record<FeedbackSentiment, string> = {
+  [FEEDBACK_SENTIMENTS.POSITIVE]: "Positive",
+  [FEEDBACK_SENTIMENTS.NEUTRAL]: "Neutral",
+  [FEEDBACK_SENTIMENTS.NEGATIVE]: "Negative",
+};
+
+export const FEEDBACK_LIMITS = {
+  MIN_TITLE_LENGTH: 3,
+  MAX_TITLE_LENGTH: 255,
+  MIN_BODY_LENGTH: 10,
+  MAX_BODY_LENGTH: 10000,
+  MAX_ATTACHMENTS: 5,
+  MAX_ATTACHMENT_SIZE_MB: 10,
+  MAX_TAGS: 20,
+  MAX_TAG_LENGTH: 50,
+} as const;

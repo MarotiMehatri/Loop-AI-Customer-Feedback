@@ -4,6 +4,8 @@ import type {
   Sentiment,
 } from "../../generated/prisma/client.js";
 
+export type { FeedbackStatus };
+
 export interface CreateFeedbackInput {
   source: FeedbackChannel;
   sentiment: Sentiment;

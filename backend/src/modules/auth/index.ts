@@ -1,14 +1,66 @@
-import { Router } from "express";
+export { authRouter } from "./auth.routes.js";
 
-import { authRouter } from "./auth.routes.js";
+export {
+  registerController,
+  loginController,
+  profileController,
+  logoutController,
+} from "./auth.controller.js";
 
-export const apiRouter = Router();
+export {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+} from "./auth.service.js";
 
-apiRouter.get("/", (_request, response) => {
-  response.status(200).json({
-    success: true,
-    message: "LOOP API is running",
-  });
-});
+export {
+  findUserByEmail,
+  findPublicUserById,
+  createWorkspaceWithAdmin,
+  updateLastLogin,
+} from "./auth.repository.js";
 
-apiRouter.use("/auth", authRouter);
+export {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+  generatePasswordResetToken,
+  verifyPasswordResetToken,
+  generateEmailVerificationToken,
+  verifyEmailVerificationToken,
+  generateApiKey,
+} from "./token.service.js";
+
+export {
+  requestPasswordReset,
+  resetPassword,
+  changePassword,
+} from "./password-reset.service.js";
+
+export {
+  requestEmailVerification,
+  verifyEmail,
+  resendVerification,
+} from "./email-verification.service.js";
+
+export {
+  toAuthResponse,
+  mapPublicUser,
+  mapJwtPayloadToPublicUser,
+} from "./auth.mapper.js";
+
+export {
+  hasMinimumRole,
+  canRegister,
+  canLogin,
+  canAccessProfile,
+  canManageOwnAccount,
+  canResetPassword,
+} from "./auth.permissions.js";
+
+export type * from "./auth.types.js";
+export {
+  registerSchema,
+  loginSchema,
+} from "./auth.validator.js";
