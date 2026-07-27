@@ -1,5 +1,7 @@
 import { Router } from "express";
 
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+import { authorize } from "../../middleware/authorize.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
 
 import { dashboardController } from "./dashboard.controller.js";
@@ -7,6 +9,9 @@ import { dashboardController } from "./dashboard.controller.js";
 import { dashboardQuerySchema } from "./dashboard.validator.js";
 
 const dashboardRouter = Router();
+
+dashboardRouter.use(authenticate);
+dashboardRouter.use(authorize("ADMIN", "ANALYST", "VIEWER"));
 
 const validateDashboardQuery = validate(dashboardQuerySchema);
 

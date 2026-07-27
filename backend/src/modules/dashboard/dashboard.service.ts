@@ -15,7 +15,7 @@ import {
   mapRecentFeedback,
 } from "./dashboard.mapper.js";
 
-import { assertAdminDashboardAccess } from "./dashboard.permissions.js";
+import { assertDashboardAccess } from "./dashboard.permissions.js";
 
 import { resolveDashboardPeriod } from "./dashboard.query.js";
 
@@ -41,7 +41,7 @@ export const dashboardService = {
     context: DashboardContext,
     query: DashboardQuery,
   ): Promise<DashboardResponse> {
-    assertAdminDashboardAccess(context.role);
+    assertDashboardAccess(context.role);
 
     const period = resolveDashboardPeriod(query);
 
