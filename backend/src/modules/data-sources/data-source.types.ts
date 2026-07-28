@@ -1,3 +1,5 @@
+import type { Role } from "../../generated/prisma/client.js";
+
 export type DataSourceType =
   | "API"
   | "WEBHOOK"
@@ -8,6 +10,12 @@ export type DataSourceType =
   | "CUSTOM";
 
 export type DataSourceStatus = "ACTIVE" | "INACTIVE" | "ERROR" | "SYNCING";
+
+export interface DataSourceActorContext {
+  userId: string;
+  workspaceId: string;
+  role: Role;
+}
 
 export interface CreateDataSourceInput {
   name: string;
@@ -53,4 +61,30 @@ export interface SyncResult {
   errors: string[];
   startedAt: Date;
   completedAt?: Date;
+}
+
+export interface SimulatorConfig {
+  sourceType: DataSourceType;
+  intervalMs: number;
+  maxRecords: number;
+  schema: Record<string, unknown>;
+}
+
+export interface HealthCheckResult {
+  dataSourceId: string;
+  status: "healthy" | "degraded" | "unreachable";
+  latencyMs: number;
+  lastCheckedAt: Date;
+  error?: string;
+}
+
+export interface IngestionRecord {
+  id: string;
+  dataSourceId: string;
+  status: "pending" | "processing" | "completed" | "failed";
+  recordsProcessed: number;
+  recordsFailed: number;
+  startedAt: Date;
+  completedAt?: Date;
+  error?: string;
 }

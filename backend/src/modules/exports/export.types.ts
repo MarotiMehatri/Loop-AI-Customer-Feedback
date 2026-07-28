@@ -1,6 +1,14 @@
+import type { Role } from "../../generated/prisma/client.js";
+
 export type ExportFormat = "CSV" | "XLSX" | "JSON" | "PDF";
 
 export type ExportStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+export interface ExportActorContext {
+  userId: string;
+  workspaceId: string;
+  role: Role;
+}
 
 export interface CreateExportInput {
   name: string;

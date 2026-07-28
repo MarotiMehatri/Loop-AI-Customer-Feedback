@@ -78,9 +78,9 @@ model Workspace {
   settings         WorkspaceSettings?
   activityLogs     ActivityLog[]
 
-  savedViews   SavedView[]
-  dataSources  DataSource[]
-  exportJobs   ExportJob[]
+  savedViews  SavedView[]
+  dataSources DataSource[]
+  exportJobs  ExportJob[]
 
   @@index([name])
   @@index([createdAt])
@@ -794,7 +794,7 @@ model SavedView {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -805,12 +805,12 @@ model SavedView {
 }
 
 model DataSource {
-  id          String         @id @default(cuid())
+  id          String           @id @default(cuid())
   name        String
   type        DataSourceType
-  description String?        @db.Text
+  description String?          @db.Text
   config      Json
-  isActive    Boolean        @default(true)
+  isActive    Boolean          @default(true)
   status      DataSourceStatus @default(INACTIVE)
 
   lastSyncAt DateTime?
@@ -819,7 +819,7 @@ model DataSource {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -831,7 +831,7 @@ model DataSource {
 }
 
 model ExportJob {
-  id       String       @id @default(cuid())
+  id       String          @id @default(cuid())
   name     String
   format   ExportFormat
   type     String
@@ -839,7 +839,7 @@ model ExportJob {
   filters  Json?
   filePath String?
   fileSize Int?
-  error    String?      @db.Text
+  error    String?         @db.Text
 
   completedAt DateTime?
 
@@ -847,7 +847,7 @@ model ExportJob {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-import {
-  EXPORT_LIMITS,
-} from "./exports.constants.js";
+import { EXPORT_LIMITS } from "./export.constants.js";
 
 const exportFormatSchema = z.enum(["CSV", "XLSX", "JSON", "PDF"]);
 

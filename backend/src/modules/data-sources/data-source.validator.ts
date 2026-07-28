@@ -4,7 +4,7 @@ import {
   DATA_SOURCE_LIMITS,
   DATA_SOURCE_SORT_FIELDS,
   DATA_SOURCE_SORT_ORDERS,
-} from "./dataSources.constants.js";
+} from "./data-source.constants.js";
 
 const dataSourceTypeSchema = z.enum([
   "API",

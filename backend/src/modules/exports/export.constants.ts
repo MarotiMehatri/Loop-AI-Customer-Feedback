@@ -27,3 +27,15 @@ export const EXPORT_STATUSES: readonly string[] = [
   "COMPLETED",
   "FAILED",
 ] as const;
+
+export const EXPORT_MESSAGES = {
+  created: "Export job created successfully",
+  listed: "Export jobs retrieved successfully",
+  retrieved: "Export job retrieved successfully",
+  deleted: "Export job deleted successfully",
+  notFound: "Export job was not found",
+  notReady: "Export is not ready for download",
+  fileNotFound: "Export file no longer exists",
+  authenticationRequired: "Authentication is required",
+  workspaceRequired: "Workspace is required",
+} as const;

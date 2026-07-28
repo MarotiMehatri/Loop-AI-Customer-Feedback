@@ -5,56 +5,44 @@ import { authorize } from "../../middleware/authorize.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 
-import {
-  createExportController,
-  downloadExportController,
-  getExportController,
-  listExportController,
-} from "./exports.controller.js";
+import { exportController } from "./export.controller.js";
 
 import {
   createExportSchema,
   exportIdSchema,
   listExportSchema,
-} from "./exports.validator.js";
+} from "./export.validator.js";
 
-export const exportsRouter = Router();
+const exportsRouter = Router();
 
 exportsRouter.use(authenticate);
 
-/*
- * All authenticated roles can read exports.
- */
 exportsRouter.get(
   "/",
   authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(listExportSchema),
-  asyncHandler(listExportController),
+  asyncHandler(exportController.list),
 );
 
 exportsRouter.get(
   "/:exportId",
   authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(exportIdSchema),
-  asyncHandler(getExportController),
+  asyncHandler(exportController.getById),
 );
 
-/*
- * Admin and Analyst can create exports.
- */
 exportsRouter.post(
   "/",
   authorize("ADMIN", "ANALYST"),
   validate(createExportSchema),
-  asyncHandler(createExportController),
+  asyncHandler(exportController.create),
 );
 
-/*
- * All authenticated roles can download completed exports.
- */
 exportsRouter.get(
   "/:exportId/download",
   authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(exportIdSchema),
-  asyncHandler(downloadExportController),
+  asyncHandler(exportController.download),
 );
+
+export default exportsRouter;
