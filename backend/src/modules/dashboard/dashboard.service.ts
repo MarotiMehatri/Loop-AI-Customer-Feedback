@@ -1,6 +1,4 @@
 import { FeedbackStatus, Sentiment } from "../../generated/prisma/client.js";
-import { PERMISSION } from "../../permissions/permission.types.js";
-import { assertPermission } from "../../permissions/rolePermissions.js";
 
 import { dashboardCache } from "./dashboard.cache.js";
 
@@ -17,11 +15,8 @@ import {
   mapRecentFeedback,
 } from "./dashboard.mapper.js";
 
-<<<<<<< HEAD
 import { assertDashboardAccess } from "./dashboard.permissions.js";
 
-=======
->>>>>>> 5169fec (feat(workspace): implement workspace management and resolve backend integration bugs)
 import { resolveDashboardPeriod } from "./dashboard.query.js";
 
 import { dashboardRepository } from "./dashboard.repository.js";
@@ -47,15 +42,7 @@ export const dashboardService = {
     context: DashboardContext,
     query: DashboardQuery,
   ): Promise<DashboardResponse> {
-<<<<<<< HEAD
     assertDashboardAccess(context.role);
-=======
-    assertPermission(
-      context.role,
-      PERMISSION.DASHBOARD_READ,
-      "You do not have permission to view the Admin dashboard",
-    );
->>>>>>> 5169fec (feat(workspace): implement workspace management and resolve backend integration bugs)
 
     const period = resolveDashboardPeriod(query);
 

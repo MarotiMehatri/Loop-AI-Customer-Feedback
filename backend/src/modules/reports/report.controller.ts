@@ -1,27 +1,16 @@
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, RequestHandler } from "express";
 
 import { ApiError } from "../../utils/apiError.js";
-
+import { REPORT_MESSAGES } from "./report.constants.js";
 import { reportService } from "./report.service.js";
+import type { ReportActorContext, ReportExportFormat } from "./report.types.js";
 
-import type {
-  CreateReportInput,
-  ReportExportFormat,
-  ReportListQuery,
-  ReportPreviewInput,
-  ReportScheduleInput,
-  UpdateReportInput,
-} from "./report.types.js";
-
-function getRequestContext(request: Request): {
-  userId: string;
-  workspaceId: string;
-} {
+function getReportContext(request: Request): ReportActorContext {
   const userId = request.user?.userId;
-
   const workspaceId = request.workspaceId ?? request.user?.workspaceId;
+  const role = request.user?.role;
 
-  if (!userId) {
+  if (!userId || !role) {
     throw new ApiError(401, "Authentication required");
   }
 
@@ -29,30 +18,31 @@ function getRequestContext(request: Request): {
     throw new ApiError(400, "Workspace is required");
   }
 
-  return {
-    userId,
-    workspaceId,
-  };
+  return { userId, workspaceId, role };
 }
 
-export const reportController = {
-  async create(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+export const reportController: {
+  create: RequestHandler;
+  list: RequestHandler;
+  getById: RequestHandler;
+  update: RequestHandler;
+  delete: RequestHandler;
+  summary: RequestHandler;
+  recent: RequestHandler;
+  preview: RequestHandler;
+  generate: RequestHandler;
+  export: RequestHandler;
+  schedule: RequestHandler;
+} = {
+  create: async (request, response, next) => {
     try {
-      const { userId, workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const result = await reportService.create(
-        workspaceId,
-        userId,
-        request.body as CreateReportInput,
-      );
+      const result = await reportService.create(actor, request.body as never);
 
       response.status(201).json({
         success: true,
-        message: "Report created successfully",
+        message: REPORT_MESSAGES.created,
         data: result,
       });
     } catch (error) {
@@ -60,18 +50,11 @@ export const reportController = {
     }
   },
 
-  async list(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  list: async (request, response, next) => {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const result = await reportService.list(
-        workspaceId,
-        request.query as unknown as ReportListQuery,
-      );
+      const result = await reportService.list(actor, request.query as never);
 
       response.status(200).json({
         success: true,
@@ -82,17 +65,11 @@ export const reportController = {
     }
   },
 
-  async getById(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  getById: async (request, response, next) => {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const reportId = request.params.reportId as string;
-
-      const result = await reportService.getById(reportId, workspaceId);
+      const result = await reportService.getById(actor, request.params.reportId as string);
 
       response.status(200).json({
         success: true,
@@ -103,28 +80,19 @@ export const reportController = {
     }
   },
 
-  async update(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  update: async (request, response, next) => {
     try {
-      const { userId, workspaceId } = getRequestContext(request);
-
-      const reportId = request.params.reportId as string;
-
-      const input = request.body as UpdateReportInput;
+      const actor = getReportContext(request);
 
       const result = await reportService.update(
-        reportId,
-        workspaceId,
-        userId,
-        input,
+        actor,
+        request.params.reportId as string,
+        request.body as never,
       );
 
       response.status(200).json({
         success: true,
-        message: "Report updated successfully",
+        message: REPORT_MESSAGES.updated,
         data: result,
       });
     } catch (error) {
@@ -132,36 +100,26 @@ export const reportController = {
     }
   },
 
-  async delete(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  delete: async (request, response, next) => {
     try {
-      const { userId, workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const reportId = request.params.reportId as string;
-
-      await reportService.delete(reportId, workspaceId, userId);
+      await reportService.delete(actor, request.params.reportId as string);
 
       response.status(200).json({
         success: true,
-        message: "Report deleted successfully",
+        message: REPORT_MESSAGES.deleted,
       });
     } catch (error) {
       next(error);
     }
   },
 
-  async summary(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  summary: async (request, response, next) => {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const result = await reportService.getSummary(workspaceId);
+      const result = await reportService.getSummary(actor);
 
       response.status(200).json({
         success: true,
@@ -172,22 +130,17 @@ export const reportController = {
     }
   },
 
-  async recent(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  recent: async (request, response, next) => {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
       const requestedLimit = Number(request.query.limit);
-
       const limit = Math.min(
         Math.max(Number.isFinite(requestedLimit) ? requestedLimit : 5, 1),
         20,
       );
 
-      const result = await reportService.getRecent(workspaceId, limit);
+      const result = await reportService.getRecent(actor, limit);
 
       response.status(200).json({
         success: true,
@@ -198,18 +151,11 @@ export const reportController = {
     }
   },
 
-  async preview(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  preview: async (request, response, next) => {
     try {
-      const { workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const result = await reportService.preview(
-        workspaceId,
-        request.body as ReportPreviewInput,
-      );
+      const result = await reportService.preview(actor, request.body as never);
 
       response.status(200).json({
         success: true,
@@ -220,25 +166,15 @@ export const reportController = {
     }
   },
 
-  async generate(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  generate: async (request, response, next) => {
     try {
-      const { userId, workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const reportId = request.params.reportId as string;
-
-      const result = await reportService.generate(
-        reportId,
-        workspaceId,
-        userId,
-      );
+      const result = await reportService.generate(actor, request.params.reportId as string);
 
       response.status(200).json({
         success: true,
-        message: "Report generated successfully",
+        message: REPORT_MESSAGES.generated,
         data: result,
       });
     } catch (error) {
@@ -246,62 +182,35 @@ export const reportController = {
     }
   },
 
-  async export(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  export: async (request, response, next) => {
     try {
-      const { userId, workspaceId } = getRequestContext(request);
+      const actor = getReportContext(request);
 
-      const reportId = request.params.reportId as string;
+      const format = String(request.query.format ?? "CSV").toUpperCase() as ReportExportFormat;
 
-      const format = String(
-        request.query.format ?? "CSV",
-      ).toUpperCase() as ReportExportFormat;
-
-      const result = await reportService.export(
-        reportId,
-        workspaceId,
-        userId,
-        format,
-      );
+      const result = await reportService.export(actor, request.params.reportId as string, format);
 
       response.setHeader("Content-Type", result.contentType);
-
-      response.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${result.fileName}"`,
-      );
-
+      response.setHeader("Content-Disposition", `attachment; filename="${result.fileName}"`);
       response.status(200).send(result.content);
     } catch (error) {
       next(error);
     }
   },
 
-  async schedule(
-    request: Request,
-    response: Response,
-    next: NextFunction,
-  ): Promise<void> {
+  schedule: async (request, response, next) => {
     try {
-      const { userId, workspaceId } = getRequestContext(request);
-
-      const reportId = request.params.reportId as string;
-
-      const input = request.body as ReportScheduleInput;
+      const actor = getReportContext(request);
 
       const result = await reportService.schedule(
-        reportId,
-        workspaceId,
-        userId,
-        input,
+        actor,
+        request.params.reportId as string,
+        request.body as never,
       );
 
       response.status(200).json({
         success: true,
-        message: "Report scheduled successfully",
+        message: REPORT_MESSAGES.scheduled,
         data: result,
       });
     } catch (error) {

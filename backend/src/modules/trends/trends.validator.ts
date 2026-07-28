@@ -55,3 +55,79 @@ export const getTrendsComparisonSchema = z.object({
     endDate: optionalDateString,
   }),
 });
+
+export const detectTrendSchema = z.object({
+  query: z.object({
+    metric: trendMetricSchema.default("feedback_count"),
+
+    period: trendPeriodSchema.default("month"),
+
+    startDate: optionalDateString,
+
+    endDate: optionalDateString,
+
+    source: z
+      .enum([
+        "SUPPORT",
+        "APP_STORE",
+        "SURVEY",
+        "SALES",
+        "SOCIAL",
+        "WEBSITE",
+        "EMAIL",
+        "MANUAL",
+      ])
+      .optional(),
+
+    category: z.string().trim().max(100).optional(),
+  }),
+});
+
+export const generateInsightsSchema = z.object({
+  query: z.object({
+    period: trendPeriodSchema.default("month"),
+
+    startDate: optionalDateString,
+
+    endDate: optionalDateString,
+
+    source: z
+      .enum([
+        "SUPPORT",
+        "APP_STORE",
+        "SURVEY",
+        "SALES",
+        "SOCIAL",
+        "WEBSITE",
+        "EMAIL",
+        "MANUAL",
+      ])
+      .optional(),
+
+    category: z.string().trim().max(100).optional(),
+  }),
+});
+
+export const detectAnomaliesSchema = z.object({
+  query: z.object({
+    period: trendPeriodSchema.default("month"),
+
+    startDate: optionalDateString,
+
+    endDate: optionalDateString,
+
+    threshold: z.coerce.number().min(1).max(5).default(2).optional(),
+  }),
+});
+
+export const generateForecastSchema = z.object({
+  query: z.object({
+    period: trendPeriodSchema.default("month"),
+
+    horizon: z.coerce.number().int().min(1).max(30).default(7).optional(),
+
+    startDate: optionalDateString,
+
+    endDate: optionalDateString,
+  }),
+});

@@ -1,75 +1,169 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler } from "express";
 
 import { ApiError } from "../../utils/apiError.js";
+import { TREND_MESSAGES } from "./trend.constants.js";
+import { trendsService } from "./trends.service.js";
+import type { TrendActorContext } from "./trends.types.js";
 
-import { getTrends, getTrendsComparison } from "./trends.service.js";
+function getTrendContext(request: Request): TrendActorContext {
+  const userId = request.user?.userId;
+  const workspaceId = request.workspaceId ?? request.user?.workspaceId;
+  const role = request.user?.role;
 
-import type {
-  GetTrendsComparisonQuery,
-  GetTrendsQuery,
-  TrendMetric,
-  TrendPeriod,
-} from "./trends.types.js";
-
-const getAuthenticatedUser = (request: Request) => {
-  if (!request.user) {
-    throw new ApiError(401, "Authentication is required");
+  if (!userId || !role) {
+    throw new ApiError(401, TREND_MESSAGES.authenticationRequired);
   }
 
-  return request.user;
-};
+  if (!workspaceId) {
+    throw new ApiError(400, TREND_MESSAGES.workspaceRequired);
+  }
 
-/**
- * GET /api/v1/trends
- */
-export const getTrendsController = async (
-  request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
+  return { userId, workspaceId, role };
+}
 
-  const { period, metric, startDate, endDate, category, source } =
-    request.query as unknown as GetTrendsQuery;
+export const trendsController: {
+  getTrends: RequestHandler;
+  getTrendsComparison: RequestHandler;
+  detectTrend: RequestHandler;
+  detectAnomalies: RequestHandler;
+  generateForecast: RequestHandler;
+  generateInsights: RequestHandler;
+} = {
+  getTrends: async (request, response, next) => {
+    try {
+      const actor = getTrendContext(request);
 
-  const result = await getTrends(
-    user.workspaceId,
-    metric,
-    period,
-    startDate,
-    endDate,
-  );
+      const { period, metric, startDate, endDate } =
+        request.query as unknown as {
+          period: string;
+          metric: string;
+          startDate?: string;
+          endDate?: string;
+        };
 
-  response.status(200).json({
-    success: true,
-    message: "Trends retrieved successfully",
-    data: result,
-  });
-};
+      const result = await trendsService.getTrends(
+        actor,
+        metric as never,
+        period as never,
+        startDate,
+        endDate,
+      );
 
-/**
- * GET /api/v1/trends/comparison
- */
-export const getTrendsComparisonController = async (
-  request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
+      response.status(200).json({
+        success: true,
+        message: TREND_MESSAGES.listed,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 
-  const { currentPeriod, previousPeriod, metric, startDate, endDate } =
-    request.query as unknown as GetTrendsComparisonQuery;
+  getTrendsComparison: async (request, response, next) => {
+    try {
+      const actor = getTrendContext(request);
 
-  const result = await getTrendsComparison(
-    user.workspaceId,
-    metric,
-    currentPeriod,
-    previousPeriod,
-    startDate,
-    endDate,
-  );
+      const { currentPeriod, previousPeriod, metric, startDate, endDate } =
+        request.query as unknown as {
+          currentPeriod: string;
+          previousPeriod: string;
+          metric: string;
+          startDate?: string;
+          endDate?: string;
+        };
 
-  response.status(200).json({
-    success: true,
-    message: "Trends comparison retrieved successfully",
-    data: result,
-  });
+      const result = await trendsService.getTrendsComparison(
+        actor,
+        metric as never,
+        currentPeriod as never,
+        previousPeriod as never,
+        startDate,
+        endDate,
+      );
+
+      response.status(200).json({
+        success: true,
+        message: TREND_MESSAGES.comparisonRetrieved,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  detectTrend: async (request, response, next) => {
+    try {
+      const actor = getTrendContext(request);
+
+      const result = await trendsService.detectTrend(
+        actor,
+        request.query as never,
+      );
+
+      response.status(200).json({
+        success: true,
+        message: TREND_MESSAGES.detectionCompleted,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  detectAnomalies: async (request, response, next) => {
+    try {
+      const actor = getTrendContext(request);
+
+      const result = await trendsService.detectAnomalies(
+        actor,
+        request.query as never,
+      );
+
+      response.status(200).json({
+        success: true,
+        message: TREND_MESSAGES.anomaliesDetected,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  generateForecast: async (request, response, next) => {
+    try {
+      const actor = getTrendContext(request);
+
+      const result = await trendsService.generateForecast(
+        actor,
+        request.query as never,
+      );
+
+      response.status(200).json({
+        success: true,
+        message: TREND_MESSAGES.forecastGenerated,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  generateInsights: async (request, response, next) => {
+    try {
+      const actor = getTrendContext(request);
+
+      const result = await trendsService.generateInsights(
+        actor,
+        request.query as never,
+      );
+
+      response.status(200).json({
+        success: true,
+        message: TREND_MESSAGES.insightsGenerated,
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

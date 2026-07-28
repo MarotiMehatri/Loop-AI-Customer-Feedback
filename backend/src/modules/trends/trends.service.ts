@@ -1,7 +1,28 @@
 import { prisma } from "../../config/prisma.js";
 
+import { TREND_MESSAGES } from "./trend.constants.js";
+import { assertCanViewTrends, assertCanDetectTrends, assertCanGenerateInsights } from "./trend.permissions.js";
+import { trendRepository } from "./trend.repository.js";
+import { trendDetectionService } from "./trend-detection.service.js";
+import { trendInsightService } from "./trend-insight.service.js";
+import {
+  calculateGrowthRate,
+  calculateMovingAverage,
+  calculateStandardDeviation,
+  calculateVolatility,
+  calculateTrendDirection,
+} from "./trend.calculator.js";
+
 import type {
+  GetTrendsComparisonQuery,
+  GetTrendsQuery,
+  TrendActorContext,
+  TrendAnomalyQuery,
   TrendDataPoint,
+  TrendDetectionQuery,
+  TrendFilterQuery,
+  TrendForecastQuery,
+  TrendInsightQuery,
   TrendMetric,
   TrendPeriod,
   TrendResult,
@@ -110,7 +131,7 @@ const getSentimentDistributionTrend = async (
   const dateMap = new Map<string, number>();
   for (const r of results) {
     const existing = dateMap.get(r.date) ?? 0;
-    const posWeight = r.sentiment === "POS" ? 1 : r.sentiment === "NEG" ? -1 : 0;
+    const posWeight = r.sentiment === "POSITIVE" ? 1 : r.sentiment === "NEGATIVE" ? -1 : 0;
     dateMap.set(r.date, existing + posWeight * Number(r.count));
   }
 
@@ -191,9 +212,9 @@ const getAvgSentimentScoreTrend = async (
     SELECT
       DATE_TRUNC(${period === "day" ? "day" : period === "week" ? "week" : period === "month" ? "month" : "quarter"}, "createdAt")::text AS date,
       AVG(CASE
-        WHEN "sentiment" = 'POS' THEN 1
-        WHEN "sentiment" = 'NEU' THEN 0
-        WHEN "sentiment" = 'NEG' THEN -1
+        WHEN "sentiment" = 'POSITIVE' THEN 1
+        WHEN "sentiment" = 'NEUTRAL' THEN 0
+        WHEN "sentiment" = 'NEGATIVE' THEN -1
         ELSE 0
       END) AS avg_score
     FROM "Feedback"
@@ -253,81 +274,157 @@ const fetchTrendData = async (
   }
 };
 
-export const getTrends = async (
-  workspaceId: string,
-  metric: TrendMetric,
-  period: TrendPeriod,
-  startDate?: string,
-  endDate?: string,
-): Promise<TrendResult> => {
-  const data = await fetchTrendData(
-    workspaceId,
-    metric,
-    period,
-    startDate,
-    endDate,
-  );
+export const trendsService = {
+  async getTrends(
+    actor: TrendActorContext,
+    metric: TrendMetric,
+    period: TrendPeriod,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<TrendResult> {
+    assertCanViewTrends(actor.role);
 
-  return {
-    metric,
-    period,
-    data,
-    summary: calculateSummary(data),
-  };
-};
+    const data = await fetchTrendData(
+      actor.workspaceId,
+      metric,
+      period,
+      startDate,
+      endDate,
+    );
 
-export const getTrendsComparison = async (
-  workspaceId: string,
-  metric: TrendMetric,
-  currentPeriod: TrendPeriod,
-  previousPeriod: TrendPeriod,
-  startDate?: string,
-  endDate?: string,
-): Promise<{
-  current: TrendResult;
-  previous: TrendResult;
-  comparison: {
-    absoluteChange: number;
-    percentageChange: number;
-    direction: "up" | "down" | "stable";
-  };
-}> => {
-  const current = await getTrends(
-    workspaceId,
-    metric,
-    currentPeriod,
-    startDate,
-    endDate,
-  );
+    return {
+      metric,
+      period,
+      data,
+      summary: calculateSummary(data),
+    };
+  },
 
-  const previous = await getTrends(
-    workspaceId,
-    metric,
-    previousPeriod,
-    startDate,
-    endDate,
-  );
+  async getTrendsComparison(
+    actor: TrendActorContext,
+    metric: TrendMetric,
+    currentPeriod: TrendPeriod,
+    previousPeriod: TrendPeriod,
+    startDate?: string,
+    endDate?: string,
+  ) {
+    assertCanViewTrends(actor.role);
 
-  const absoluteChange = current.summary.total - previous.summary.total;
-  const percentageChange =
-    previous.summary.total !== 0
-      ? (absoluteChange / previous.summary.total) * 100
-      : 0;
+    const current = await this.getTrends(
+      actor,
+      metric,
+      currentPeriod,
+      startDate,
+      endDate,
+    );
 
-  const direction =
-    Math.abs(percentageChange) < 1
-      ? "stable"
-      : percentageChange > 0
-        ? "up"
-        : "down";
+    const previous = await this.getTrends(
+      actor,
+      metric,
+      previousPeriod,
+      startDate,
+      endDate,
+    );
 
-  return {
-    current,
-    previous,
-    comparison: {
-      absoluteChange: Math.round(absoluteChange * 100) / 100,
-      percentageChange: Math.round(percentageChange * 100) / 100,
-      direction,
-    },
-  };
+    const absoluteChange = current.summary.total - previous.summary.total;
+    const percentageChange =
+      previous.summary.total !== 0
+        ? (absoluteChange / previous.summary.total) * 100
+        : 0;
+
+    const direction =
+      Math.abs(percentageChange) < 1
+        ? "stable"
+        : percentageChange > 0
+          ? "up"
+          : "down";
+
+    return {
+      current,
+      previous,
+      comparison: {
+        absoluteChange: Math.round(absoluteChange * 100) / 100,
+        percentageChange: Math.round(percentageChange * 100) / 100,
+        direction,
+      },
+    };
+  },
+
+  async detectTrend(
+    actor: TrendActorContext,
+    query: TrendDetectionQuery,
+  ) {
+    assertCanDetectTrends(actor.role);
+
+    const filterQuery: TrendFilterQuery = {
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? new Date(query.endDate) : undefined,
+      source: query.source,
+      category: query.category,
+    };
+
+    return trendDetectionService.detectTrend(
+      actor.workspaceId,
+      query.metric,
+      query.period,
+      filterQuery,
+    );
+  },
+
+  async detectAnomalies(
+    actor: TrendActorContext,
+    query: TrendAnomalyQuery,
+  ) {
+    assertCanDetectTrends(actor.role);
+
+    const filterQuery: TrendFilterQuery = {
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? new Date(query.endDate) : undefined,
+    };
+
+    return trendDetectionService.detectAnomalies(
+      actor.workspaceId,
+      query.period,
+      filterQuery,
+    );
+  },
+
+  async generateForecast(
+    actor: TrendActorContext,
+    query: TrendForecastQuery,
+  ) {
+    assertCanDetectTrends(actor.role);
+
+    const filterQuery: TrendFilterQuery = {
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? new Date(query.endDate) : undefined,
+    };
+
+    return trendDetectionService.generateForecast(
+      actor.workspaceId,
+      query.period,
+      query.horizon ?? 7,
+      filterQuery,
+    );
+  },
+
+  async generateInsights(
+    actor: TrendActorContext,
+    query: TrendInsightQuery,
+  ) {
+    assertCanGenerateInsights(actor.role);
+
+    const filterQuery: TrendFilterQuery = {
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? new Date(query.endDate) : undefined,
+      source: query.source,
+      category: query.category,
+    };
+
+    return trendInsightService.generateInsights(
+      actor.workspaceId,
+      query.period,
+      filterQuery,
+    );
+  },
 };

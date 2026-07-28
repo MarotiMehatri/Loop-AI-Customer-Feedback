@@ -1,6 +1,7 @@
 import type {
   ReportStatus,
   ReportType as PrismaReportType,
+  Role,
 } from "../../generated/prisma/client.js";
 
 export const REPORT_TYPES = [
@@ -48,14 +49,17 @@ export const REPORT_CHART_TYPES = [
 export const REPORT_EXPORT_FORMATS = ["CSV", "JSON"] as const;
 
 export type ReportType = (typeof REPORT_TYPES)[number];
-
 export type ReportSource = (typeof REPORT_SOURCES)[number];
-
 export type ReportMetric = (typeof REPORT_METRICS)[number];
-
 export type ReportChartType = (typeof REPORT_CHART_TYPES)[number];
-
 export type ReportExportFormat = (typeof REPORT_EXPORT_FORMATS)[number];
+export type ReportScheduleFrequency = "DAILY" | "WEEKLY" | "MONTHLY";
+
+export interface ReportActorContext {
+  userId: string;
+  workspaceId: string;
+  role: Role;
+}
 
 export interface ReportFilters {
   sentiments?: string[];
@@ -127,24 +131,10 @@ export interface ReportPreview {
   neutral: number;
   negative: number;
   responseRate: number;
-  sentimentDistribution: Array<{
-    name: string;
-    value: number;
-    percentage: number;
-  }>;
-  channelDistribution: Array<{
-    name: string;
-    value: number;
-  }>;
-  feedbackOverTime: Array<{
-    date: string;
-    value: number;
-  }>;
-  topThemes: Array<{
-    name: string;
-    value: number;
-    percentage: number;
-  }>;
+  sentimentDistribution: Array<{ name: string; value: number; percentage: number }>;
+  channelDistribution: Array<{ name: string; value: number }>;
+  feedbackOverTime: Array<{ date: string; value: number }>;
+  topThemes: Array<{ name: string; value: number; percentage: number }>;
   generatedAt: Date;
 }
 
@@ -167,20 +157,34 @@ export interface GeneratedReportData {
   conclusion: string;
 }
 
-export interface ReportTemplateData {
-  name: string;
-  description?: string;
-  type: ReportType;
-  sources: ReportSource[];
-  filters?: ReportFilters;
-  metrics: ReportMetric[];
-  charts?: ReportChartConfiguration[];
-  tags?: string[];
-}
-
-export type ReportScheduleFrequency = "DAILY" | "WEEKLY" | "MONTHLY";
-
 export interface ReportScheduleInput {
   frequency: ReportScheduleFrequency;
   scheduledAt?: Date;
+}
+
+export interface Report {
+  id: string;
+  title: string;
+  description: string | null;
+  type: string;
+  status: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  aiSummary: string | null;
+  tags: string[];
+  generatedAt: Date | null;
+  data: unknown;
+  workspaceId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReportSchedule {
+  id: string;
+  reportId: string;
+  frequency: ReportScheduleFrequency;
+  nextRunAt: Date;
+  lastRunAt?: Date;
+  isActive: boolean;
+  createdAt: Date;
 }

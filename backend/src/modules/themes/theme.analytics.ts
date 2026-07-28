@@ -4,6 +4,8 @@ import { mapTheme } from "./theme.mapper.js";
 
 import { themeRepository } from "./theme.repository.js";
 
+import { themeFeedbackRepository } from "./theme-feedback.repository.js";
+
 import type {
   ThemeAnalyticsResponse,
   ThemeSentimentItem,
@@ -20,7 +22,7 @@ export async function getThemeAnalytics(
     return null;
   }
 
-  const records = await themeRepository.getAnalyticsRecords(
+  const records = await themeFeedbackRepository.getAnalyticsRecords(
     themeId,
     workspaceId,
   );
