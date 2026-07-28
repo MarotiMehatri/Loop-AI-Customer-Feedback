@@ -20,6 +20,18 @@ export interface SavedViewListFilters {
   sortOrder: "asc" | "desc";
 }
 
+export interface SavedViewFilters {
+  search?: string;
+  status?: string;
+  sentiment?: string;
+  source?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  tags?: string[];
+  themes?: string[];
+  rating?: number;
+}
+
 export interface PaginationMetadata {
   page: number;
   limit: number;

@@ -3,18 +3,10 @@ import {
   getCachedAnalytics,
   setCachedAnalytics,
 } from "./analytics.cache.js";
-import {
-  calculatePercentage,
-  createTrendMap,
-  mapDistribution,
-} from "./analytics.helper.js";
-import {
-  mapOverview,
-  mapSentimentDistribution,
-  mapSourceDistribution,
-  mapThemeDistribution,
-} from "./analytics.mapper.js";
+import { calculatePercentage, createTrendMap, mapDistribution } from "./analytics.helper.js";
+import { mapOverview, mapSentimentDistribution, mapSourceDistribution, mapThemeDistribution } from "./analytics.mapper.js";
 import { analyticsRepository } from "./analytics.repository.js";
+import { analyticsInsightService } from "./analytics-insight.service.js";
 import type {
   AnalyticsDashboard,
   AnalyticsInsight,
@@ -27,7 +19,6 @@ function hourly(rows: Array<{ createdAt: Date }>): HourlyDistributionItem[] {
 
   for (const row of rows) {
     const hour = row.createdAt.getHours();
-
     counts[hour] = (counts[hour] ?? 0) + 1;
   }
 
@@ -39,7 +30,7 @@ function hourly(rows: Array<{ createdAt: Date }>): HourlyDistributionItem[] {
   }));
 }
 
-function insights(
+function basicInsights(
   total: number,
   positive: number,
   negative: number,
@@ -148,6 +139,7 @@ export const analyticsService = {
       categoryDistribution,
       topThemes,
       hourlyDistribution,
+      advancedInsights,
     ] = await Promise.all([
       this.getOverview(input),
       this.getTrend(input),
@@ -156,7 +148,17 @@ export const analyticsService = {
       this.getCategoryDistribution(input),
       this.getTopThemes(input),
       this.getHourlyDistribution(input),
+      analyticsInsightService.generateInsights(input, []),
     ]);
+
+    const basic = basicInsights(
+      overview.totalFeedback,
+      overview.positive.count,
+      overview.negative.count,
+      topThemes[0]?.name,
+      sourceDistribution[0]?.label,
+    );
+
     return {
       range: {
         startDate: input.startDate.toISOString(),
@@ -170,13 +172,7 @@ export const analyticsService = {
       categoryDistribution,
       topThemes,
       hourlyDistribution,
-      insights: insights(
-        overview.totalFeedback,
-        overview.positive.count,
-        overview.negative.count,
-        topThemes[0]?.name,
-        sourceDistribution[0]?.label,
-      ),
+      insights: [...basic, ...advancedInsights],
     };
   },
 
