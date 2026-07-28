@@ -1,4 +1,8 @@
-import type { Role } from "../../generated/prisma/client.js";
+import { Role } from "../../generated/prisma/client.js";
+
+import { PERMISSION } from "../../permissions/permission.types.js";
+
+import { assertPermission } from "../../permissions/rolePermissions.js";
 
 import { ApiError } from "../../utils/apiError.js";
 
@@ -16,15 +20,19 @@ import type {
   RecentActivityQuery,
 } from "./activity.types.js";
 
-function isAdmin(role: Role): boolean {
-  return role === "ADMIN";
+function assertCanReadActivities(actor: ActivityActorContext): void {
+  assertPermission(
+    actor.role,
+    PERMISSION.ACTIVITY_READ,
+    ACTIVITY_MESSAGES.forbidden,
+  );
 }
 
-function applyRoleScope(
+function applyListRoleScope(
   actor: ActivityActorContext,
   query: ActivityListQuery,
 ): ActivityListQuery {
-  if (actor.role === "VIEWER") {
+  if (actor.role === Role.VIEWER) {
     return {
       ...query,
       userId: actor.userId,
@@ -38,7 +46,7 @@ function applyRecentRoleScope(
   actor: ActivityActorContext,
   query: RecentActivityQuery,
 ): RecentActivityQuery {
-  if (actor.role === "VIEWER") {
+  if (actor.role === Role.VIEWER) {
     return {
       ...query,
       userId: actor.userId,
@@ -48,9 +56,19 @@ function applyRecentRoleScope(
   return query;
 }
 
+function calculateTotalPages(total: number, limit: number): number {
+  if (total === 0) {
+    return 0;
+  }
+
+  return Math.ceil(total / limit);
+}
+
 export const activityService = {
   async list(actor: ActivityActorContext, query: ActivityListQuery) {
-    const scopedQuery = applyRoleScope(actor, query);
+    assertCanReadActivities(actor);
+
+    const scopedQuery = applyListRoleScope(actor, query);
 
     const result = await activityRepository.list(
       actor.workspaceId,
@@ -62,34 +80,47 @@ export const activityService = {
 
       pagination: {
         page: scopedQuery.page,
+
         limit: scopedQuery.limit,
+
         total: result.total,
 
-        totalPages: Math.ceil(result.total / scopedQuery.limit),
+        totalPages: calculateTotalPages(result.total, scopedQuery.limit),
       },
     };
   },
 
   async listMine(actor: ActivityActorContext, query: ActivityListQuery) {
-    const result = await activityRepository.list(actor.workspaceId, {
+    assertCanReadActivities(actor);
+
+    const scopedQuery: ActivityListQuery = {
       ...query,
       userId: actor.userId,
-    });
+    };
+
+    const result = await activityRepository.list(
+      actor.workspaceId,
+      scopedQuery,
+    );
 
     return {
       items: mapActivities(result.items),
 
       pagination: {
-        page: query.page,
-        limit: query.limit,
+        page: scopedQuery.page,
+
+        limit: scopedQuery.limit,
+
         total: result.total,
 
-        totalPages: Math.ceil(result.total / query.limit),
+        totalPages: calculateTotalPages(result.total, scopedQuery.limit),
       },
     };
   },
 
   async recent(actor: ActivityActorContext, query: RecentActivityQuery) {
+    assertCanReadActivities(actor);
+
     const scopedQuery = applyRecentRoleScope(actor, query);
 
     const activities = await activityRepository.recent(
@@ -101,6 +132,8 @@ export const activityService = {
   },
 
   async getById(actor: ActivityActorContext, activityId: string) {
+    assertCanReadActivities(actor);
+
     const activity = await activityRepository.findById(
       activityId,
       actor.workspaceId,
@@ -110,7 +143,7 @@ export const activityService = {
       throw new ApiError(404, ACTIVITY_MESSAGES.notFound);
     }
 
-    if (actor.role === "VIEWER" && activity.userId !== actor.userId) {
+    if (actor.role === Role.VIEWER && activity.userId !== actor.userId) {
       throw new ApiError(403, ACTIVITY_MESSAGES.forbidden);
     }
 
@@ -118,15 +151,19 @@ export const activityService = {
   },
 
   async getSummary(actor: ActivityActorContext, query: ActivitySummaryQuery) {
-    const userId = actor.role === "VIEWER" ? actor.userId : query.userId;
+    assertCanReadActivities(actor);
+
+    const userId = actor.role === Role.VIEWER ? actor.userId : query.userId;
 
     return activityRepository.getSummary(actor.workspaceId, userId);
   },
 
   async remove(actor: ActivityActorContext, activityId: string): Promise<void> {
-    if (!isAdmin(actor.role)) {
-      throw new ApiError(403, ACTIVITY_MESSAGES.forbidden);
-    }
+    assertPermission(
+      actor.role,
+      PERMISSION.ACTIVITY_DELETE,
+      ACTIVITY_MESSAGES.forbidden,
+    );
 
     const result = await activityRepository.deleteById(
       activityId,
@@ -139,9 +176,11 @@ export const activityService = {
   },
 
   async clear(actor: ActivityActorContext, input: ClearActivityInput) {
-    if (!isAdmin(actor.role)) {
-      throw new ApiError(403, ACTIVITY_MESSAGES.forbidden);
-    }
+    assertPermission(
+      actor.role,
+      PERMISSION.ACTIVITY_CLEAR,
+      ACTIVITY_MESSAGES.forbidden,
+    );
 
     const result = await activityRepository.clear(actor.workspaceId, input);
 

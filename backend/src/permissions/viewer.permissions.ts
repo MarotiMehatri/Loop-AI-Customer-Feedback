@@ -1,0 +1,21 @@
+import { PERMISSION } from "./permission.types.js";
+
+import type { Permission } from "./permission.types.js";
+
+export const VIEWER_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>([
+  PERMISSION.ASK_LOOP_USE,
+
+  PERMISSION.FEEDBACK_READ,
+
+  PERMISSION.NOTIFICATION_READ_OWN,
+  PERMISSION.NOTIFICATION_UPDATE_OWN,
+
+  PERMISSION.PROFILE_READ_OWN,
+  PERMISSION.PROFILE_UPDATE_OWN,
+
+  PERMISSION.REPORT_READ,
+
+  PERMISSION.THEME_READ,
+
+  PERMISSION.WORKSPACE_READ,
+]);

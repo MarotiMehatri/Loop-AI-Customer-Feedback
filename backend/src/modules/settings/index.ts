@@ -9,4 +9,3 @@ export * from "./settings.mapper.js";
 export * from "./settings.constants.js";
 export * from "./settings.defaults.js";
 export * from "./settings.helper.js";
-export * from "./settings.permissions.js";

@@ -4,68 +4,87 @@ import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { prisma } from "./config/prisma.js";
 
-let server: Server | undefined;
+let server: Server | null = null;
+let isShuttingDown = false;
 
-const startServer = async (): Promise<void> => {
+const BASE_URL = `http://localhost:${env.PORT}`;
+
+async function startServer(): Promise<void> {
   try {
     await prisma.$connect();
 
-    console.log("✅ PostgreSQL database connected successfully");
-
     server = app.listen(env.PORT, () => {
-      console.log(`🚀 LOOP backend running at http://localhost:${env.PORT}`);
-
-      console.log(`❤️ Health check: http://localhost:${env.PORT}/health`);
-
-      console.log(`Feedback API: http://localhost:${env.PORT}/api/v1/feedback`);
+      console.log(`LOOP backend running at ${BASE_URL}`);
     });
   } catch (error) {
-    console.error("❌ Failed to start LOOP backend:", error);
+    console.error("Failed to start LOOP backend:", error);
 
     await prisma.$disconnect();
 
     process.exit(1);
   }
-};
+}
 
-const shutdown = async (signal: string): Promise<void> => {
-  console.log(`\n${signal} received. Shutting down...`);
-
-  if (server) {
-    server.close(async () => {
-      await prisma.$disconnect();
-
-      console.log("✅ Server and database connection closed");
-
-      process.exit(0);
-    });
-
+async function closeHttpServer(): Promise<void> {
+  if (!server) {
     return;
   }
 
-  await prisma.$disconnect();
+  await new Promise<void>((resolve, reject) => {
+    server?.close((error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
 
-  process.exit(0);
-};
+      resolve();
+    });
+  });
 
-process.on("SIGINT", () => {
+  server = null;
+}
+
+async function shutdown(signal: string, exitCode = 0): Promise<void> {
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+
+  console.log(`\n${signal} received. Shutting down...`);
+
+  try {
+    await closeHttpServer();
+    await prisma.$disconnect();
+
+    console.log("✅ Server stopped successfully");
+
+    process.exit(exitCode);
+  } catch (error) {
+    console.error("Error during shutdown:", error);
+
+    process.exit(1);
+  }
+}
+
+process.once("SIGINT", () => {
   void shutdown("SIGINT");
 });
 
-process.on("SIGTERM", () => {
+process.once("SIGTERM", () => {
   void shutdown("SIGTERM");
 });
 
-process.on("unhandledRejection", (reason: unknown) => {
-  console.error("❌ Unhandled promise rejection:", reason);
+process.once("unhandledRejection", (reason: unknown) => {
+  console.error("Unhandled promise rejection:", reason);
 
-  void shutdown("UNHANDLED_REJECTION");
+  void shutdown("UNHANDLED_REJECTION", 1);
 });
 
-process.on("uncaughtException", (error: Error) => {
-  console.error("❌ Uncaught exception:", error);
+process.once("uncaughtException", (error: Error) => {
+  console.error("Uncaught exception:", error);
 
-  void shutdown("UNCAUGHT_EXCEPTION");
+  void shutdown("UNCAUGHT_EXCEPTION", 1);
 });
 
 void startServer();

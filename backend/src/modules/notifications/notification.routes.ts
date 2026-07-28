@@ -1,54 +1,30 @@
 import { Router } from "express";
 
-import { validate } from "../../middleware/validate.middleware.js";
-
 import { notificationController } from "./notification.controller.js";
 
-import {
-  clearNotificationsSchema,
-  listNotificationsSchema,
-  notificationIdSchema,
-} from "./notification.validator.js";
+const router = Router();
 
-const notificationRouter = Router();
-
-/*
- * Static routes must be registered
- * before /:notificationId.
+/**
+ * Authentication and workspace middleware should be applied
+ * before these routes are mounted in src/routes/index.ts or app.ts.
  */
 
-notificationRouter.get("/unread-count", notificationController.unreadCount);
+router.get("/", notificationController.list);
 
-notificationRouter.patch("/read-all", notificationController.markAllAsRead);
+router.get("/unread-count", notificationController.getUnreadCount);
 
-notificationRouter.get(
-  "/",
-  validate(listNotificationsSchema),
-  notificationController.list,
-);
+router.patch("/read-all", notificationController.markAllAsRead);
 
-notificationRouter.delete(
-  "/",
-  validate(clearNotificationsSchema),
-  notificationController.clear,
-);
+router.delete("/read", notificationController.removeRead);
 
-notificationRouter.get(
-  "/:notificationId",
-  validate(notificationIdSchema),
-  notificationController.getById,
-);
+router.delete("/", notificationController.clear);
 
-notificationRouter.patch(
-  "/:notificationId/read",
-  validate(notificationIdSchema),
-  notificationController.markAsRead,
-);
+router.get("/:notificationId", notificationController.getById);
 
-notificationRouter.delete(
-  "/:notificationId",
-  validate(notificationIdSchema),
-  notificationController.remove,
-);
+router.patch("/:notificationId/read", notificationController.markAsRead);
 
-export default notificationRouter;
+router.patch("/:notificationId/unread", notificationController.markAsUnread);
+
+router.delete("/:notificationId", notificationController.remove);
+
+export const notificationRoutes = router;
