@@ -1,130 +1,236 @@
-import { Prisma } from "../../generated/prisma/client.js";
+import type { Notification, Prisma } from "../../generated/prisma/client.js";
 
 import { prisma } from "../../config/prisma.js";
 
 import {
-  buildNotificationOrderBy,
-  buildNotificationWhere,
-} from "./notification.query.js";
+  NOTIFICATION_DEFAULT_LIMIT,
+  NOTIFICATION_DEFAULT_PAGE,
+  NOTIFICATION_MAX_LIMIT,
+} from "./notification.constants.js";
 
 import type {
   CreateNotificationInput,
-  NotificationClearQuery,
   NotificationListQuery,
 } from "./notification.types.js";
 
-function toJsonValue(value: Record<string, unknown>): Prisma.InputJsonValue {
-  return value as Prisma.InputJsonValue;
+interface NotificationRepositoryListResult {
+  notifications: Notification[];
+  total: number;
+  unreadCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
-function buildCreateData(
-  input: CreateNotificationInput,
-): Prisma.NotificationUncheckedCreateInput {
+function normalizePage(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) {
+    return NOTIFICATION_DEFAULT_PAGE;
+  }
+
+  return Math.max(1, Math.trunc(value));
+}
+
+function normalizeLimit(value: number | undefined): number {
+  if (value === undefined || !Number.isFinite(value)) {
+    return NOTIFICATION_DEFAULT_LIMIT;
+  }
+
+  return Math.min(Math.max(1, Math.trunc(value)), NOTIFICATION_MAX_LIMIT);
+}
+
+function normalizeRequiredText(value: string, fieldName: string): string {
+  const normalized = value.replace(/\s+/g, " ").trim();
+
+  if (!normalized) {
+    throw new Error(`${fieldName} is required.`);
+  }
+
+  return normalized;
+}
+
+function buildUserWhere(
+  workspaceId: string,
+  userId: string,
+  query: Pick<NotificationListQuery, "isRead" | "type"> = {},
+): Prisma.NotificationWhereInput {
   return {
-    userId: input.userId,
-    workspaceId: input.workspaceId,
+    workspaceId,
+    userId,
 
-    type: input.type,
-    priority: input.priority ?? "NORMAL",
+    ...(query.isRead !== undefined
+      ? {
+          isRead: query.isRead,
+        }
+      : {}),
 
-    title: input.title,
-    message: input.message,
-
-    entityType: input.entityType,
-    entityId: input.entityId,
-
-    metadata: input.metadata ? toJsonValue(input.metadata) : undefined,
+    ...(query.type !== undefined
+      ? {
+          type: query.type,
+        }
+      : {}),
   };
 }
 
-async function createNotification(input: CreateNotificationInput) {
-  return prisma.notification.create({
-    data: buildCreateData(input),
-  });
+function toCreateData(
+  input: CreateNotificationInput,
+): Prisma.NotificationUncheckedCreateInput {
+  const title = normalizeRequiredText(input.title, "Notification title");
+
+  const message = normalizeRequiredText(input.message, "Notification message");
+
+  return {
+    userId: input.userId,
+
+    workspaceId: input.workspaceId,
+
+    type: input.type,
+
+    title,
+    message,
+
+    metadata: input.metadata ?? {},
+
+    isRead: false,
+
+    readAt: null,
+
+    ...(input.entityType !== undefined
+      ? {
+          entityType: input.entityType,
+        }
+      : {}),
+
+    ...(input.entityId !== undefined
+      ? {
+          entityId: input.entityId,
+        }
+      : {}),
+
+    ...(input.priority !== undefined
+      ? {
+          priority: input.priority,
+        }
+      : {}),
+  };
 }
 
-async function createManyNotifications(inputs: CreateNotificationInput[]) {
-  if (inputs.length === 0) {
-    return [];
-  }
-
-  const operations = inputs.map((input) =>
-    prisma.notification.create({
-      data: buildCreateData(input),
-    }),
-  );
-
-  return prisma.$transaction(operations);
-}
-
-async function findNotificationById(
-  notificationId: string,
-  userId: string,
+async function list(
   workspaceId: string,
-) {
-  return prisma.notification.findFirst({
-    where: {
-      id: notificationId,
-      userId,
-      workspaceId,
-    },
-  });
-}
-
-async function listNotifications(
   userId: string,
-  workspaceId: string,
-  query: NotificationListQuery,
-) {
-  const where = buildNotificationWhere(userId, workspaceId, query);
+  query: NotificationListQuery = {},
+): Promise<NotificationRepositoryListResult> {
+  const page = normalizePage(query.page);
 
-  const skip = (query.page - 1) * query.limit;
+  const limit = normalizeLimit(query.limit);
 
-  const [items, total] = await prisma.$transaction([
+  const skip = (page - 1) * limit;
+
+  const where = buildUserWhere(workspaceId, userId, query);
+
+  const [notifications, total, unreadCount] = await Promise.all([
     prisma.notification.findMany({
       where,
 
-      skip,
-      take: query.limit,
+      orderBy: {
+        createdAt: "desc",
+      },
 
-      orderBy: buildNotificationOrderBy(query),
+      skip,
+      take: limit,
     }),
 
     prisma.notification.count({
       where,
     }),
+
+    prisma.notification.count({
+      where: {
+        workspaceId,
+        userId,
+        isRead: false,
+      },
+    }),
   ]);
 
   return {
-    items,
+    notifications,
     total,
+    unreadCount,
+    page,
+    limit,
+
+    totalPages: total === 0 ? 0 : Math.ceil(total / limit),
   };
 }
 
-async function countUnreadNotifications(userId: string, workspaceId: string) {
+async function countUnread(
+  workspaceId: string,
+  userId: string,
+): Promise<number> {
   return prisma.notification.count({
     where: {
-      userId,
       workspaceId,
+      userId,
       isRead: false,
     },
   });
 }
 
-async function markNotificationAsRead(
+async function findById(
   notificationId: string,
-  userId: string,
   workspaceId: string,
-) {
+  userId: string,
+): Promise<Notification | null> {
+  return prisma.notification.findFirst({
+    where: {
+      id: notificationId,
+
+      workspaceId,
+      userId,
+    },
+  });
+}
+
+async function create(input: CreateNotificationInput): Promise<Notification> {
+  return prisma.notification.create({
+    data: toCreateData(input),
+  });
+}
+
+async function createMany(
+  inputs: CreateNotificationInput[],
+): Promise<Prisma.BatchPayload> {
+  if (inputs.length === 0) {
+    return {
+      count: 0,
+    };
+  }
+
+  const data: Prisma.NotificationCreateManyInput[] = inputs.map((input) =>
+    toCreateData(input),
+  );
+
+  return prisma.notification.createMany({
+    data,
+  });
+}
+
+async function markAsRead(
+  notificationId: string,
+  workspaceId: string,
+  userId: string,
+): Promise<Notification | null> {
   const result = await prisma.notification.updateMany({
     where: {
       id: notificationId,
-      userId,
+
       workspaceId,
+      userId,
     },
 
     data: {
       isRead: true,
+
       readAt: new Date(),
     },
   });
@@ -133,79 +239,105 @@ async function markNotificationAsRead(
     return null;
   }
 
-  return findNotificationById(notificationId, userId, workspaceId);
+  return findById(notificationId, workspaceId, userId);
 }
 
-async function markAllNotificationsAsRead(userId: string, workspaceId: string) {
+async function markAsUnread(
+  notificationId: string,
+  workspaceId: string,
+  userId: string,
+): Promise<Notification | null> {
+  const result = await prisma.notification.updateMany({
+    where: {
+      id: notificationId,
+
+      workspaceId,
+      userId,
+    },
+
+    data: {
+      isRead: false,
+
+      readAt: null,
+    },
+  });
+
+  if (result.count === 0) {
+    return null;
+  }
+
+  return findById(notificationId, workspaceId, userId);
+}
+
+async function markAllAsRead(
+  workspaceId: string,
+  userId: string,
+): Promise<Prisma.BatchPayload> {
   return prisma.notification.updateMany({
     where: {
-      userId,
       workspaceId,
+      userId,
       isRead: false,
     },
 
     data: {
       isRead: true,
+
       readAt: new Date(),
     },
   });
 }
 
-async function deleteNotificationById(
+async function deleteById(
   notificationId: string,
-  userId: string,
   workspaceId: string,
-) {
+  userId: string,
+): Promise<Prisma.BatchPayload> {
   return prisma.notification.deleteMany({
     where: {
       id: notificationId,
-      userId,
+
       workspaceId,
+      userId,
     },
   });
 }
 
-async function clearNotifications(
-  userId: string,
+async function deleteRead(
   workspaceId: string,
-  query: NotificationClearQuery,
-) {
-  const where: Prisma.NotificationWhereInput = {
-    userId,
-    workspaceId,
-  };
-
-  if (query.onlyRead ?? true) {
-    where.isRead = true;
-  }
-
-  if (query.beforeDate) {
-    where.createdAt = {
-      lt: query.beforeDate,
-    };
-  }
-
+  userId: string,
+): Promise<Prisma.BatchPayload> {
   return prisma.notification.deleteMany({
-    where,
+    where: {
+      workspaceId,
+      userId,
+      isRead: true,
+    },
+  });
+}
+
+async function clear(
+  workspaceId: string,
+  userId: string,
+): Promise<Prisma.BatchPayload> {
+  return prisma.notification.deleteMany({
+    where: {
+      workspaceId,
+      userId,
+    },
   });
 }
 
 export const notificationRepository = {
-  create: createNotification,
-
-  createMany: createManyNotifications,
-
-  findById: findNotificationById,
-
-  list: listNotifications,
-
-  countUnread: countUnreadNotifications,
-
-  markAsRead: markNotificationAsRead,
-
-  markAllAsRead: markAllNotificationsAsRead,
-
-  deleteById: deleteNotificationById,
-
-  clear: clearNotifications,
+  list,
+  countUnread,
+  findById,
+  create,
+  createMany,
+  markAsRead,
+  markAsUnread,
+  markAllAsRead,
+  deleteById,
+  deleteRead,
+  clear,
 };

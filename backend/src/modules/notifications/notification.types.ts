@@ -1,11 +1,8 @@
-import type {
-  NotificationPriority,
-  NotificationType,
-} from "../../generated/prisma/client.js";
+import type { Notification, Prisma } from "../../generated/prisma/client.js";
 
-export type NotificationSortField = "createdAt" | "priority" | "title";
+export type NotificationTypeValue = Notification["type"];
 
-export type NotificationSortOrder = "asc" | "desc";
+export type NotificationPriorityValue = Notification["priority"];
 
 export interface NotificationContext {
   userId: string;
@@ -13,67 +10,29 @@ export interface NotificationContext {
 }
 
 export interface NotificationListQuery {
-  page: number;
-  limit: number;
-
-  search?: string;
-  type?: NotificationType;
-  priority?: NotificationPriority;
+  page?: number;
+  limit?: number;
   isRead?: boolean;
-
-  startDate?: Date;
-  endDate?: Date;
-
-  sortBy: NotificationSortField;
-  sortOrder: NotificationSortOrder;
-}
-
-export interface NotificationClearQuery {
-  onlyRead?: boolean;
-  beforeDate?: Date;
+  type?: NotificationTypeValue;
 }
 
 export interface CreateNotificationInput {
   userId: string;
   workspaceId: string;
-
-  type: NotificationType;
-  priority?: NotificationPriority;
-
+  type: NotificationTypeValue;
   title: string;
   message: string;
 
-  entityType?: string;
-  entityId?: string;
+  metadata?: Prisma.InputJsonValue;
 
-  metadata?: Record<string, unknown>;
+  entityType?: string | null;
+
+  entityId?: string | null;
+
+  priority?: NotificationPriorityValue;
 }
 
 export type PublishNotificationInput = CreateNotificationInput;
-
-export interface NotificationResponse {
-  id: string;
-
-  type: NotificationType;
-  priority: NotificationPriority;
-
-  title: string;
-  message: string;
-
-  isRead: boolean;
-  readAt: Date | null;
-
-  entityType: string | null;
-  entityId: string | null;
-
-  metadata: unknown;
-
-  userId: string;
-  workspaceId: string;
-
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export interface NotificationPagination {
   page: number;
@@ -82,7 +41,27 @@ export interface NotificationPagination {
   totalPages: number;
 }
 
+export interface NotificationResponse {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  type: NotificationTypeValue;
+  title: string;
+  message: string;
+  metadata: Prisma.JsonValue;
+  isRead: boolean;
+  readAt: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  priority: NotificationPriorityValue;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface NotificationListResponse {
-  items: NotificationResponse[];
+  notifications: NotificationResponse[];
+
   pagination: NotificationPagination;
+
+  unreadCount: number;
 }

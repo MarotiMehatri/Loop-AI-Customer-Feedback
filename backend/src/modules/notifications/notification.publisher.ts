@@ -9,6 +9,12 @@ async function publishNotification(input: PublishNotificationInput) {
 }
 
 async function publishManyNotifications(inputs: PublishNotificationInput[]) {
+  if (inputs.length === 0) {
+    return {
+      count: 0,
+    };
+  }
+
   return notificationRepository.createMany(inputs);
 }
 
@@ -20,6 +26,7 @@ async function publishNotificationSafe(
   } catch (error) {
     logger.error({
       module: "notifications",
+
       message: "Unable to publish notification",
 
       notificationType: input.type,
@@ -28,7 +35,16 @@ async function publishNotificationSafe(
 
       workspaceId: input.workspaceId,
 
-      error,
+      error:
+        error instanceof Error
+          ? {
+              name: error.name,
+
+              message: error.message,
+
+              stack: error.stack,
+            }
+          : error,
     });
   }
 }
@@ -45,13 +61,23 @@ async function publishManyNotificationsSafe(
   } catch (error) {
     logger.error({
       module: "notifications",
+
       message: "Unable to publish multiple notifications",
 
       notificationCount: inputs.length,
 
       workspaceId: inputs[0]?.workspaceId,
 
-      error,
+      error:
+        error instanceof Error
+          ? {
+              name: error.name,
+
+              message: error.message,
+
+              stack: error.stack,
+            }
+          : error,
     });
   }
 }

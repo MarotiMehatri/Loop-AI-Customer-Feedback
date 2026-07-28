@@ -7,22 +7,23 @@ import { NOTIFICATION_MESSAGES } from "./notification.constants.js";
 import { notificationService } from "./notification.service.js";
 
 import type {
-  NotificationClearQuery,
   NotificationContext,
-  NotificationListQuery,
+  NotificationTypeValue,
 } from "./notification.types.js";
 
-function getNotificationContext(request: Request): NotificationContext {
+import { notificationValidator } from "./notification.validator.js";
+
+function getContext(request: Request): NotificationContext {
   const userId = request.user?.userId;
 
   const workspaceId = request.workspaceId ?? request.user?.workspaceId;
 
   if (!userId) {
-    throw new ApiError(401, NOTIFICATION_MESSAGES.authenticationRequired);
+    throw new ApiError(401, NOTIFICATION_MESSAGES.UNAUTHORIZED);
   }
 
   if (!workspaceId) {
-    throw new ApiError(400, NOTIFICATION_MESSAGES.workspaceRequired);
+    throw new ApiError(400, NOTIFICATION_MESSAGES.WORKSPACE_REQUIRED);
   }
 
   return {
@@ -31,153 +32,148 @@ function getNotificationContext(request: Request): NotificationContext {
   };
 }
 
-export const notificationController: {
-  list: RequestHandler;
-  getById: RequestHandler;
-  unreadCount: RequestHandler;
-  markAsRead: RequestHandler;
-  markAllAsRead: RequestHandler;
-  remove: RequestHandler;
-  clear: RequestHandler;
-} = {
-  list: async (request, response, next) => {
-    try {
-      const context = getNotificationContext(request);
+function getNotificationId(request: Request): string {
+  const parsed = notificationValidator.notificationParams.safeParse(
+    request.params,
+  );
 
-      const result = await notificationService.list(
-        context,
+  if (!parsed.success) {
+    throw new ApiError(400, NOTIFICATION_MESSAGES.INVALID_ID);
+  }
 
-        request.query as unknown as NotificationListQuery,
-      );
+  return parsed.data.notificationId;
+}
 
-      response.status(200).json({
-        success: true,
+const list: RequestHandler = async (request, response) => {
+  const parsed = notificationValidator.listQuery.safeParse(request.query);
 
-        message: NOTIFICATION_MESSAGES.listed,
+  if (!parsed.success) {
+    throw new ApiError(400, NOTIFICATION_MESSAGES.INVALID_QUERY);
+  }
 
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  const context = getContext(request);
 
-  getById: async (request, response, next) => {
-    try {
-      const context = getNotificationContext(request);
+  const data = await notificationService.list(context, {
+    page: parsed.data.page,
 
-      const notificationId = request.params.notificationId as string;
+    limit: parsed.data.limit,
 
-      const result = await notificationService.getById(context, notificationId);
+    isRead: parsed.data.isRead,
 
-      response.status(200).json({
-        success: true,
+    type: parsed.data.type as NotificationTypeValue | undefined,
+  });
 
-        message: NOTIFICATION_MESSAGES.retrieved,
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
 
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+const getUnreadCount: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-  unreadCount: async (request, response, next) => {
-    try {
-      const context = getNotificationContext(request);
+  const data = await notificationService.getUnreadCount(context);
 
-      const result = await notificationService.getUnreadCount(context);
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
 
-      response.status(200).json({
-        success: true,
+const getById: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-        message: NOTIFICATION_MESSAGES.unreadCountRetrieved,
+  const notificationId = getNotificationId(request);
 
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  const data = await notificationService.getById(context, notificationId);
 
-  markAsRead: async (request, response, next) => {
-    try {
-      const context = getNotificationContext(request);
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
 
-      const notificationId = request.params.notificationId as string;
+const markAsRead: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-      const result = await notificationService.markAsRead(
-        context,
-        notificationId,
-      );
+  const notificationId = getNotificationId(request);
 
-      response.status(200).json({
-        success: true,
+  const data = await notificationService.markAsRead(context, notificationId);
 
-        message: NOTIFICATION_MESSAGES.markedAsRead,
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
 
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+const markAsUnread: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-  markAllAsRead: async (request, response, next) => {
-    try {
-      const context = getNotificationContext(request);
+  const notificationId = getNotificationId(request);
 
-      const result = await notificationService.markAllAsRead(context);
+  const data = await notificationService.markAsUnread(context, notificationId);
 
-      response.status(200).json({
-        success: true,
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
 
-        message: NOTIFICATION_MESSAGES.allMarkedAsRead,
+const markAllAsRead: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  const data = await notificationService.markAllAsRead(context);
 
-  remove: async (request, response, next) => {
-    try {
-      const context = getNotificationContext(request);
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
 
-      const notificationId = request.params.notificationId as string;
+const remove: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-      await notificationService.remove(context, notificationId);
+  const notificationId = getNotificationId(request);
 
-      response.status(200).json({
-        success: true,
+  await notificationService.remove(context, notificationId);
 
-        message: NOTIFICATION_MESSAGES.deleted,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
 
-  clear: async (request, response, next) => {
-    try {
-      const context = getNotificationContext(request);
+    message: "Notification deleted successfully.",
+  });
+};
 
-      const result = await notificationService.clear(
-        context,
+const removeRead: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-        request.query as unknown as NotificationClearQuery,
-      );
+  const data = await notificationService.removeRead(context);
 
-      response.status(200).json({
-        success: true,
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
 
-        message: NOTIFICATION_MESSAGES.cleared,
+const clear: RequestHandler = async (request, response) => {
+  const context = getContext(request);
 
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  const data = await notificationService.clear(context);
+
+  response.status(200).json({
+    success: true,
+    data,
+  });
+};
+
+export const notificationController = {
+  list,
+  getUnreadCount,
+  getById,
+  markAsRead,
+  markAsUnread,
+  markAllAsRead,
+  remove,
+  removeRead,
+  clear,
 };

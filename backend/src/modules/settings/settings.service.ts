@@ -1,5 +1,8 @@
 import { ActivityType } from "../../generated/prisma/client.js";
 
+import { PERMISSION } from "../../permissions/permission.types.js";
+import { assertPermission } from "../../permissions/rolePermissions.js";
+
 import { activityLogger } from "../activity/activity.logger.js";
 
 import { getDefaultSettingsSection } from "./settings.defaults.js";
@@ -7,11 +10,6 @@ import { getDefaultSettingsSection } from "./settings.defaults.js";
 import { buildUpdatedSettingsSection } from "./settings.helper.js";
 
 import { mapSettings, mapSettingsSection } from "./settings.mapper.js";
-
-import {
-  assertCanManageSettings,
-  assertCanViewSettings,
-} from "./settings.permissions.js";
 
 import { settingsRepository } from "./settings.repository.js";
 
@@ -23,7 +21,11 @@ import type {
 
 export const settingsService = {
   async getAll(context: SettingsContext) {
-    assertCanViewSettings(context);
+    assertPermission(
+      context.role,
+      PERMISSION.SETTINGS_READ,
+      "You do not have permission to view workspace settings",
+    );
 
     const settings = await settingsRepository.ensure(context.workspaceId);
 
@@ -31,7 +33,11 @@ export const settingsService = {
   },
 
   async getSection(context: SettingsContext, section: SettingsSection) {
-    assertCanViewSettings(context);
+    assertPermission(
+      context.role,
+      PERMISSION.SETTINGS_READ,
+      "You do not have permission to view workspace settings",
+    );
 
     const settings = await settingsRepository.ensure(context.workspaceId);
 
@@ -43,7 +49,11 @@ export const settingsService = {
     section: SettingsSection,
     input: SettingsSectionUpdate,
   ) {
-    assertCanManageSettings(context);
+    assertPermission(
+      context.role,
+      PERMISSION.SETTINGS_UPDATE,
+      "You do not have permission to update workspace settings",
+    );
 
     const currentRecord = await settingsRepository.ensure(context.workspaceId);
 
@@ -63,6 +73,7 @@ export const settingsService = {
 
     await activityLogger.logSafe({
       userId: context.userId,
+
       workspaceId: context.workspaceId,
 
       type: ActivityType.SETTINGS_UPDATED,
@@ -72,6 +83,7 @@ export const settingsService = {
       description: `The ${section} settings were updated.`,
 
       entityType: "SETTINGS",
+
       entityId: context.workspaceId,
 
       metadata: {
@@ -85,7 +97,11 @@ export const settingsService = {
   },
 
   async resetSection(context: SettingsContext, section: SettingsSection) {
-    assertCanManageSettings(context);
+    assertPermission(
+      context.role,
+      PERMISSION.SETTINGS_RESET,
+      "You do not have permission to reset workspace settings",
+    );
 
     const defaultSection = getDefaultSettingsSection(section);
 
@@ -97,6 +113,7 @@ export const settingsService = {
 
     await activityLogger.logSafe({
       userId: context.userId,
+
       workspaceId: context.workspaceId,
 
       type: ActivityType.SETTINGS_UPDATED,
@@ -106,6 +123,7 @@ export const settingsService = {
       description: `The ${section} settings were reset to their default values.`,
 
       entityType: "SETTINGS",
+
       entityId: context.workspaceId,
 
       metadata: {

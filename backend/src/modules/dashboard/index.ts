@@ -9,4 +9,3 @@ export * from "./dashboard.mapper.js";
 export * from "./dashboard.constants.js";
 export * from "./dashboard.query.js";
 export * from "./dashboard.cache.js";
-export * from "./dashboard.permissions.js";
