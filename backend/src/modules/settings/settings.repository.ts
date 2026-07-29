@@ -10,9 +10,9 @@ import {
   DEFAULT_REPORT_SETTINGS,
   DEFAULT_RETENTION_SETTINGS,
   DEFAULT_SECURITY_SETTINGS,
-} from "./settings.defaults.js";
+} from "./settings.constants.js";
 
-import { toSettingsJson } from "./settings.helper.js";
+import { toSettingsJson } from "./settings.mapper.js";
 
 import type {
   SettingsSection,

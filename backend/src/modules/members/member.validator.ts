@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-import { MEMBER_MAX_LIMIT } from "./member.constants.js";
+import {
+  MEMBER_DEPARTMENT_MAX,
+  MEMBER_JOB_TITLE_MAX,
+  MEMBER_MAX_LIMIT,
+  MEMBER_NAME_MAX,
+  MEMBER_NAME_MIN,
+  MEMBER_SEARCH_MAX,
+} from "./member.constants.js";
 
 import { MEMBER_SORT_FIELDS, MEMBER_SORT_ORDERS } from "./member.types.js";
 
@@ -10,19 +17,21 @@ const memberIdParamsSchema = z.object({
   memberId: z.string().cuid(),
 });
 
-const inviteIdParamsSchema = z.object({
-  inviteId: z.string().cuid(),
-});
-
 export const listMembersSchema = z.object({
   query: z.object({
     page: z.coerce.number().int().min(1).default(1),
 
     limit: z.coerce.number().int().min(1).max(MEMBER_MAX_LIMIT).default(10),
 
-    search: z.string().trim().max(200).optional(),
+    search: z.string().trim().max(MEMBER_SEARCH_MAX).optional(),
 
     role: roleSchema.optional(),
+
+    department: z
+      .string()
+      .trim()
+      .max(MEMBER_DEPARTMENT_MAX)
+      .optional(),
 
     isActive: z
       .enum(["true", "false"])
@@ -44,26 +53,76 @@ export const updateMemberSchema = z.object({
 
   body: z
     .object({
-      name: z.string().trim().min(2).max(100).optional(),
+      name: z
+        .string()
+        .trim()
+        .min(MEMBER_NAME_MIN)
+        .max(MEMBER_NAME_MAX)
+        .optional(),
 
       role: roleSchema.optional(),
 
       isActive: z.boolean().optional(),
+
+      department: z
+        .string()
+        .trim()
+        .max(MEMBER_DEPARTMENT_MAX)
+        .nullable()
+        .optional()
+        .transform((v) => (v === "" ? null : v)),
+
+      jobTitle: z
+        .string()
+        .trim()
+        .max(MEMBER_JOB_TITLE_MAX)
+        .nullable()
+        .optional()
+        .transform((v) => (v === "" ? null : v)),
+
+      phone: z
+        .string()
+        .trim()
+        .max(30)
+        .nullable()
+        .optional()
+        .transform((v) => (v === "" ? null : v)),
+
+      bio: z
+        .string()
+        .trim()
+        .max(500)
+        .nullable()
+        .optional()
+        .transform((v) => (v === "" ? null : v)),
+
+      location: z
+        .string()
+        .trim()
+        .max(100)
+        .nullable()
+        .optional()
+        .transform((v) => (v === "" ? null : v)),
+
+      timezone: z
+        .string()
+        .trim()
+        .max(50)
+        .nullable()
+        .optional()
+        .transform((v) => (v === "" ? null : v)),
+
+      avatarUrl: z
+        .string()
+        .url()
+        .nullable()
+        .optional()
+        .transform((v) => (v === "" ? null : v)),
     })
     .strict()
     .refine((value) => Object.keys(value).length > 0, {
       message: "At least one field must be provided",
     }),
-});
-
-export const inviteMemberSchema = z.object({
-  body: z
-    .object({
-      email: z.string().trim().email().max(254),
-
-      role: roleSchema.default("VIEWER"),
-    })
-    .strict(),
 });
 
 export const changeMemberRoleSchema = z.object({
@@ -84,8 +143,4 @@ export const changeMemberStatusSchema = z.object({
       isActive: z.boolean(),
     })
     .strict(),
-});
-
-export const inviteIdSchema = z.object({
-  params: inviteIdParamsSchema,
 });

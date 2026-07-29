@@ -1,8 +1,19 @@
 import { Router } from "express";
 
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+
+import { authorize } from "../../middleware/authorize.middleware.js";
+
 import { validate } from "../../middleware/validate.middleware.js";
 
-import { settingsController } from "./settings.controller.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+
+import {
+  getAllSettingsController,
+  getSettingsSectionController,
+  resetSettingsSectionController,
+  updateSettingsSectionController,
+} from "./settings.controller.js";
 
 import {
   resetSettingsSectionSchema,
@@ -12,24 +23,33 @@ import {
 
 const settingsRouter = Router();
 
-settingsRouter.get("/", settingsController.getAll);
+settingsRouter.use(authenticate);
+
+settingsRouter.get(
+  "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(getAllSettingsController),
+);
 
 settingsRouter.get(
   "/:section",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(settingsSectionSchema),
-  settingsController.getSection,
+  asyncHandler(getSettingsSectionController),
 );
 
 settingsRouter.patch(
   "/:section",
+  authorize("ADMIN"),
   validate(updateSettingsSchema),
-  settingsController.updateSection,
+  asyncHandler(updateSettingsSectionController),
 );
 
 settingsRouter.post(
   "/:section/reset",
+  authorize("ADMIN"),
   validate(resetSettingsSectionSchema),
-  settingsController.resetSection,
+  asyncHandler(resetSettingsSectionController),
 );
 
 export default settingsRouter;

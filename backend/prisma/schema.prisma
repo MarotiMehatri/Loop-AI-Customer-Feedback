@@ -81,6 +81,7 @@ model Workspace {
   savedViews  SavedView[]
   dataSources DataSource[]
   exportJobs  ExportJob[]
+  savedAskLoopQueries SavedAskLoopQuery[]
 
   @@index([name])
   @@index([createdAt])
@@ -129,6 +130,7 @@ model User {
   createdSavedViews  SavedView[]
   createdDataSources DataSource[]
   createdExportJobs  ExportJob[]
+  savedAskLoopQueries SavedAskLoopQuery[]
 
   @@index([workspaceId])
   @@index([workspaceId, role])
@@ -384,6 +386,22 @@ model AIMessageFeedback {
 
   @@unique([messageId, userId])
   @@index([userId])
+}
+
+model SavedAskLoopQuery {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  question    String
+  label       String?
+
+  createdAt DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, userId])
+  @@index([workspaceId, userId, createdAt])
 }
 
 // Reports

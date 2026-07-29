@@ -1,3 +1,5 @@
+import type { Role } from "../../generated/prisma/client.js";
+
 export type TrendPeriod = "day" | "week" | "month" | "quarter";
 
 export type TrendMetric =
@@ -18,7 +20,7 @@ export type InsightSeverity = "high" | "medium" | "low";
 export interface TrendActorContext {
   userId: string;
   workspaceId: string;
-  role: string;
+  role: Role;
 }
 
 export interface GetTrendsQuery {

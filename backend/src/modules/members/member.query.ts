@@ -12,23 +12,23 @@ export function buildMemberWhere(
 
   if (query.search) {
     where.OR = [
-      {
-        name: {
-          contains: query.search,
-          mode: "insensitive",
-        },
-      },
-      {
-        email: {
-          contains: query.search,
-          mode: "insensitive",
-        },
-      },
+      { name: { contains: query.search, mode: "insensitive" } },
+      { email: { contains: query.search, mode: "insensitive" } },
+      { department: { contains: query.search, mode: "insensitive" } },
+      { jobTitle: { contains: query.search, mode: "insensitive" } },
+      { location: { contains: query.search, mode: "insensitive" } },
     ];
   }
 
   if (query.role) {
     where.role = query.role;
+  }
+
+  if (query.department) {
+    where.department = {
+      equals: query.department,
+      mode: "insensitive",
+    };
   }
 
   if (query.isActive !== undefined) {
@@ -43,29 +43,21 @@ export function buildMemberOrderBy(
 ): Prisma.UserOrderByWithRelationInput {
   switch (query.sortBy) {
     case "name":
-      return {
-        name: query.sortOrder,
-      };
-
+      return { name: query.sortOrder };
     case "email":
-      return {
-        email: query.sortOrder,
-      };
-
+      return { email: query.sortOrder };
     case "role":
-      return {
-        role: query.sortOrder,
-      };
-
+      return { role: query.sortOrder };
+    case "department":
+      return { department: query.sortOrder };
+    case "isActive":
+      return { isActive: query.sortOrder };
+    case "lastLoginAt":
+      return { lastLoginAt: query.sortOrder };
     case "updatedAt":
-      return {
-        updatedAt: query.sortOrder,
-      };
-
+      return { updatedAt: query.sortOrder };
     case "createdAt":
     default:
-      return {
-        createdAt: query.sortOrder,
-      };
+      return { createdAt: query.sortOrder };
   }
 }

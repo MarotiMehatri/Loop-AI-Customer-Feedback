@@ -1,8 +1,26 @@
 import { Router } from "express";
 
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+
+import { authorize } from "../../middleware/authorize.middleware.js";
+
+import { asyncHandler } from "../../utils/asyncHandler.js";
+
 import { validate } from "../../middleware/validate.middleware.js";
 
-import { themeController } from "./theme.controller.js";
+import {
+  analyticsController,
+  assignFeedbackController,
+  createController,
+  generateController,
+  getByIdController,
+  listController,
+  listFeedbackController,
+  removeController,
+  removeFeedbackController,
+  summaryController,
+  updateController,
+} from "./theme.controller.js";
 
 import {
   assignFeedbackSchema,
@@ -15,60 +33,84 @@ import {
   updateThemeSchema,
 } from "./theme.validator.js";
 
-const themeRouter = Router();
+const router = Router();
 
-/*
- * Static routes must be registered before /:themeId.
- */
+router.use(authenticate);
 
-themeRouter.get("/summary", themeController.summary);
+router.get(
+  "/summary",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(summaryController),
+);
 
-themeRouter.post(
+router.post(
   "/generate",
+  authorize("ADMIN", "ANALYST"),
   validate(generateThemesSchema),
-  themeController.generate,
+  asyncHandler(generateController),
 );
 
-themeRouter.get("/", validate(listThemesSchema), themeController.list);
+router.get(
+  "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  validate(listThemesSchema),
+  asyncHandler(listController),
+);
 
-themeRouter.post("/", validate(createThemeSchema), themeController.create);
+router.post(
+  "/",
+  authorize("ADMIN", "ANALYST"),
+  validate(createThemeSchema),
+  asyncHandler(createController),
+);
 
-themeRouter.get(
+router.get(
   "/:themeId/analytics",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(themeIdSchema),
-  themeController.analytics,
+  asyncHandler(analyticsController),
 );
 
-themeRouter.get(
+router.get(
   "/:themeId/feedback",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(listThemeFeedbackSchema),
-  themeController.listFeedback,
+  asyncHandler(listFeedbackController),
 );
 
-themeRouter.post(
+router.post(
   "/:themeId/feedback/:feedbackId",
+  authorize("ADMIN", "ANALYST"),
   validate(assignFeedbackSchema),
-  themeController.assignFeedback,
+  asyncHandler(assignFeedbackController),
 );
 
-themeRouter.delete(
+router.delete(
   "/:themeId/feedback/:feedbackId",
+  authorize("ADMIN", "ANALYST"),
   validate(removeFeedbackSchema),
-  themeController.removeFeedback,
+  asyncHandler(removeFeedbackController),
 );
 
-themeRouter.get("/:themeId", validate(themeIdSchema), themeController.getById);
-
-themeRouter.patch(
+router.get(
   "/:themeId",
-  validate(updateThemeSchema),
-  themeController.update,
-);
-
-themeRouter.delete(
-  "/:themeId",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(themeIdSchema),
-  themeController.remove,
+  asyncHandler(getByIdController),
 );
 
-export default themeRouter;
+router.patch(
+  "/:themeId",
+  authorize("ADMIN", "ANALYST"),
+  validate(updateThemeSchema),
+  asyncHandler(updateController),
+);
+
+router.delete(
+  "/:themeId",
+  authorize("ADMIN"),
+  validate(themeIdSchema),
+  asyncHandler(removeController),
+);
+
+export default router;

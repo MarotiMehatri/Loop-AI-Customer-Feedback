@@ -26,9 +26,7 @@ function createAvatarFileName(originalName: string): string {
 
 const storage = multer.diskStorage({
   destination: (_request, _file, callback) => {
-    void mkdir(avatarDirectory, {
-      recursive: true,
-    })
+    void mkdir(avatarDirectory, { recursive: true })
       .then(() => {
         callback(null, avatarDirectory);
       })
@@ -58,7 +56,6 @@ function avatarFileFilter(
 
   if (!allowed) {
     callback(new Error(PROFILE_MESSAGES.invalidAvatarType));
-
     return;
   }
 
@@ -67,12 +64,7 @@ function avatarFileFilter(
 
 export const profileAvatarUpload = multer({
   storage,
-
-  limits: {
-    fileSize: PROFILE_MAX_AVATAR_SIZE,
-    files: 1,
-  },
-
+  limits: { fileSize: PROFILE_MAX_AVATAR_SIZE, files: 1 },
   fileFilter: avatarFileFilter,
 });
 
@@ -88,7 +80,6 @@ export async function deleteAvatarFile(
   }
 
   const fileName = path.basename(avatarUrl);
-
   const absolutePath = path.join(avatarDirectory, fileName);
 
   try {

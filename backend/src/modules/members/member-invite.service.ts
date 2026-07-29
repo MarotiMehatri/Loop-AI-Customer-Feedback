@@ -1,26 +1,43 @@
+import { createHash, randomBytes } from "node:crypto";
+
 import { ApiError } from "../../utils/apiError.js";
 
-import { MEMBER_MESSAGES } from "./member.constants.js";
+import { MEMBER_INVITE_EXPIRY_HOURS, MEMBER_MESSAGES } from "./member.constants.js";
 
-import {
-  createInvitationExpiry,
-  createInvitationToken,
-  normalizeEmail,
-} from "./member.helper.js";
-
-import { logMemberActivity } from "./member.activity.js";
-
-import { memberCache } from "./member.cache.js";
+import { logMemberActivity } from "./member-activity.service.js";
 
 import { mapWorkspaceInvite } from "./member.mapper.js";
 
 import { memberRepository } from "./member.repository.js";
 
-import { memberSocket } from "./member.socket.js";
+import { memberInviteRepository } from "./member-invite.repository.js";
+
+import { eventBus } from "../../events/event-bus.js";
+
+import { MEMBER_INVITED, MEMBER_REMOVED } from "../../events/event-names.js";
 
 import type { InviteMemberInput } from "./member.types.js";
 
-export const inviteService = {
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function createInvitationToken(): {
+  rawToken: string;
+  tokenHash: string;
+} {
+  const rawToken = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  return { rawToken, tokenHash };
+}
+
+function createInvitationExpiry(): Date {
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + MEMBER_INVITE_EXPIRY_HOURS);
+  return expiresAt;
+}
+
+export const memberInviteService = {
   async invite(input: {
     workspaceId: string;
     actorUserId: string;
@@ -37,7 +54,7 @@ export const inviteService = {
       throw new ApiError(409, MEMBER_MESSAGES.alreadyMember);
     }
 
-    const existingInvite = await memberRepository.findPendingInvite(
+    const existingInvite = await memberInviteRepository.findPendingInvite(
       input.workspaceId,
       email,
     );
@@ -48,7 +65,7 @@ export const inviteService = {
 
     const { rawToken, tokenHash } = createInvitationToken();
 
-    const invite = await memberRepository.createInvite({
+    const invite = await memberInviteRepository.create({
       workspaceId: input.workspaceId,
       invitedById: input.actorUserId,
       email,
@@ -57,34 +74,49 @@ export const inviteService = {
       expiresAt: createInvitationExpiry(),
     });
 
-    memberCache.clearWorkspace(input.workspaceId);
-
-    memberSocket.publish({
-      event: "member:invited",
-      workspaceId: input.workspaceId,
-      email,
-      role: input.invitation.role,
-      createdAt: new Date(),
-    });
-
     logMemberActivity({
       action: "MEMBER_INVITED",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
       targetEmail: email,
-      metadata: {
-        role: input.invitation.role,
-      },
+      metadata: { role: input.invitation.role },
+    });
+
+    eventBus.emit(MEMBER_INVITED, {
+      userId: input.actorUserId,
+      workspaceId: input.workspaceId,
+      email,
     });
 
     return {
       ...mapWorkspaceInvite(invite),
-
-      /*
-       * Send this token through your email service.
-       * Do not store the raw token in the database.
-       */
       invitationToken: rawToken,
+    };
+  },
+
+  async list(
+    actor: { role: string; workspaceId: string },
+    query: {
+      page: number;
+      limit: number;
+      status?: string;
+      sortBy: string;
+      sortOrder: "asc" | "desc";
+    },
+  ) {
+    const result = await memberInviteRepository.list(
+      actor.workspaceId,
+      query,
+    );
+
+    return {
+      items: result.items.map(mapWorkspaceInvite),
+      pagination: {
+        page: query.page,
+        limit: query.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / query.limit),
+      },
     };
   },
 
@@ -93,7 +125,7 @@ export const inviteService = {
     workspaceId: string;
     actorUserId: string;
   }) {
-    const invite = await memberRepository.findInviteById(
+    const invite = await memberInviteRepository.findById(
       input.inviteId,
       input.workspaceId,
     );
@@ -104,7 +136,7 @@ export const inviteService = {
 
     const { rawToken, tokenHash } = createInvitationToken();
 
-    const updated = await memberRepository.updateInviteToken(
+    const updated = await memberInviteRepository.updateToken(
       input.inviteId,
       input.workspaceId,
       {
@@ -135,7 +167,7 @@ export const inviteService = {
     workspaceId: string;
     actorUserId: string;
   }): Promise<void> {
-    const result = await memberRepository.cancelInvite(
+    const result = await memberInviteRepository.cancel(
       input.inviteId,
       input.workspaceId,
     );
@@ -143,14 +175,6 @@ export const inviteService = {
     if (result.count === 0) {
       throw new ApiError(404, MEMBER_MESSAGES.inviteNotFound);
     }
-
-    memberCache.clearWorkspace(input.workspaceId);
-
-    memberSocket.publish({
-      event: "invite:cancelled",
-      workspaceId: input.workspaceId,
-      createdAt: new Date(),
-    });
 
     logMemberActivity({
       action: "INVITE_CANCELLED",

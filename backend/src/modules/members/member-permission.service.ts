@@ -4,17 +4,15 @@ import { ApiError } from "../../utils/apiError.js";
 
 import { MEMBER_MESSAGES } from "./member.constants.js";
 
-import { logMemberActivity } from "./member.activity.js";
-
-import { memberCache } from "./member.cache.js";
-
-import { mapMember } from "./member.mapper.js";
+import { logMemberActivity } from "./member-activity.service.js";
 
 import { memberRepository } from "./member.repository.js";
 
-import { memberSocket } from "./member.socket.js";
+import { memberInviteRepository } from "./member-invite.repository.js";
 
-export const roleService = {
+import { mapMember } from "./member.mapper.js";
+
+export const memberPermissionService = {
   async changeRole(input: {
     memberId: string;
     workspaceId: string;
@@ -59,16 +57,6 @@ export const roleService = {
     if (!updated) {
       throw new ApiError(404, MEMBER_MESSAGES.notFound);
     }
-
-    memberCache.clearWorkspace(input.workspaceId);
-
-    memberSocket.publish({
-      event: "member:role-changed",
-      workspaceId: input.workspaceId,
-      memberId: updated.id,
-      role: updated.role,
-      createdAt: new Date(),
-    });
 
     logMemberActivity({
       action: "MEMBER_ROLE_CHANGED",

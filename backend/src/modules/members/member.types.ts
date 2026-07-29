@@ -7,6 +7,9 @@ export const MEMBER_SORT_FIELDS = [
   "name",
   "email",
   "role",
+  "department",
+  "isActive",
+  "lastLoginAt",
   "createdAt",
   "updatedAt",
 ] as const;
@@ -14,7 +17,6 @@ export const MEMBER_SORT_FIELDS = [
 export const MEMBER_SORT_ORDERS = ["asc", "desc"] as const;
 
 export type MemberSortField = (typeof MEMBER_SORT_FIELDS)[number];
-
 export type MemberSortOrder = (typeof MEMBER_SORT_ORDERS)[number];
 
 export interface MemberListQuery {
@@ -22,6 +24,7 @@ export interface MemberListQuery {
   limit: number;
   search?: string;
   role?: Role;
+  department?: string;
   isActive?: boolean;
   sortBy: MemberSortField;
   sortOrder: MemberSortOrder;
@@ -31,6 +34,13 @@ export interface UpdateMemberInput {
   name?: string;
   role?: Role;
   isActive?: boolean;
+  department?: string | null;
+  jobTitle?: string | null;
+  phone?: string | null;
+  bio?: string | null;
+  location?: string | null;
+  timezone?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface InviteMemberInput {
@@ -65,6 +75,12 @@ export interface MemberSummary {
   analysts: number;
   viewers: number;
   pendingInvites: number;
+  departments: DepartmentSummary[];
+}
+
+export interface DepartmentSummary {
+  department: string;
+  count: number;
 }
 
 export interface WorkspaceInviteResult {
@@ -74,11 +90,6 @@ export interface WorkspaceInviteResult {
   status: WorkspaceInviteStatus;
   expiresAt: Date;
   createdAt: Date;
-
-  /**
-   * Returned only immediately after creating or
-   * resending an invitation.
-   */
   invitationToken?: string;
 }
 
@@ -91,10 +102,16 @@ export interface MemberActivityData {
     | "MEMBER_REMOVED"
     | "INVITE_RESENT"
     | "INVITE_CANCELLED";
-
   workspaceId: string;
   actorUserId: string;
   targetUserId?: string;
   targetEmail?: string;
   metadata?: Record<string, unknown>;
+}
+
+export interface WorkspaceAccess {
+  workspaceId: string;
+  workspaceName: string;
+  workspaceSlug: string;
+  role: Role;
 }

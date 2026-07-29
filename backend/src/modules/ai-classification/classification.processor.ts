@@ -1,5 +1,5 @@
 import type { ClassificationResult, ClassificationSentiment } from "./classification.types.js";
-import { CLASSIFICATION_CATEGORIES } from "./classification.constants.js";
+import { CLASSIFICATION_CATEGORIES, CLASSIFICATION_DEFAULT_CONFIDENCE } from "./classification.constants.js";
 
 const POSITIVE_WORDS = [
   "great", "excellent", "amazing", "love", "fantastic",

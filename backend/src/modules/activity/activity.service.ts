@@ -1,10 +1,12 @@
 import { Role } from "../../generated/prisma/client.js";
 
-import { PERMISSION } from "../../permissions/permission.types.js";
-
-import { assertPermission } from "../../permissions/rolePermissions.js";
-
 import { ApiError } from "../../utils/apiError.js";
+
+import {
+  assertCanClearActivities,
+  assertCanDeleteActivity,
+  assertCanReadActivities,
+} from "./activity.permissions.js";
 
 import { ACTIVITY_MESSAGES } from "./activity.constants.js";
 
@@ -20,23 +22,12 @@ import type {
   RecentActivityQuery,
 } from "./activity.types.js";
 
-function assertCanReadActivities(actor: ActivityActorContext): void {
-  assertPermission(
-    actor.role,
-    PERMISSION.ACTIVITY_READ,
-    ACTIVITY_MESSAGES.forbidden,
-  );
-}
-
 function applyListRoleScope(
   actor: ActivityActorContext,
   query: ActivityListQuery,
 ): ActivityListQuery {
   if (actor.role === Role.VIEWER) {
-    return {
-      ...query,
-      userId: actor.userId,
-    };
+    return { ...query, userId: actor.userId };
   }
 
   return query;
@@ -47,10 +38,7 @@ function applyRecentRoleScope(
   query: RecentActivityQuery,
 ): RecentActivityQuery {
   if (actor.role === Role.VIEWER) {
-    return {
-      ...query,
-      userId: actor.userId,
-    };
+    return { ...query, userId: actor.userId };
   }
 
   return query;
@@ -66,7 +54,7 @@ function calculateTotalPages(total: number, limit: number): number {
 
 export const activityService = {
   async list(actor: ActivityActorContext, query: ActivityListQuery) {
-    assertCanReadActivities(actor);
+    assertCanReadActivities(actor.role);
 
     const scopedQuery = applyListRoleScope(actor, query);
 
@@ -80,18 +68,15 @@ export const activityService = {
 
       pagination: {
         page: scopedQuery.page,
-
         limit: scopedQuery.limit,
-
         total: result.total,
-
         totalPages: calculateTotalPages(result.total, scopedQuery.limit),
       },
     };
   },
 
   async listMine(actor: ActivityActorContext, query: ActivityListQuery) {
-    assertCanReadActivities(actor);
+    assertCanReadActivities(actor.role);
 
     const scopedQuery: ActivityListQuery = {
       ...query,
@@ -108,18 +93,15 @@ export const activityService = {
 
       pagination: {
         page: scopedQuery.page,
-
         limit: scopedQuery.limit,
-
         total: result.total,
-
         totalPages: calculateTotalPages(result.total, scopedQuery.limit),
       },
     };
   },
 
   async recent(actor: ActivityActorContext, query: RecentActivityQuery) {
-    assertCanReadActivities(actor);
+    assertCanReadActivities(actor.role);
 
     const scopedQuery = applyRecentRoleScope(actor, query);
 
@@ -132,7 +114,7 @@ export const activityService = {
   },
 
   async getById(actor: ActivityActorContext, activityId: string) {
-    assertCanReadActivities(actor);
+    assertCanReadActivities(actor.role);
 
     const activity = await activityRepository.findById(
       activityId,
@@ -151,7 +133,7 @@ export const activityService = {
   },
 
   async getSummary(actor: ActivityActorContext, query: ActivitySummaryQuery) {
-    assertCanReadActivities(actor);
+    assertCanReadActivities(actor.role);
 
     const userId = actor.role === Role.VIEWER ? actor.userId : query.userId;
 
@@ -159,11 +141,7 @@ export const activityService = {
   },
 
   async remove(actor: ActivityActorContext, activityId: string): Promise<void> {
-    assertPermission(
-      actor.role,
-      PERMISSION.ACTIVITY_DELETE,
-      ACTIVITY_MESSAGES.forbidden,
-    );
+    assertCanDeleteActivity(actor.role);
 
     const result = await activityRepository.deleteById(
       activityId,
@@ -176,11 +154,7 @@ export const activityService = {
   },
 
   async clear(actor: ActivityActorContext, input: ClearActivityInput) {
-    assertPermission(
-      actor.role,
-      PERMISSION.ACTIVITY_CLEAR,
-      ACTIVITY_MESSAGES.forbidden,
-    );
+    assertCanClearActivities(actor.role);
 
     const result = await activityRepository.clear(actor.workspaceId, input);
 

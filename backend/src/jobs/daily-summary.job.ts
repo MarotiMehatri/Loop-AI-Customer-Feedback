@@ -8,7 +8,7 @@ import {
 import { logger } from "../config/logger.js";
 import { prisma } from "../config/prisma.js";
 
-import { notificationPublisher } from "../modules/notifications/notification.publisher.js";
+import { notificationPublisher } from "../modules/notifications/notification.service.js";
 
 function getTodayDateRange(): {
   startDate: Date;

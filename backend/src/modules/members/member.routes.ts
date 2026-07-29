@@ -1,71 +1,115 @@
 import { Router } from "express";
 
+import { authorize } from "../../middleware/authorize.middleware.js";
+
 import { validate } from "../../middleware/validate.middleware.js";
 
-import { memberController } from "./member.controller.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
+
+import {
+  cancelInviteController,
+  changeMemberRoleController,
+  changeMemberStatusController,
+  getMemberController,
+  inviteMemberController,
+  listInvitesController,
+  listMembersController,
+  memberSummaryController,
+  removeMemberController,
+  resendInviteController,
+  updateMemberController,
+} from "./member.controller.js";
 
 import {
   changeMemberRoleSchema,
   changeMemberStatusSchema,
-  inviteIdSchema,
-  inviteMemberSchema,
   listMembersSchema,
   memberIdSchema,
   updateMemberSchema,
 } from "./member.validator.js";
 
+import {
+  inviteIdSchema,
+  inviteMemberSchema,
+  listInvitesSchema,
+} from "./member-invite.validator.js";
+
 const memberRouter = Router();
 
-memberRouter.get("/summary", memberController.summary);
+memberRouter.get(
+  "/summary",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(memberSummaryController),
+);
 
-memberRouter.get("/", validate(listMembersSchema), memberController.list);
+memberRouter.get(
+  "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  validate(listMembersSchema),
+  asyncHandler(listMembersController),
+);
 
 memberRouter.post(
   "/invite",
+  authorize("ADMIN", "ANALYST"),
   validate(inviteMemberSchema),
-  memberController.invite,
+  asyncHandler(inviteMemberController),
+);
+
+memberRouter.get(
+  "/invites",
+  authorize("ADMIN", "ANALYST"),
+  validate(listInvitesSchema),
+  asyncHandler(listInvitesController),
 );
 
 memberRouter.post(
   "/invites/:inviteId/resend",
+  authorize("ADMIN", "ANALYST"),
   validate(inviteIdSchema),
-  memberController.resendInvite,
+  asyncHandler(resendInviteController),
 );
 
 memberRouter.delete(
   "/invites/:inviteId",
+  authorize("ADMIN", "ANALYST"),
   validate(inviteIdSchema),
-  memberController.cancelInvite,
+  asyncHandler(cancelInviteController),
 );
 
 memberRouter.get(
   "/:memberId",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(memberIdSchema),
-  memberController.getById,
+  asyncHandler(getMemberController),
 );
 
 memberRouter.patch(
   "/:memberId",
+  authorize("ADMIN", "ANALYST"),
   validate(updateMemberSchema),
-  memberController.update,
+  asyncHandler(updateMemberController),
 );
 
 memberRouter.patch(
   "/:memberId/role",
+  authorize("ADMIN", "ANALYST"),
   validate(changeMemberRoleSchema),
-  memberController.changeRole,
+  asyncHandler(changeMemberRoleController),
 );
 
 memberRouter.patch(
   "/:memberId/status",
+  authorize("ADMIN", "ANALYST"),
   validate(changeMemberStatusSchema),
-  memberController.changeStatus,
+  asyncHandler(changeMemberStatusController),
 );
 
 memberRouter.delete(
   "/:memberId",
+  authorize("ADMIN"),
   validate(memberIdSchema),
-  memberController.remove,
+  asyncHandler(removeMemberController),
 );
 
 export default memberRouter;

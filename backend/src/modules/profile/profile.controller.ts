@@ -1,21 +1,10 @@
-import type { Request, RequestHandler } from "express";
+import type { Request, Response } from "express";
 
 import { ApiError } from "../../utils/apiError.js";
 
 import { PROFILE_MESSAGES } from "./profile.constants.js";
 
-import { getProfileActivity } from "./profile.activity.js";
-
-import {
-  getProfilePreferences,
-  updateProfilePreferences,
-} from "./profile.preferences.js";
-
-import { changeProfilePassword } from "./profile.security.js";
-
 import { profileService } from "./profile.service.js";
-
-import { getProfileStatistics } from "./profile.statistics.js";
 
 import type {
   ChangePasswordInput,
@@ -24,12 +13,11 @@ import type {
   UpdateProfileInput,
 } from "./profile.types.js";
 
-function getProfileContext(request: Request): {
+function getContext(request: Request): {
   userId: string;
   workspaceId: string;
 } {
   const userId = request.user?.userId;
-
   const workspaceId = request.workspaceId ?? request.user?.workspaceId;
 
   if (!userId) {
@@ -40,187 +28,163 @@ function getProfileContext(request: Request): {
     throw new ApiError(400, PROFILE_MESSAGES.workspaceRequired);
   }
 
-  return {
-    userId,
-    workspaceId,
-  };
+  return { userId, workspaceId };
 }
 
-export const profileController: {
-  getProfile: RequestHandler;
-  updateProfile: RequestHandler;
-  updateAvatar: RequestHandler;
-  removeAvatar: RequestHandler;
-  getPreferences: RequestHandler;
-  updatePreferences: RequestHandler;
-  changePassword: RequestHandler;
-  getStatistics: RequestHandler;
-  getActivity: RequestHandler;
-} = {
-  getProfile: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const getProfileController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      const result = await profileService.getProfile(userId, workspaceId);
+  const result = await profileService.getProfile(userId, workspaceId);
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.retrieved,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.retrieved,
+    data: result,
+  });
+};
 
-  updateProfile: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const updateProfileController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      const result = await profileService.updateProfile(
-        userId,
-        workspaceId,
-        request.body as UpdateProfileInput,
-      );
+  const result = await profileService.updateProfile(
+    userId,
+    workspaceId,
+    request.body as UpdateProfileInput,
+  );
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.updated,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.updated,
+    data: result,
+  });
+};
 
-  updateAvatar: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const updateAvatarController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      if (!request.file) {
-        throw new ApiError(400, PROFILE_MESSAGES.avatarRequired);
-      }
+  if (!request.file) {
+    throw new ApiError(400, PROFILE_MESSAGES.avatarRequired);
+  }
 
-      const result = await profileService.updateAvatar(
-        userId,
-        workspaceId,
-        request.file,
-      );
+  const result = await profileService.updateAvatar(
+    userId,
+    workspaceId,
+    request.file,
+  );
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.avatarUpdated,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.avatarUpdated,
+    data: result,
+  });
+};
 
-  removeAvatar: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const removeAvatarController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      const result = await profileService.removeAvatar(userId, workspaceId);
+  const result = await profileService.removeAvatar(userId, workspaceId);
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.avatarRemoved,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.avatarRemoved,
+    data: result,
+  });
+};
 
-  getPreferences: async (request, response, next) => {
-    try {
-      const { userId } = getProfileContext(request);
+export const getPreferencesController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId } = getContext(request);
 
-      const result = await getProfilePreferences(userId);
+  const result = await profileService.getPreferences(userId);
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.preferencesRetrieved,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.preferencesRetrieved,
+    data: result,
+  });
+};
 
-  updatePreferences: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const updatePreferencesController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      const result = await updateProfilePreferences(
-        userId,
-        workspaceId,
-        request.body as UpdatePreferencesInput,
-      );
+  const result = await profileService.updatePreferences(
+    userId,
+    workspaceId,
+    request.body as UpdatePreferencesInput,
+  );
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.preferencesUpdated,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.preferencesUpdated,
+    data: result,
+  });
+};
 
-  changePassword: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const changePasswordController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      await changeProfilePassword(
-        userId,
-        workspaceId,
-        request.body as ChangePasswordInput,
-      );
+  await profileService.changePassword(
+    userId,
+    workspaceId,
+    request.body as ChangePasswordInput,
+  );
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.passwordUpdated,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.passwordUpdated,
+  });
+};
 
-  getStatistics: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const getStatisticsController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      const result = await getProfileStatistics(userId, workspaceId);
+  const result = await profileService.getStatistics(userId, workspaceId);
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.statisticsRetrieved,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.statisticsRetrieved,
+    data: result,
+  });
+};
 
-  getActivity: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getProfileContext(request);
+export const getActivityController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getContext(request);
 
-      const result = await getProfileActivity(
-        userId,
-        workspaceId,
-        request.query as unknown as ProfileActivityQuery,
-      );
+  const result = await profileService.getActivity(
+    userId,
+    workspaceId,
+    request.query as unknown as ProfileActivityQuery,
+  );
 
-      response.status(200).json({
-        success: true,
-        message: PROFILE_MESSAGES.activityRetrieved,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: PROFILE_MESSAGES.activityRetrieved,
+    data: result,
+  });
 };

@@ -1,10 +1,24 @@
 import { Router } from "express";
 
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+
 import { validate } from "../../middleware/validate.middleware.js";
 
-import { profileAvatarUpload } from "./profile.avatar.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
-import { profileController } from "./profile.controller.js";
+import { profileAvatarUpload } from "./profile-avatar.service.js";
+
+import {
+  changePasswordController,
+  getActivityController,
+  getPreferencesController,
+  getProfileController,
+  getStatisticsController,
+  removeAvatarController,
+  updateAvatarController,
+  updatePreferencesController,
+  updateProfileController,
+} from "./profile.controller.js";
 
 import {
   changePasswordSchema,
@@ -15,42 +29,53 @@ import {
 
 const profileRouter = Router();
 
-profileRouter.get("/", profileController.getProfile);
+profileRouter.use(authenticate);
+
+profileRouter.get("/", asyncHandler(getProfileController));
 
 profileRouter.patch(
   "/",
   validate(updateProfileSchema),
-  profileController.updateProfile,
+  asyncHandler(updateProfileController),
 );
 
 profileRouter.patch(
   "/avatar",
   profileAvatarUpload.single("avatar"),
-  profileController.updateAvatar,
+  asyncHandler(updateAvatarController),
 );
 
-profileRouter.delete("/avatar", profileController.removeAvatar);
+profileRouter.delete(
+  "/avatar",
+  asyncHandler(removeAvatarController),
+);
 
-profileRouter.get("/preferences", profileController.getPreferences);
+profileRouter.get(
+  "/preferences",
+  asyncHandler(getPreferencesController),
+);
 
 profileRouter.patch(
   "/preferences",
   validate(updatePreferencesSchema),
-  profileController.updatePreferences,
+  asyncHandler(updatePreferencesController),
 );
 
 profileRouter.patch(
   "/password",
   validate(changePasswordSchema),
-  profileController.changePassword,
+  asyncHandler(changePasswordController),
 );
 
-profileRouter.get("/statistics", profileController.getStatistics);
+profileRouter.get(
+  "/statistics",
+  asyncHandler(getStatisticsController),
+);
 
 profileRouter.get(
   "/activity",
   validate(profileActivitySchema),
-  profileController.getActivity,
+  asyncHandler(getActivityController),
 );
 
 export default profileRouter;

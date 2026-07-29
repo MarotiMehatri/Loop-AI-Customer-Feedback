@@ -19,9 +19,9 @@ import type {
 
 async function classifyWithAI(content: string): Promise<ClassificationResult | null> {
   try {
-    const { classifyFeedback } = await import("../../ai/services/classification.service.js");
+    const { classificationService } = await import("../../ai/services/classification.service.js");
 
-    const result = await classifyFeedback({ text: content });
+    const result = await classificationService.classifyFeedback(content);
 
     const sentimentMap: Record<string, "POS" | "NEU" | "NEG"> = {
       POSITIVE: "POS",
@@ -32,7 +32,7 @@ async function classifyWithAI(content: string): Promise<ClassificationResult | n
     return {
       sentiment: sentimentMap[result.sentiment] ?? "NEU",
       category: result.category ?? "General",
-      tags: result.tags ?? [],
+      tags: result.themes ?? [],
       confidence: result.confidence ?? 0.5,
       summary: result.summary,
       method: "ai",

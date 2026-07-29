@@ -26,7 +26,7 @@ const optionalBooleanQuery = z.preprocess(
   z.boolean().optional(),
 );
 
-const listQuery = z.object({
+export const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(NOTIFICATION_DEFAULT_PAGE),
 
   limit: z.coerce
@@ -41,11 +41,6 @@ const listQuery = z.object({
   type: z.string().trim().min(1).optional(),
 });
 
-const notificationParams = z.object({
+export const notificationParamsSchema = z.object({
   notificationId: z.string().trim().min(1),
 });
-
-export const notificationValidator = {
-  listQuery,
-  notificationParams,
-};

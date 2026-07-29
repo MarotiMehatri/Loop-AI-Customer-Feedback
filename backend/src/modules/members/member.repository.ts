@@ -1,18 +1,27 @@
-import {
-  Prisma,
-  Role,
-  WorkspaceInviteStatus,
-} from "../../generated/prisma/client.js";
+import { Prisma, Role } from "../../generated/prisma/client.js";
 
 import { prisma } from "../../config/prisma.js";
 
 import { buildMemberOrderBy, buildMemberWhere } from "./member.query.js";
 
 import type {
-  InviteMemberInput,
   MemberListQuery,
   UpdateMemberInput,
 } from "./member.types.js";
+
+const memberInclude = {
+  preferences: {
+    select: {
+      emailNotifications: true,
+      pushNotifications: true,
+      reportNotifications: true,
+      weeklySummary: true,
+      theme: true,
+      language: true,
+      timezone: true,
+    },
+  },
+} as const;
 
 export const memberRepository = {
   async list(workspaceId: string, query: MemberListQuery) {
@@ -26,25 +35,18 @@ export const memberRepository = {
         skip,
         take: query.limit,
         orderBy: buildMemberOrderBy(query),
+        include: memberInclude,
       }),
-
-      prisma.user.count({
-        where,
-      }),
+      prisma.user.count({ where }),
     ]);
 
-    return {
-      items,
-      total,
-    };
+    return { items, total };
   },
 
   async findById(memberId: string, workspaceId: string) {
     return prisma.user.findFirst({
-      where: {
-        id: memberId,
-        workspaceId,
-      },
+      where: { id: memberId, workspaceId },
+      include: memberInclude,
     });
   },
 
@@ -52,10 +54,7 @@ export const memberRepository = {
     return prisma.user.findFirst({
       where: {
         workspaceId,
-        email: {
-          equals: email,
-          mode: "insensitive",
-        },
+        email: { equals: email, mode: "insensitive" },
       },
     });
   },
@@ -67,39 +66,30 @@ export const memberRepository = {
   ) {
     const data: Prisma.UserUpdateManyMutationInput = {};
 
-    if (input.name !== undefined) {
-      data.name = input.name;
-    }
-
-    if (input.role !== undefined) {
-      data.role = input.role;
-    }
-
-    if (input.isActive !== undefined) {
-      data.isActive = input.isActive;
-    }
+    if (input.name !== undefined) data.name = input.name;
+    if (input.role !== undefined) data.role = input.role;
+    if (input.isActive !== undefined) data.isActive = input.isActive;
+    if (input.department !== undefined) data.department = input.department;
+    if (input.jobTitle !== undefined) data.jobTitle = input.jobTitle;
+    if (input.phone !== undefined) data.phone = input.phone;
+    if (input.bio !== undefined) data.bio = input.bio;
+    if (input.location !== undefined) data.location = input.location;
+    if (input.timezone !== undefined) data.timezone = input.timezone;
+    if (input.avatarUrl !== undefined) data.avatarUrl = input.avatarUrl;
 
     const result = await prisma.user.updateMany({
-      where: {
-        id: memberId,
-        workspaceId,
-      },
+      where: { id: memberId, workspaceId },
       data,
     });
 
-    if (result.count === 0) {
-      return null;
-    }
+    if (result.count === 0) return null;
 
     return this.findById(memberId, workspaceId);
   },
 
   async remove(memberId: string, workspaceId: string) {
     return prisma.user.deleteMany({
-      where: {
-        id: memberId,
-        workspaceId,
-      },
+      where: { id: memberId, workspaceId },
     });
   },
 
@@ -122,54 +112,29 @@ export const memberRepository = {
       analysts,
       viewers,
       pendingInvites,
+      departmentGroups,
     ] = await prisma.$transaction([
-      prisma.user.count({
-        where: { workspaceId },
-      }),
-
-      prisma.user.count({
-        where: {
-          workspaceId,
-          isActive: true,
-        },
-      }),
-
-      prisma.user.count({
-        where: {
-          workspaceId,
-          isActive: false,
-        },
-      }),
-
-      prisma.user.count({
-        where: {
-          workspaceId,
-          role: Role.ADMIN,
-        },
-      }),
-
-      prisma.user.count({
-        where: {
-          workspaceId,
-          role: Role.ANALYST,
-        },
-      }),
-
-      prisma.user.count({
-        where: {
-          workspaceId,
-          role: Role.VIEWER,
-        },
-      }),
-
+      prisma.user.count({ where: { workspaceId } }),
+      prisma.user.count({ where: { workspaceId, isActive: true } }),
+      prisma.user.count({ where: { workspaceId, isActive: false } }),
+      prisma.user.count({ where: { workspaceId, role: Role.ADMIN } }),
+      prisma.user.count({ where: { workspaceId, role: Role.ANALYST } }),
+      prisma.user.count({ where: { workspaceId, role: Role.VIEWER } }),
       prisma.workspaceInvite.count({
         where: {
           workspaceId,
-          status: WorkspaceInviteStatus.PENDING,
-          expiresAt: {
-            gt: new Date(),
-          },
+          status: "PENDING",
+          expiresAt: { gt: new Date() },
         },
+      }),
+      prisma.user.groupBy({
+        by: ["department"],
+        where: {
+          workspaceId,
+          department: { not: null },
+        },
+        _count: { department: true },
+        orderBy: { department: "asc" },
       }),
     ]);
 
@@ -181,96 +146,12 @@ export const memberRepository = {
       analysts,
       viewers,
       pendingInvites,
+      departments: departmentGroups
+        .filter((g) => g.department !== null)
+        .map((g) => ({
+          department: g.department as string,
+          count: (g._count as { department: number }).department,
+        })),
     };
-  },
-
-  async findPendingInvite(workspaceId: string, email: string) {
-    return prisma.workspaceInvite.findFirst({
-      where: {
-        workspaceId,
-        email: {
-          equals: email,
-          mode: "insensitive",
-        },
-        status: WorkspaceInviteStatus.PENDING,
-        expiresAt: {
-          gt: new Date(),
-        },
-      },
-    });
-  },
-
-  async createInvite(input: {
-    workspaceId: string;
-    invitedById: string;
-    email: string;
-    role: Role;
-    tokenHash: string;
-    expiresAt: Date;
-  }) {
-    return prisma.workspaceInvite.create({
-      data: {
-        workspaceId: input.workspaceId,
-        invitedById: input.invitedById,
-        email: input.email,
-        role: input.role,
-        tokenHash: input.tokenHash,
-        expiresAt: input.expiresAt,
-        status: WorkspaceInviteStatus.PENDING,
-      },
-    });
-  },
-
-  async findInviteById(inviteId: string, workspaceId: string) {
-    return prisma.workspaceInvite.findFirst({
-      where: {
-        id: inviteId,
-        workspaceId,
-      },
-    });
-  },
-
-  async updateInviteToken(
-    inviteId: string,
-    workspaceId: string,
-    input: {
-      tokenHash: string;
-      expiresAt: Date;
-      role?: Role;
-    },
-  ) {
-    const result = await prisma.workspaceInvite.updateMany({
-      where: {
-        id: inviteId,
-        workspaceId,
-        status: WorkspaceInviteStatus.PENDING,
-      },
-
-      data: {
-        tokenHash: input.tokenHash,
-        expiresAt: input.expiresAt,
-        role: input.role,
-      },
-    });
-
-    if (result.count === 0) {
-      return null;
-    }
-
-    return this.findInviteById(inviteId, workspaceId);
-  },
-
-  async cancelInvite(inviteId: string, workspaceId: string) {
-    return prisma.workspaceInvite.updateMany({
-      where: {
-        id: inviteId,
-        workspaceId,
-        status: WorkspaceInviteStatus.PENDING,
-      },
-
-      data: {
-        status: WorkspaceInviteStatus.CANCELLED,
-      },
-    });
   },
 };

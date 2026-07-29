@@ -3,8 +3,17 @@ import type { Role } from "../../generated/prisma/client.js";
 export const MEMBER_DEFAULT_PAGE = 1;
 export const MEMBER_DEFAULT_LIMIT = 10;
 export const MEMBER_MAX_LIMIT = 100;
-
 export const MEMBER_INVITE_EXPIRY_HOURS = 72;
+
+export const MEMBER_NAME_MIN = 2;
+export const MEMBER_NAME_MAX = 100;
+export const MEMBER_SEARCH_MAX = 200;
+export const MEMBER_DEPARTMENT_MAX = 100;
+export const MEMBER_JOB_TITLE_MAX = 100;
+export const MEMBER_PHONE_MAX = 30;
+export const MEMBER_BIO_MAX = 500;
+export const MEMBER_LOCATION_MAX = 100;
+export const MEMBER_TIMEZONE_MAX = 50;
 
 export const MEMBER_MESSAGES = {
   listed: "Team members retrieved successfully",

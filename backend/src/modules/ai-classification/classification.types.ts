@@ -1,4 +1,4 @@
-import type { ClassificationResult as AIClassificationResult } from "../../ai/ai.types.js";
+import type { FeedbackClassification } from "../../ai/ai.types.js";
 
 export type ClassificationSentiment = "POS" | "NEU" | "NEG";
 
@@ -58,10 +58,12 @@ export interface ClassificationRecord {
   createdAt: Date;
 }
 
+import type { Role } from "../../generated/prisma/client.js";
+
 export interface ClassificationActorContext {
   userId: string;
   workspaceId: string;
-  role: string;
+  role: Role;
 }
 
 export interface ClassificationConfig {
@@ -72,4 +74,13 @@ export interface ClassificationConfig {
   provider?: string;
 }
 
-export type AIClassificationPayload = AIClassificationResult;
+export type AIClassificationPayload = FeedbackClassification;
+
+export interface ListClassificationsQuery {
+  page: number;
+  limit: number;
+  sentiment?: string;
+  category?: string;
+  startDate?: Date;
+  endDate?: Date;
+}

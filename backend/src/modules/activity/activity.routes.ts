@@ -1,8 +1,22 @@
 import { Router } from "express";
 
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+
+import { authorize } from "../../middleware/authorize.middleware.js";
+
+import { asyncHandler } from "../../utils/asyncHandler.js";
+
 import { validate } from "../../middleware/validate.middleware.js";
 
-import { activityController } from "./activity.controller.js";
+import {
+  clearController,
+  getByIdController,
+  listController,
+  listMineController,
+  recentController,
+  removeController,
+  summaryController,
+} from "./activity.controller.js";
 
 import {
   activityIdSchema,
@@ -12,48 +26,57 @@ import {
   recentActivitySchema,
 } from "./activity.validator.js";
 
-const activityRouter = Router();
+const router = Router();
 
-/*
- * Static routes must come before /:activityId.
- */
+router.use(authenticate);
 
-activityRouter.get(
+router.get(
   "/summary",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(activitySummarySchema),
-  activityController.summary,
+  asyncHandler(summaryController),
 );
 
-activityRouter.get(
+router.get(
   "/recent",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(recentActivitySchema),
-  activityController.recent,
+  asyncHandler(recentController),
 );
 
-activityRouter.get(
+router.get(
   "/me",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(listActivitySchema),
-  activityController.listMine,
+  asyncHandler(listMineController),
 );
 
-activityRouter.get("/", validate(listActivitySchema), activityController.list);
-
-activityRouter.delete(
+router.get(
   "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  validate(listActivitySchema),
+  asyncHandler(listController),
+);
+
+router.delete(
+  "/",
+  authorize("ADMIN"),
   validate(clearActivitySchema),
-  activityController.clear,
+  asyncHandler(clearController),
 );
 
-activityRouter.get(
+router.get(
   "/:activityId",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(activityIdSchema),
-  activityController.getById,
+  asyncHandler(getByIdController),
 );
 
-activityRouter.delete(
+router.delete(
   "/:activityId",
+  authorize("ADMIN"),
   validate(activityIdSchema),
-  activityController.remove,
+  asyncHandler(removeController),
 );
 
-export default activityRouter;
+export { router as activityRoutes };

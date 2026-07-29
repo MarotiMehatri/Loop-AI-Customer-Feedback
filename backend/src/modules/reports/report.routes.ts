@@ -1,8 +1,26 @@
 import { Router } from "express";
 
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+
+import { authorize } from "../../middleware/authorize.middleware.js";
+
+import { asyncHandler } from "../../utils/asyncHandler.js";
+
 import { validate } from "../../middleware/validate.middleware.js";
 
-import { reportController } from "./report.controller.js";
+import {
+  createController,
+  deleteController,
+  exportController,
+  generateController,
+  getByIdController,
+  listController,
+  previewController,
+  recentController,
+  scheduleController,
+  summaryController,
+  updateController,
+} from "./report.controller.js";
 
 import {
   createReportSchema,
@@ -14,56 +32,83 @@ import {
   updateReportSchema,
 } from "./report.validator.js";
 
-const reportRouter = Router();
+const router = Router();
 
-reportRouter.get("/summary", reportController.summary);
+router.use(authenticate);
 
-reportRouter.get("/recent", reportController.recent);
+router.get(
+  "/summary",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(summaryController),
+);
 
-reportRouter.post(
+router.get(
+  "/recent",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(recentController),
+);
+
+router.post(
   "/preview",
+  authorize("ADMIN", "ANALYST"),
   validate(previewReportSchema),
-  reportController.preview,
+  asyncHandler(previewController),
 );
 
-reportRouter.get("/", validate(listReportsSchema), reportController.list);
+router.get(
+  "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  validate(listReportsSchema),
+  asyncHandler(listController),
+);
 
-reportRouter.post("/", validate(createReportSchema), reportController.create);
+router.post(
+  "/",
+  authorize("ADMIN", "ANALYST"),
+  validate(createReportSchema),
+  asyncHandler(createController),
+);
 
-reportRouter.get(
+router.get(
   "/:reportId",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(reportIdSchema),
-  reportController.getById,
+  asyncHandler(getByIdController),
 );
 
-reportRouter.patch(
+router.patch(
   "/:reportId",
+  authorize("ADMIN", "ANALYST"),
   validate(updateReportSchema),
-  reportController.update,
+  asyncHandler(updateController),
 );
 
-reportRouter.delete(
+router.delete(
   "/:reportId",
+  authorize("ADMIN"),
   validate(reportIdSchema),
-  reportController.delete,
+  asyncHandler(deleteController),
 );
 
-reportRouter.post(
+router.post(
   "/:reportId/generate",
+  authorize("ADMIN", "ANALYST"),
   validate(reportIdSchema),
-  reportController.generate,
+  asyncHandler(generateController),
 );
 
-reportRouter.get(
+router.get(
   "/:reportId/export",
+  authorize("ADMIN", "ANALYST"),
   validate(exportReportSchema),
-  reportController.export,
+  asyncHandler(exportController),
 );
 
-reportRouter.post(
+router.post(
   "/:reportId/schedule",
+  authorize("ADMIN"),
   validate(scheduleReportSchema),
-  reportController.schedule,
+  asyncHandler(scheduleController),
 );
 
-export default reportRouter;
+export default router;

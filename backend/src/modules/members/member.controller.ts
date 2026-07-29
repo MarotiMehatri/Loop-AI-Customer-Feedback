@@ -1,12 +1,12 @@
-import type { RequestHandler } from "express";
+import type { Request, Response } from "express";
 
 import { ApiError } from "../../utils/apiError.js";
 
-import { inviteService } from "./invite.service.js";
+import { memberInviteService } from "./member-invite.service.js";
+
+import { memberPermissionService } from "./member-permission.service.js";
 
 import { memberService } from "./member.service.js";
-
-import { roleService } from "./role.service.js";
 
 import type {
   InviteMemberInput,
@@ -14,11 +14,9 @@ import type {
   UpdateMemberInput,
 } from "./member.types.js";
 
-function getRequestContext(request: Parameters<RequestHandler>[0]) {
+const getRequestContext = (request: Request) => {
   const userId = request.user?.userId;
-
   const workspaceId = request.workspaceId ?? request.user?.workspaceId;
-
   const role = request.user?.role;
 
   if (!userId || !role) {
@@ -29,226 +27,215 @@ function getRequestContext(request: Parameters<RequestHandler>[0]) {
     throw new ApiError(400, "Workspace is required");
   }
 
-  return {
-    userId,
+  return { userId, workspaceId, role };
+};
+
+export const listMembersController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { role, workspaceId } = getRequestContext(request);
+
+  const result = await memberService.list(
+    { role, workspaceId },
+    request.query as unknown as MemberListQuery,
+  );
+
+  response.status(200).json({
+    success: true,
+    message: "Team members retrieved successfully",
+    data: result,
+  });
+};
+
+export const getMemberController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { role, workspaceId } = getRequestContext(request);
+
+  const result = await memberService.getById(
+    { role, workspaceId },
+    request.params.memberId as string,
+  );
+
+  response.status(200).json({
+    success: true,
+    data: result,
+  });
+};
+
+export const updateMemberController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId, role } = getRequestContext(request);
+
+  const result = await memberService.update({
+    memberId: request.params.memberId as string,
     workspaceId,
-    role,
-  };
-}
+    actorUserId: userId,
+    actorRole: role,
+    data: request.body as UpdateMemberInput,
+  });
 
-export const memberController: {
-  list: RequestHandler;
-  getById: RequestHandler;
-  update: RequestHandler;
-  remove: RequestHandler;
-  summary: RequestHandler;
-  invite: RequestHandler;
-  resendInvite: RequestHandler;
-  cancelInvite: RequestHandler;
-  changeRole: RequestHandler;
-  changeStatus: RequestHandler;
-} = {
-  list: async (request, response, next) => {
-    try {
-      const { workspaceId } = getRequestContext(request);
+  response.status(200).json({
+    success: true,
+    message: "Team member updated successfully",
+    data: result,
+  });
+};
 
-      const result = await memberService.list(
-        workspaceId,
-        request.query as unknown as MemberListQuery,
-      );
+export const removeMemberController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId, role } = getRequestContext(request);
 
-      response.status(200).json({
-        success: true,
-        message: "Team members retrieved successfully",
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  await memberService.remove({
+    memberId: request.params.memberId as string,
+    workspaceId,
+    actorUserId: userId,
+    actorRole: role,
+  });
 
-  getById: async (request, response, next) => {
-    try {
-      const { workspaceId } = getRequestContext(request);
+  response.status(200).json({
+    success: true,
+    message: "Team member removed successfully",
+  });
+};
 
-      const result = await memberService.getById(
-        request.params.memberId as string,
-        workspaceId,
-      );
+export const memberSummaryController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { role, workspaceId } = getRequestContext(request);
 
-      response.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  const result = await memberService.getSummary({ role, workspaceId });
 
-  update: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getRequestContext(request);
+  response.status(200).json({
+    success: true,
+    data: result,
+  });
+};
 
-      const result = await memberService.update({
-        memberId: request.params.memberId as string,
+export const inviteMemberController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getRequestContext(request);
 
-        workspaceId,
-        actorUserId: userId,
+  const result = await memberInviteService.invite({
+    workspaceId,
+    actorUserId: userId,
+    invitation: request.body as InviteMemberInput,
+  });
 
-        data: request.body as UpdateMemberInput,
-      });
+  response.status(201).json({
+    success: true,
+    message: "Team member invited successfully",
+    data: result,
+  });
+};
 
-      response.status(200).json({
-        success: true,
-        message: "Team member updated successfully",
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+export const listInvitesController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { role, workspaceId } = getRequestContext(request);
 
-  remove: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getRequestContext(request);
+  const result = await memberInviteService.list(
+    { role, workspaceId },
+    request.query as unknown as {
+      page: number;
+      limit: number;
+      status?: string;
+      sortBy: string;
+      sortOrder: "asc" | "desc";
+    },
+  );
 
-      await memberService.remove({
-        memberId: request.params.memberId as string,
+  response.status(200).json({
+    success: true,
+    message: "Invitations retrieved successfully",
+    data: result,
+  });
+};
 
-        workspaceId,
-        actorUserId: userId,
-      });
+export const resendInviteController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getRequestContext(request);
 
-      response.status(200).json({
-        success: true,
-        message: "Team member removed successfully",
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  const result = await memberInviteService.resend({
+    inviteId: request.params.inviteId as string,
+    workspaceId,
+    actorUserId: userId,
+  });
 
-  summary: async (request, response, next) => {
-    try {
-      const { workspaceId } = getRequestContext(request);
+  response.status(200).json({
+    success: true,
+    message: "Invitation resent successfully",
+    data: result,
+  });
+};
 
-      const result = await memberService.getSummary(workspaceId);
+export const cancelInviteController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getRequestContext(request);
 
-      response.status(200).json({
-        success: true,
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  await memberInviteService.cancel({
+    inviteId: request.params.inviteId as string,
+    workspaceId,
+    actorUserId: userId,
+  });
 
-  invite: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getRequestContext(request);
+  response.status(200).json({
+    success: true,
+    message: "Invitation cancelled successfully",
+  });
+};
 
-      const result = await inviteService.invite({
-        workspaceId,
-        actorUserId: userId,
+export const changeMemberRoleController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId } = getRequestContext(request);
 
-        invitation: request.body as InviteMemberInput,
-      });
+  const result = await memberPermissionService.changeRole({
+    memberId: request.params.memberId as string,
+    workspaceId,
+    actorUserId: userId,
+    role: request.body.role,
+  });
 
-      response.status(201).json({
-        success: true,
-        message: "Team member invited successfully",
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: "Member role updated successfully",
+    data: result,
+  });
+};
 
-  resendInvite: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getRequestContext(request);
+export const changeMemberStatusController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const { userId, workspaceId, role } = getRequestContext(request);
 
-      const result = await inviteService.resend({
-        inviteId: request.params.inviteId as string,
+  const result = await memberService.update({
+    memberId: request.params.memberId as string,
+    workspaceId,
+    actorUserId: userId,
+    actorRole: role,
+    data: { isActive: request.body.isActive },
+  });
 
-        workspaceId,
-        actorUserId: userId,
-      });
-
-      response.status(200).json({
-        success: true,
-        message: "Invitation resent successfully",
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  cancelInvite: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getRequestContext(request);
-
-      await inviteService.cancel({
-        inviteId: request.params.inviteId as string,
-
-        workspaceId,
-        actorUserId: userId,
-      });
-
-      response.status(200).json({
-        success: true,
-        message: "Invitation cancelled successfully",
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  changeRole: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getRequestContext(request);
-
-      const result = await roleService.changeRole({
-        memberId: request.params.memberId as string,
-
-        workspaceId,
-        actorUserId: userId,
-        role: request.body.role,
-      });
-
-      response.status(200).json({
-        success: true,
-        message: "Member role updated successfully",
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  changeStatus: async (request, response, next) => {
-    try {
-      const { userId, workspaceId } = getRequestContext(request);
-
-      const result = await memberService.update({
-        memberId: request.params.memberId as string,
-
-        workspaceId,
-        actorUserId: userId,
-
-        data: {
-          isActive: request.body.isActive,
-        },
-      });
-
-      response.status(200).json({
-        success: true,
-        message: "Member status updated successfully",
-        data: result,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  response.status(200).json({
+    success: true,
+    message: "Member status updated successfully",
+    data: result,
+  });
 };

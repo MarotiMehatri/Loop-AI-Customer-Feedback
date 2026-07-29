@@ -1,24 +1,108 @@
 import { Router } from "express";
+
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+
+import { authorize } from "../../middleware/authorize.middleware.js";
+
 import { validate } from "../../middleware/validate.middleware.js";
-import { workspaceController } from "./workspace.controller.js";
+
+import { asyncHandler } from "../../utils/asyncHandler.js";
+
 import {
+  availableWorkspacesController,
+  createWorkspaceController,
+  deleteWorkspaceController,
+  getFullWorkspaceController,
+  getWorkspaceController,
+  switchWorkspaceController,
+  updateWorkspaceController,
+  workspaceHealthController,
+  workspaceOverviewController,
+  workspaceSummaryController,
+  workspaceUsageController,
+} from "./workspace.controller.js";
+
+import {
+  createWorkspaceSchema,
   deleteWorkspaceSchema,
+  switchWorkspaceSchema,
   updateWorkspaceSchema,
+  usageQuerySchema,
 } from "./workspace.validator.js";
 
 const workspaceRouter = Router();
 
-workspaceRouter.get("/summary", workspaceController.summary);
-workspaceRouter.get("/", workspaceController.get);
+workspaceRouter.use(authenticate);
+
+workspaceRouter.get(
+  "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(getWorkspaceController),
+);
+
+workspaceRouter.get(
+  "/full",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(getFullWorkspaceController),
+);
+
+workspaceRouter.get(
+  "/overview",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(workspaceOverviewController),
+);
+
+workspaceRouter.get(
+  "/summary",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(workspaceSummaryController),
+);
+
+workspaceRouter.get(
+  "/health",
+  authorize("ADMIN", "ANALYST"),
+  asyncHandler(workspaceHealthController),
+);
+
+workspaceRouter.get(
+  "/usage",
+  authorize("ADMIN", "ANALYST"),
+  validate(usageQuerySchema),
+  asyncHandler(workspaceUsageController),
+);
+
+workspaceRouter.get(
+  "/available",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(availableWorkspacesController),
+);
+
+workspaceRouter.post(
+  "/switch",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  validate(switchWorkspaceSchema),
+  asyncHandler(switchWorkspaceController),
+);
+
+workspaceRouter.post(
+  "/",
+  authorize("ADMIN"),
+  validate(createWorkspaceSchema),
+  asyncHandler(createWorkspaceController),
+);
+
 workspaceRouter.patch(
   "/",
+  authorize("ADMIN"),
   validate(updateWorkspaceSchema),
-  workspaceController.update,
+  asyncHandler(updateWorkspaceController),
 );
+
 workspaceRouter.delete(
   "/",
+  authorize("ADMIN"),
   validate(deleteWorkspaceSchema),
-  workspaceController.remove,
+  asyncHandler(deleteWorkspaceController),
 );
 
 export default workspaceRouter;

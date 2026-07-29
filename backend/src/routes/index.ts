@@ -10,7 +10,7 @@ import reportRouter from '../modules/reports/report.routes.js';
 import { authenticate } from '../middleware/authenticate.middleware.js';
 import memberRouter from '../modules/members/member.routes.js';
 import profileRouter from '../modules/profile/profile.routes.js';
-import activityRouter from '../modules/activity/activity.routes.js';
+import { activityRoutes as activityRouter } from '../modules/activity/activity.routes.js';
 
 import settingsRouter from '../modules/settings/settings.routes.js';
 import themeRouter from '../modules/themes/theme.routes.js';

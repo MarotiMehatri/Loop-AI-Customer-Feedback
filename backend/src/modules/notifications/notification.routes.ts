@@ -1,30 +1,79 @@
 import { Router } from "express";
 
-import { notificationController } from "./notification.controller.js";
+import { authenticate } from "../../middleware/authenticate.middleware.js";
+
+import { authorize } from "../../middleware/authorize.middleware.js";
+
+import { asyncHandler } from "../../utils/asyncHandler.js";
+
+import {
+  clearController,
+  getByIdController,
+  getUnreadCountController,
+  listController,
+  markAllAsReadController,
+  markAsReadController,
+  markAsUnreadController,
+  removeController,
+  removeReadController,
+} from "./notification.controller.js";
 
 const router = Router();
 
-/**
- * Authentication and workspace middleware should be applied
- * before these routes are mounted in src/routes/index.ts or app.ts.
- */
+router.use(authenticate);
 
-router.get("/", notificationController.list);
+router.get(
+  "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(listController),
+);
 
-router.get("/unread-count", notificationController.getUnreadCount);
+router.get(
+  "/unread-count",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(getUnreadCountController),
+);
 
-router.patch("/read-all", notificationController.markAllAsRead);
+router.patch(
+  "/read-all",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(markAllAsReadController),
+);
 
-router.delete("/read", notificationController.removeRead);
+router.delete(
+  "/read",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(removeReadController),
+);
 
-router.delete("/", notificationController.clear);
+router.delete(
+  "/",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(clearController),
+);
 
-router.get("/:notificationId", notificationController.getById);
+router.get(
+  "/:notificationId",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(getByIdController),
+);
 
-router.patch("/:notificationId/read", notificationController.markAsRead);
+router.patch(
+  "/:notificationId/read",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(markAsReadController),
+);
 
-router.patch("/:notificationId/unread", notificationController.markAsUnread);
+router.patch(
+  "/:notificationId/unread",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(markAsUnreadController),
+);
 
-router.delete("/:notificationId", notificationController.remove);
+router.delete(
+  "/:notificationId",
+  authorize("ADMIN", "ANALYST", "VIEWER"),
+  asyncHandler(removeController),
+);
 
-export const notificationRoutes = router;
+export { router as notificationRoutes };

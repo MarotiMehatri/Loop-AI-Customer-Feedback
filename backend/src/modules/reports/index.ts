@@ -1,5 +1,17 @@
 export { default as reportRoutes } from "./report.routes.js";
-export { reportController } from "./report.controller.js";
+export {
+  createController,
+  deleteController,
+  exportController,
+  generateController,
+  getByIdController,
+  listController,
+  previewController,
+  recentController,
+  scheduleController,
+  summaryController,
+  updateController,
+} from "./report.controller.js";
 export { reportService } from "./report.service.js";
 export { reportRepository } from "./report.repository.js";
 export { reportDataService } from "./report-data.service.js";

@@ -1,4 +1,4 @@
-import cuid from "cuid";
+import { randomUUID } from "node:crypto";
 import { prisma } from "../../config/prisma.js";
 import type { MessageRole, Prisma } from "../../generated/prisma/client.js";
 import type { AskLoopMessage } from "./ask-loop.types.js";
@@ -117,8 +117,8 @@ INSTRUCTIONS:
       conversationId: m.conversationId,
       role: m.role,
       content: m.content,
-      chart: m.chart as AskLoopMessage["chart"],
-      metadata: m.metadata as AskLoopMessage["metadata"],
+      chart: m.chart as unknown as AskLoopMessage["chart"],
+      metadata: m.metadata as unknown as AskLoopMessage["metadata"],
       promptTokens: m.promptTokens ?? undefined,
       completionTokens: m.completionTokens ?? undefined,
       createdAt: m.createdAt,

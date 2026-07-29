@@ -1,28 +1,35 @@
 import { ApiError } from "../../utils/apiError.js";
 
+import {
+  assertCanManageMembers,
+  assertCanViewMembers,
+} from "./member.permissions.js";
+
 import { MEMBER_MESSAGES } from "./member.constants.js";
 
-import { normalizeMemberName } from "./member.helper.js";
-
-import { logMemberActivity } from "./member.activity.js";
-
-import { memberCache } from "./member.cache.js";
+import { logMemberActivity } from "./member-activity.service.js";
 
 import { mapMember, mapMembers } from "./member.mapper.js";
 
 import { memberRepository } from "./member.repository.js";
 
-import { memberSocket } from "./member.socket.js";
-
 import type { MemberListQuery, UpdateMemberInput } from "./member.types.js";
 
+function normalizeMemberName(name: string): string {
+  return name.replace(/\s+/g, " ").trim();
+}
+
 export const memberService = {
-  async list(workspaceId: string, query: MemberListQuery) {
-    const result = await memberRepository.list(workspaceId, query);
+  async list(
+    actor: { role: string; workspaceId: string },
+    query: MemberListQuery,
+  ) {
+    assertCanViewMembers(actor.role as never);
+
+    const result = await memberRepository.list(actor.workspaceId, query);
 
     return {
       items: mapMembers(result.items),
-
       pagination: {
         page: query.page,
         limit: query.limit,
@@ -32,8 +39,16 @@ export const memberService = {
     };
   },
 
-  async getById(memberId: string, workspaceId: string) {
-    const member = await memberRepository.findById(memberId, workspaceId);
+  async getById(
+    actor: { role: string; workspaceId: string },
+    memberId: string,
+  ) {
+    assertCanViewMembers(actor.role as never);
+
+    const member = await memberRepository.findById(
+      memberId,
+      actor.workspaceId,
+    );
 
     if (!member) {
       throw new ApiError(404, MEMBER_MESSAGES.notFound);
@@ -46,8 +61,11 @@ export const memberService = {
     memberId: string;
     workspaceId: string;
     actorUserId: string;
+    actorRole: string;
     data: UpdateMemberInput;
   }) {
+    assertCanManageMembers(input.actorRole as never);
+
     if (
       input.memberId === input.actorUserId &&
       (input.data.role !== undefined || input.data.isActive !== undefined)
@@ -79,39 +97,34 @@ export const memberService = {
       }
     }
 
+    const normalized: UpdateMemberInput = {
+      ...input.data,
+      name:
+        input.data.name !== undefined
+          ? normalizeMemberName(input.data.name)
+          : undefined,
+    };
+
     const updated = await memberRepository.update(
       input.memberId,
       input.workspaceId,
-      {
-        ...input.data,
-
-        name:
-          input.data.name !== undefined
-            ? normalizeMemberName(input.data.name)
-            : undefined,
-      },
+      normalized,
     );
 
     if (!updated) {
       throw new ApiError(404, MEMBER_MESSAGES.notFound);
     }
 
-    memberCache.clearWorkspace(input.workspaceId);
-
-    memberSocket.publish({
-      event: "member:updated",
-      workspaceId: input.workspaceId,
-      memberId: updated.id,
-      role: updated.role,
-      isActive: updated.isActive,
-      createdAt: new Date(),
-    });
-
     logMemberActivity({
       action: "MEMBER_UPDATED",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
       targetUserId: updated.id,
+      metadata: {
+        name: input.data.name,
+        role: input.data.role,
+        isActive: input.data.isActive,
+      },
     });
 
     return mapMember(updated);
@@ -121,7 +134,10 @@ export const memberService = {
     memberId: string;
     workspaceId: string;
     actorUserId: string;
+    actorRole: string;
   }): Promise<void> {
+    assertCanManageMembers(input.actorRole as never);
+
     if (input.memberId === input.actorUserId) {
       throw new ApiError(400, MEMBER_MESSAGES.cannotModifySelf);
     }
@@ -154,15 +170,6 @@ export const memberService = {
       throw new ApiError(404, MEMBER_MESSAGES.notFound);
     }
 
-    memberCache.clearWorkspace(input.workspaceId);
-
-    memberSocket.publish({
-      event: "member:removed",
-      workspaceId: input.workspaceId,
-      memberId: input.memberId,
-      createdAt: new Date(),
-    });
-
     logMemberActivity({
       action: "MEMBER_REMOVED",
       workspaceId: input.workspaceId,
@@ -171,19 +178,11 @@ export const memberService = {
     });
   },
 
-  async getSummary(workspaceId: string) {
-    const cacheKey = `member-summary:${workspaceId}`;
+  async getSummary(
+    actor: { role: string; workspaceId: string },
+  ) {
+    assertCanViewMembers(actor.role as never);
 
-    const cached = memberCache.get(cacheKey);
-
-    if (cached) {
-      return cached;
-    }
-
-    const summary = await memberRepository.getSummary(workspaceId);
-
-    memberCache.set(cacheKey, summary);
-
-    return summary;
+    return memberRepository.getSummary(actor.workspaceId);
   },
 };

@@ -1,3 +1,5 @@
+import { logger } from "../../config/logger.js";
+
 import { ApiError } from "../../utils/apiError.js";
 
 import { NOTIFICATION_MESSAGES } from "./notification.constants.js";
@@ -7,10 +9,12 @@ import { notificationMapper } from "./notification.mapper.js";
 import { notificationRepository } from "./notification.repository.js";
 
 import type {
+  CreateNotificationInput,
   NotificationContext,
   NotificationListQuery,
   NotificationListResponse,
   NotificationResponse,
+  PublishNotificationInput,
 } from "./notification.types.js";
 
 async function list(
@@ -28,11 +32,8 @@ async function list(
 
     pagination: {
       page: result.page,
-
       limit: result.limit,
-
       total: result.total,
-
       totalPages: result.totalPages,
     },
 
@@ -158,6 +159,63 @@ async function clear(context: NotificationContext): Promise<{
   };
 }
 
+async function publish(input: PublishNotificationInput): Promise<NotificationResponse> {
+  const notification = await notificationRepository.create(input);
+  return notificationMapper.toResponse(notification);
+}
+
+async function publishMany(inputs: PublishNotificationInput[]): Promise<{ count: number }> {
+  if (inputs.length === 0) {
+    return { count: 0 };
+  }
+
+  return notificationRepository.createMany(inputs);
+}
+
+async function publishSafe(input: PublishNotificationInput): Promise<void> {
+  try {
+    await publish(input);
+  } catch (error) {
+    logger.error({
+      module: "notifications",
+      message: "Unable to publish notification",
+      notificationType: input.type,
+      userId: input.userId,
+      workspaceId: input.workspaceId,
+      error: error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : error,
+    });
+  }
+}
+
+async function publishManySafe(inputs: PublishNotificationInput[]): Promise<void> {
+  if (inputs.length === 0) {
+    return;
+  }
+
+  try {
+    await publishMany(inputs);
+  } catch (error) {
+    logger.error({
+      module: "notifications",
+      message: "Unable to publish multiple notifications",
+      notificationCount: inputs.length,
+      workspaceId: inputs[0]?.workspaceId,
+      error: error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : error,
+    });
+  }
+}
+
+export const notificationPublisher = {
+  publish,
+  publishMany,
+  publishSafe,
+  publishManySafe,
+};
+
 export const notificationService = {
   list,
   getUnreadCount,
@@ -168,4 +226,8 @@ export const notificationService = {
   remove,
   removeRead,
   clear,
+  publish,
+  publishMany,
+  publishSafe,
+  publishManySafe,
 };

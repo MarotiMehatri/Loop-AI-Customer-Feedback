@@ -1,4 +1,5 @@
 import type { Prisma } from "../../generated/prisma/client.js";
+import { $Enums } from "../../generated/prisma/client.js";
 
 import type { TrendFilterQuery } from "./trends.types.js";
 
@@ -11,11 +12,11 @@ export function buildTrendWhere(
   };
 
   if (query.source) {
-    where.source = query.source;
+    where.source = query.source as $Enums.FeedbackChannel;
   }
 
   if (query.sentiment) {
-    where.sentiment = query.sentiment;
+    where.sentiment = query.sentiment as $Enums.Sentiment;
   }
 
   if (query.category) {
@@ -26,7 +27,7 @@ export function buildTrendWhere(
   }
 
   if (query.status) {
-    where.status = query.status;
+    where.status = query.status as $Enums.FeedbackStatus;
   }
 
   if (query.startDate || query.endDate) {

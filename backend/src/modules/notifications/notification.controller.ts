@@ -1,4 +1,4 @@
-import type { Request, RequestHandler } from "express";
+import type { Request, Response } from "express";
 
 import { ApiError } from "../../utils/apiError.js";
 
@@ -6,16 +6,15 @@ import { NOTIFICATION_MESSAGES } from "./notification.constants.js";
 
 import { notificationService } from "./notification.service.js";
 
-import type {
-  NotificationContext,
-  NotificationTypeValue,
-} from "./notification.types.js";
+import {
+  listQuerySchema,
+  notificationParamsSchema,
+} from "./notification.validator.js";
 
-import { notificationValidator } from "./notification.validator.js";
+import type { NotificationTypeValue } from "./notification.types.js";
 
-function getContext(request: Request): NotificationContext {
+function getContext(request: Request) {
   const userId = request.user?.userId;
-
   const workspaceId = request.workspaceId ?? request.user?.workspaceId;
 
   if (!userId) {
@@ -26,16 +25,11 @@ function getContext(request: Request): NotificationContext {
     throw new ApiError(400, NOTIFICATION_MESSAGES.WORKSPACE_REQUIRED);
   }
 
-  return {
-    userId,
-    workspaceId,
-  };
+  return { userId, workspaceId };
 }
 
 function getNotificationId(request: Request): string {
-  const parsed = notificationValidator.notificationParams.safeParse(
-    request.params,
-  );
+  const parsed = notificationParamsSchema.safeParse(request.params);
 
   if (!parsed.success) {
     throw new ApiError(400, NOTIFICATION_MESSAGES.INVALID_ID);
@@ -44,8 +38,11 @@ function getNotificationId(request: Request): string {
   return parsed.data.notificationId;
 }
 
-const list: RequestHandler = async (request, response) => {
-  const parsed = notificationValidator.listQuery.safeParse(request.query);
+export const listController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  const parsed = listQuerySchema.safeParse(request.query);
 
   if (!parsed.success) {
     throw new ApiError(400, NOTIFICATION_MESSAGES.INVALID_QUERY);
@@ -55,11 +52,8 @@ const list: RequestHandler = async (request, response) => {
 
   const data = await notificationService.list(context, {
     page: parsed.data.page,
-
     limit: parsed.data.limit,
-
     isRead: parsed.data.isRead,
-
     type: parsed.data.type as NotificationTypeValue | undefined,
   });
 
@@ -69,7 +63,10 @@ const list: RequestHandler = async (request, response) => {
   });
 };
 
-const getUnreadCount: RequestHandler = async (request, response) => {
+export const getUnreadCountController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const data = await notificationService.getUnreadCount(context);
@@ -80,7 +77,10 @@ const getUnreadCount: RequestHandler = async (request, response) => {
   });
 };
 
-const getById: RequestHandler = async (request, response) => {
+export const getByIdController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const notificationId = getNotificationId(request);
@@ -93,7 +93,10 @@ const getById: RequestHandler = async (request, response) => {
   });
 };
 
-const markAsRead: RequestHandler = async (request, response) => {
+export const markAsReadController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const notificationId = getNotificationId(request);
@@ -106,7 +109,10 @@ const markAsRead: RequestHandler = async (request, response) => {
   });
 };
 
-const markAsUnread: RequestHandler = async (request, response) => {
+export const markAsUnreadController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const notificationId = getNotificationId(request);
@@ -119,7 +125,10 @@ const markAsUnread: RequestHandler = async (request, response) => {
   });
 };
 
-const markAllAsRead: RequestHandler = async (request, response) => {
+export const markAllAsReadController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const data = await notificationService.markAllAsRead(context);
@@ -130,7 +139,10 @@ const markAllAsRead: RequestHandler = async (request, response) => {
   });
 };
 
-const remove: RequestHandler = async (request, response) => {
+export const removeController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const notificationId = getNotificationId(request);
@@ -139,12 +151,14 @@ const remove: RequestHandler = async (request, response) => {
 
   response.status(200).json({
     success: true,
-
     message: "Notification deleted successfully.",
   });
 };
 
-const removeRead: RequestHandler = async (request, response) => {
+export const removeReadController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const data = await notificationService.removeRead(context);
@@ -155,7 +169,10 @@ const removeRead: RequestHandler = async (request, response) => {
   });
 };
 
-const clear: RequestHandler = async (request, response) => {
+export const clearController = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
   const context = getContext(request);
 
   const data = await notificationService.clear(context);
@@ -164,16 +181,4 @@ const clear: RequestHandler = async (request, response) => {
     success: true,
     data,
   });
-};
-
-export const notificationController = {
-  list,
-  getUnreadCount,
-  getById,
-  markAsRead,
-  markAsUnread,
-  markAllAsRead,
-  remove,
-  removeRead,
-  clear,
 };

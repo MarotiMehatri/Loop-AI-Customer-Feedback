@@ -5,11 +5,13 @@ import { assertPermission } from "../../permissions/rolePermissions.js";
 
 import { activityLogger } from "../activity/activity.logger.js";
 
-import { getDefaultSettingsSection } from "./settings.defaults.js";
+import { getDefaultSettingsSection } from "./settings.constants.js";
 
-import { buildUpdatedSettingsSection } from "./settings.helper.js";
-
-import { mapSettings, mapSettingsSection } from "./settings.mapper.js";
+import {
+  buildUpdatedSettingsSection,
+  mapSettings,
+  mapSettingsSection,
+} from "./settings.mapper.js";
 
 import { settingsRepository } from "./settings.repository.js";
 
@@ -73,22 +75,14 @@ export const settingsService = {
 
     await activityLogger.logSafe({
       userId: context.userId,
-
       workspaceId: context.workspaceId,
-
       type: ActivityType.SETTINGS_UPDATED,
-
       title: "Workspace settings updated",
-
       description: `The ${section} settings were updated.`,
-
       entityType: "SETTINGS",
-
       entityId: context.workspaceId,
-
       metadata: {
         section,
-
         updatedFields: Object.keys(input),
       },
     });
@@ -113,19 +107,12 @@ export const settingsService = {
 
     await activityLogger.logSafe({
       userId: context.userId,
-
       workspaceId: context.workspaceId,
-
       type: ActivityType.SETTINGS_UPDATED,
-
       title: "Workspace settings reset",
-
       description: `The ${section} settings were reset to their default values.`,
-
       entityType: "SETTINGS",
-
       entityId: context.workspaceId,
-
       metadata: {
         section,
         action: "RESET",

@@ -1,7 +1,7 @@
 import { ActivityType, ReportStatus } from "../../generated/prisma/client.js";
 import { ApiError } from "../../utils/apiError.js";
 import { activityLogger } from "../activity/activity.logger.js";
-import { notificationPublisher } from "../notifications/notification.publisher.js";
+import { notificationPublisher } from "../notifications/notification.service.js";
 import { NotificationType } from "../../generated/prisma/client.js";
 import { assertCanCreateReport, assertCanViewReports, assertCanUpdateReport, assertCanDeleteReport, assertCanGenerateReport, assertCanExportReport, assertCanScheduleReport } from "./report.permissions.js";
 import { REPORT_MESSAGES, REPORT_CACHE_TTL_MS } from "./report.constants.js";

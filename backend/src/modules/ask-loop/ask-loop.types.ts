@@ -1,9 +1,11 @@
 export type AskLoopChartType = "bar" | "line" | "pie" | "none";
 
+import type { Role } from "../../generated/prisma/client.js";
+
 export interface AskLoopActorContext {
   userId: string;
   workspaceId: string;
-  role: string;
+  role: Role;
 }
 
 export interface AskLoopQueryInput {
