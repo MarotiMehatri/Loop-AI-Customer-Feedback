@@ -134,7 +134,7 @@ export const switchWorkspaceController = async (
 ): Promise<void> => {
   const result = await workspaceService.switchWorkspace(
     getContext(request),
-    request.body.workspaceId as string,
+    (request.body as { workspaceId: string }).workspaceId,
   );
 
   response.status(200).json({

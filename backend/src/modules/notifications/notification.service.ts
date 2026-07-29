@@ -9,7 +9,6 @@ import { notificationMapper } from "./notification.mapper.js";
 import { notificationRepository } from "./notification.repository.js";
 
 import type {
-  CreateNotificationInput,
   NotificationContext,
   NotificationListQuery,
   NotificationListResponse,

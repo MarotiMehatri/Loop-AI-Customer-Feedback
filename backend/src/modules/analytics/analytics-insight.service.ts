@@ -1,5 +1,3 @@
-import type { Prisma } from "../../generated/prisma/client.js";
-
 import { prisma } from "../../config/prisma.js";
 
 import {
@@ -15,7 +13,6 @@ import {
 import { buildFeedbackWhere } from "./analytics.query.js";
 
 import type {
-  AnalyticsGroupBy,
   AnalyticsInsight,
   AnalyticsQueryInput,
   TrendDataPoint,
@@ -55,9 +52,6 @@ async function detectTrendShift(
   ]);
 
   if (currentRows.length === 0 && previousRows.length === 0) return null;
-
-  const currentTrend = createTrendMap(currentRows, "day");
-  const previousTrend = createTrendMap(previousRows, "day");
 
   const currentTotal = currentRows.length;
   const previousTotal = previousRows.length;
@@ -240,7 +234,7 @@ async function detectSourceConcentration(
 export const analyticsInsightService = {
   async generateInsights(
     input: AnalyticsQueryInput,
-    trendPoints: TrendDataPoint[],
+    _trendPoints: TrendDataPoint[],
   ): Promise<AnalyticsInsight[]> {
     const [
       trendShiftInsight,

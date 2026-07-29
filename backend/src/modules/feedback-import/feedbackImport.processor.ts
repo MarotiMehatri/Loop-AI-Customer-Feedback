@@ -33,7 +33,7 @@ export const processCsvRows = (input: ProcessCsvInput): ProcessRowResult => {
 
   const valid: Prisma.FeedbackCreateManyInput[] = [];
   const errors: FeedbackImportErrorInput[] = [];
-  let duplicates = 0;
+  const duplicates = 0;
 
   for (let index = 0; index < rows.length; index++) {
     const row = rows[index] as CsvFeedbackRow;

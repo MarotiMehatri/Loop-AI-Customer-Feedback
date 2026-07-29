@@ -8,6 +8,8 @@ import { memberPermissionService } from "./member-permission.service.js";
 
 import { memberService } from "./member.service.js";
 
+import type { Role } from "../../generated/prisma/client.js";
+
 import type {
   InviteMemberInput,
   MemberListQuery,
@@ -209,7 +211,7 @@ export const changeMemberRoleController = async (
     memberId: request.params.memberId as string,
     workspaceId,
     actorUserId: userId,
-    role: request.body.role,
+    role: (request.body as { role: Role }).role,
   });
 
   response.status(200).json({
@@ -230,7 +232,7 @@ export const changeMemberStatusController = async (
     workspaceId,
     actorUserId: userId,
     actorRole: role,
-    data: { isActive: request.body.isActive },
+    data: { isActive: (request.body as { isActive: boolean }).isActive },
   });
 
   response.status(200).json({

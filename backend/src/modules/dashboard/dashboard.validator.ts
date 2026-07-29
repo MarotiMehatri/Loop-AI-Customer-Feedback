@@ -48,7 +48,7 @@ const dashboardQueryObject = z
         recentLimit: number;
         topThemesLimit: number;
       },
-      context: any,
+      context,
     ) => {
       if (value.range === "custom") {
         if (!value.startDate) {

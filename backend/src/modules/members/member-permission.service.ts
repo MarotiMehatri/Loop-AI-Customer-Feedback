@@ -58,7 +58,7 @@ export const memberPermissionService = {
       throw new ApiError(404, MEMBER_MESSAGES.notFound);
     }
 
-    logMemberActivity({
+    await logMemberActivity({
       action: "MEMBER_ROLE_CHANGED",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,

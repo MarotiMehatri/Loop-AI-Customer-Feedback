@@ -1,3 +1,5 @@
+import type { Role } from "../../generated/prisma/client.js";
+
 import { ApiError } from "../../utils/apiError.js";
 
 import {
@@ -21,10 +23,10 @@ function normalizeMemberName(name: string): string {
 
 export const memberService = {
   async list(
-    actor: { role: string; workspaceId: string },
+    actor: { role: Role; workspaceId: string },
     query: MemberListQuery,
   ) {
-    assertCanViewMembers(actor.role as never);
+    assertCanViewMembers(actor.role);
 
     const result = await memberRepository.list(actor.workspaceId, query);
 
@@ -40,10 +42,10 @@ export const memberService = {
   },
 
   async getById(
-    actor: { role: string; workspaceId: string },
+    actor: { role: Role; workspaceId: string },
     memberId: string,
   ) {
-    assertCanViewMembers(actor.role as never);
+    assertCanViewMembers(actor.role);
 
     const member = await memberRepository.findById(
       memberId,
@@ -61,10 +63,10 @@ export const memberService = {
     memberId: string;
     workspaceId: string;
     actorUserId: string;
-    actorRole: string;
+    actorRole: Role;
     data: UpdateMemberInput;
   }) {
-    assertCanManageMembers(input.actorRole as never);
+    assertCanManageMembers(input.actorRole);
 
     if (
       input.memberId === input.actorUserId &&
@@ -115,7 +117,7 @@ export const memberService = {
       throw new ApiError(404, MEMBER_MESSAGES.notFound);
     }
 
-    logMemberActivity({
+    await logMemberActivity({
       action: "MEMBER_UPDATED",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
@@ -134,9 +136,9 @@ export const memberService = {
     memberId: string;
     workspaceId: string;
     actorUserId: string;
-    actorRole: string;
+    actorRole: Role;
   }): Promise<void> {
-    assertCanManageMembers(input.actorRole as never);
+    assertCanManageMembers(input.actorRole);
 
     if (input.memberId === input.actorUserId) {
       throw new ApiError(400, MEMBER_MESSAGES.cannotModifySelf);
@@ -170,7 +172,7 @@ export const memberService = {
       throw new ApiError(404, MEMBER_MESSAGES.notFound);
     }
 
-    logMemberActivity({
+    await logMemberActivity({
       action: "MEMBER_REMOVED",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
@@ -179,9 +181,9 @@ export const memberService = {
   },
 
   async getSummary(
-    actor: { role: string; workspaceId: string },
+    actor: { role: Role; workspaceId: string },
   ) {
-    assertCanViewMembers(actor.role as never);
+    assertCanViewMembers(actor.role);
 
     return memberRepository.getSummary(actor.workspaceId);
   },

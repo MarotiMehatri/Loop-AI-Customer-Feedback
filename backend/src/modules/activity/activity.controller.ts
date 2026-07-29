@@ -92,7 +92,7 @@ export const summaryController = async (
 
   const result = await activityService.getSummary(
     actor,
-    request.query as unknown as ActivitySummaryQuery,
+    request.query,
   );
 
   response.status(200).json({

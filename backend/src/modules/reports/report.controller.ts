@@ -178,7 +178,8 @@ export const exportController = async (
 ): Promise<void> => {
   const actor = getReportContext(request);
 
-  const format = String(request.query.format ?? "CSV").toUpperCase() as ReportExportFormat;
+  const rawFormat = request.query.format;
+  const format = (typeof rawFormat === "string" ? rawFormat : "CSV").toUpperCase() as ReportExportFormat;
 
   const result = await reportService.export(
     actor,

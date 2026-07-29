@@ -14,7 +14,7 @@ import { memberInviteRepository } from "./member-invite.repository.js";
 
 import { eventBus } from "../../events/event-bus.js";
 
-import { MEMBER_INVITED, MEMBER_REMOVED } from "../../events/event-names.js";
+import { MEMBER_INVITED } from "../../events/event-names.js";
 
 import type { InviteMemberInput } from "./member.types.js";
 
@@ -74,7 +74,7 @@ export const memberInviteService = {
       expiresAt: createInvitationExpiry(),
     });
 
-    logMemberActivity({
+    await logMemberActivity({
       action: "MEMBER_INVITED",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
@@ -149,7 +149,7 @@ export const memberInviteService = {
       throw new ApiError(404, MEMBER_MESSAGES.inviteNotFound);
     }
 
-    logMemberActivity({
+    await logMemberActivity({
       action: "INVITE_RESENT",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
@@ -176,7 +176,7 @@ export const memberInviteService = {
       throw new ApiError(404, MEMBER_MESSAGES.inviteNotFound);
     }
 
-    logMemberActivity({
+    await logMemberActivity({
       action: "INVITE_CANCELLED",
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
