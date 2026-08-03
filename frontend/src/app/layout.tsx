@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import "../styles/globals.css";
+import "./globals.css";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "LOOP AI Platform",
-  description: "AI-powered customer feedback platform",
+  title: "Loop | Analytics",
+  description: "AI-powered customer feedback intelligence platform",
 };
 
 export default function RootLayout({
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
