@@ -12,6 +12,7 @@ interface AuthState {
   user: AuthUser | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
+  updateUser: (user: AuthUser) => void;
   logout: () => void;
 }
 
@@ -45,6 +46,12 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
         });
         return result.user;
+      },
+
+      updateUser: (user) => {
+        const token = useAuthStore.getState().token;
+        syncAuthStorage(token, user);
+        set({ user });
       },
 
       logout: () => {
