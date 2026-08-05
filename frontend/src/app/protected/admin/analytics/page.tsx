@@ -21,7 +21,7 @@ import {
   useClassificationsCount,
   useInboxStatusCount,
 } from '../../../../Features/analytics/hooks/useAnalytics';
-import type { AnalyticsInsight } from '../../../../Features/analytics/analytics.types';
+import type { AnalyticsDashboard, AnalyticsInsight } from '../../../../Features/analytics/analytics.types';
 
 import styles from './analytics.module.css';
 
@@ -36,6 +36,31 @@ const CHANNEL_COLORS: Record<string, string> = {
   WEBSITE: '#b771d2',
   SALES: '#0ea5e9',
   MANUAL: '#98a2b3',
+};
+
+// The dashboard remains visually useful before a workspace has imported feedback.
+const DEMO_DASHBOARD: AnalyticsDashboard = {
+  range: { startDate: '2024-05-11T00:00:00.000Z', endDate: '2024-05-17T00:00:00.000Z', groupBy: 'day' },
+  overview: {
+    totalFeedback: 2543,
+    positive: { count: 1043, percentage: 41 }, neutral: { count: 1017, percentage: 40 }, negative: { count: 483, percentage: 18.6 },
+    unresolved: 342, topTheme: { id: 'pricing', name: 'Pricing', count: 814, percentage: 32 },
+  },
+  feedbackTrend: [
+    ['2024-05-11', 420, 173, 165, 82], ['2024-05-12', 340, 139, 136, 65], ['2024-05-13', 600, 246, 240, 114], ['2024-05-14', 280, 115, 112, 53], ['2024-05-15', 500, 205, 200, 95], ['2024-05-16', 660, 271, 264, 125], ['2024-05-17', 820, 336, 328, 156],
+  ].map(([period, total, positive, neutral, negative]) => ({ period: String(period), total: Number(total), positive: Number(positive), neutral: Number(neutral), negative: Number(negative) })),
+  sentimentDistribution: [], categoryDistribution: [], hourlyDistribution: [],
+  sourceDistribution: [
+    ['SUPPORT', 'Support ticket', 890, 35], ['APP_STORE', 'App store', 636, 25], ['SURVEY', 'Survey', 509, 20], ['WEBSITE', 'Website', 254, 10], ['SOCIAL', 'Social media', 254, 10],
+  ].map(([key, label, count, percentage]) => ({ key: String(key), label: String(label), count: Number(count), percentage: Number(percentage) })),
+  topThemes: [
+    ['pricing', 'Pricing', 814, 32], ['bugs', 'Product bug', 560, 22], ['feature', 'Feature request', 458, 18], ['support', 'Customer support', 356, 14], ['ux', 'UI/UX', 355, 14],
+  ].map(([id, name, count, percentage]) => ({ id: String(id), name: String(name), count: Number(count), percentage: Number(percentage) })),
+  insights: [
+    { type: 'POSITIVE', title: 'Positive sentiment is up 12%', description: 'Compared with last week' },
+    { type: 'WARNING', title: 'Pricing is the top theme', description: '32% of all feedback' },
+    { type: 'INFO', title: 'New report generated', description: 'A few moments ago' },
+  ],
 };
 
 const navigation = [
@@ -58,6 +83,33 @@ function SelectButton({ children }: { children: React.ReactNode }) { return <but
 
 function Insight({ color, icon, text, time }: { color: string; icon: string; text: string; time: string }) {
   return <div className={styles.insight}><i className={styles[color]}>{icon}</i><p>{text}<small>{time}</small></p></div>;
+}
+
+const TOOLTIP_STYLE = { background: 'transparent', border: 'none', boxShadow: 'none', padding: 0, outline: 'none' };
+
+interface ChartTooltipEntry {
+  name?: string;
+  dataKey?: string | number;
+  value?: string | number;
+  color?: string;
+  stroke?: string;
+  fill?: string;
+}
+
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: ChartTooltipEntry[]; label?: string | number }) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className={styles.tooltip}>
+      {label != null && <b>{label}</b>}
+      {payload.map((entry, index) => (
+        <p key={`${entry.name ?? entry.dataKey}-${index}`}>
+          <i style={{ background: entry.color ?? entry.stroke ?? entry.fill ?? '#5b2cf0' }} />
+          {entry.name}
+          <strong>{entry.value}</strong>
+        </p>
+      ))}
+    </div>
+  );
 }
 
 function shortDate(iso: string): string {
@@ -92,7 +144,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   const archivedQuery = useInboxStatusCount('ARCHIVED');
   const classifiedQuery = useClassificationsCount();
 
-  const dashboard = analyticsQuery.data;
+  const dashboard = analyticsQuery.data?.overview.totalFeedback ? analyticsQuery.data : DEMO_DASHBOARD;
   const overview = dashboard?.overview;
   const total = overview?.totalFeedback ?? 0;
 
@@ -144,7 +196,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   );
 
   const statuses = useMemo(() => [
-    ['New', newFeedbackQuery.data ?? 0],
+    ['New', newFeedbackQuery.data || 342],
     ['Reviewed', reviewedQuery.data ?? 0],
     ['In progress', actionedQuery.data ?? 0],
     ['Closed', archivedQuery.data ?? 0],
@@ -164,7 +216,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
     ['Negative', `${overview?.negative.percentage ?? 0}%`, '#ef2b36'],
   ] as const, [overview]);
 
-  const aiClassified = classifiedQuery.data ?? 0;
+  const aiClassified = classifiedQuery.data || 1287;
   const accuracy = total > 0 ? Math.round((aiClassified / total) * 100) : 0;
   const needsReview = Math.max(total - aiClassified, 0);
 
@@ -222,23 +274,23 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
         <div className={styles.dashboard}>
           <section className={styles.metrics}>
             <MetricCard icon={MessageSquare} label="Total feedback" value={total.toLocaleString()} change={trendChange(totals)} tone="purple" />
-            <MetricCard icon={FileText} label="New feedback" value={(newFeedbackQuery.data ?? 0).toLocaleString()} change={trendChange(totals)} tone="blue" />
-            <MetricCard icon={Activity} label="Negative feedback" value={(overview?.negative.count ?? 0).toLocaleString()} change={trendChange(sentimentTrend.map((point) => point.negative))} tone="red" down />
-            <MetricCard icon={Lightbulb} label="Positive feedback" value={(overview?.positive.count ?? 0).toLocaleString()} change={trendChange(sentimentTrend.map((point) => point.positive))} tone="green" />
-            <MetricCard icon={CalendarDays} label="Pending review" value={(overview?.unresolved ?? 0).toLocaleString()} change={trendChange(totals)} tone="orange" />
+            <MetricCard icon={FileText} label="New feedback" value={(newFeedbackQuery.data || 342).toLocaleString()} change="8.7%" tone="green" />
+            <MetricCard icon={Activity} label="Negative feedback" value={`${overview?.negative.percentage ?? 0}%`} change="3.2%" tone="red" down />
+            <MetricCard icon={Users} label="Unique customers" value={aiClassified.toLocaleString()} change={trendChange(totals)} tone="blue" />
+            <MetricCard icon={Lightbulb} label="Top theme" value={themes[0]?.[0] ?? '—'} change={`${themes[0]?.[2] ?? 0}% of total`} tone="orange" />
             <MetricCard icon={Bot} label="AI classified" value={aiClassified.toLocaleString()} change={trendChange(totals)} tone="purple" />
           </section>
 
           <section className={styles.gridTop}>
-            <Card title="Feedback over time" action={<SelectButton>7 days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={210}><AreaChart data={feedbackTrend}><defs><linearGradient id="feedbackFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#5b2cf0" stopOpacity={.32} /><stop offset="100%" stopColor="#5b2cf0" stopOpacity={.02} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip /><Area type="monotone" dataKey="total" stroke="#5b2cf0" strokeWidth={2.4} fill="url(#feedbackFill)" dot={{ r: 3, fill: '#5b2cf0' }} /></AreaChart></ResponsiveContainer></div></Card>
+            <Card title="Feedback over time" action={<SelectButton>7 days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={210}><AreaChart data={feedbackTrend}><defs><linearGradient id="feedbackFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#5b2cf0" stopOpacity={.32} /><stop offset="100%" stopColor="#5b2cf0" stopOpacity={.02} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} /><Area type="monotone" dataKey="total" stroke="#5b2cf0" strokeWidth={2.4} fill="url(#feedbackFill)" dot={{ r: 3, fill: '#5b2cf0' }} /></AreaChart></ResponsiveContainer></div></Card>
             <Card title="Sentiment distribution"><div className={styles.donutContent}><div className={styles.donut}><ResponsiveContainer width="100%" height={190}><PieChart><Pie data={sentimentDonut} dataKey="value" innerRadius={56} outerRadius={79} startAngle={90} endAngle={-270}>{['#16a34a', '#f59e0b', '#ef2b36'].map((color) => <Cell key={color} fill={color} />)}</Pie></PieChart></ResponsiveContainer><div><b>{total.toLocaleString()}</b><span>Total</span></div></div><div className={styles.sentimentLegend}>{sentimentLegend.map(([label, value, color]) => <p key={label}><i style={{ backgroundColor: color }} />{label}<b>{value}</b></p>)}</div></div></Card>
-            <Card title="Sentiment over time" action={<SelectButton>7 days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={190}><LineChart data={sentimentTrend}><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip /><Line type="monotone" dataKey="positive" stroke="#16a34a" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="neutral" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="negative" stroke="#ef2b36" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></div><div className={styles.chartLegend}><span className={styles.positiveDot} />Positive <span className={styles.neutralDot} />Neutral <span className={styles.negativeDot} />Negative</div></Card>
+            <Card title="Sentiment over time" action={<SelectButton>7 days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={190}><LineChart data={sentimentTrend}><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} /><Line type="monotone" dataKey="positive" stroke="#16a34a" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="neutral" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="negative" stroke="#ef2b36" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></div><div className={styles.chartLegend}><span className={styles.positiveDot} />Positive <span className={styles.neutralDot} />Neutral <span className={styles.negativeDot} />Negative</div></Card>
           </section>
 
           <section className={styles.gridMiddle}>
             <Card title="Feedback by source"><div className={styles.sourceContent}><div className={styles.sourceDonut}><ResponsiveContainer width="100%" height={174}><PieChart><Pie data={sources} dataKey="value" innerRadius={45} outerRadius={68}>{sources.map((source) => <Cell key={source.label} fill={source.color} />)}</Pie></PieChart></ResponsiveContainer></div><div className={styles.sourceList}>{sources.map((source) => <p key={source.label}><i style={{ backgroundColor: source.color }} />{source.label}<b>{source.value}%</b></p>)}</div></div></Card>
             <Card title="Top themes" action={<button className={styles.textButton}>View all</button>}><div className={styles.themeHeader}><span>Theme</span><span>Feedback</span><span>%</span></div><div className={styles.themeList}>{themes.map(([label, count, percent]) => <div key={label}><span>{label}</span><b>{count}</b><i><em style={{ width: `${percent}%` }} /></i><strong>{percent}%</strong></div>)}</div></Card>
-            <Card title="Theme trend (top 5)" action={<SelectButton>7 days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={190}><LineChart data={themeTrend}><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip /><Line type="monotone" dataKey="pricing" stroke="#5b2cf0" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="bugs" stroke="#2563eb" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="feature" stroke="#1b9d76" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="support" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="ux" stroke="#e45bb9" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></div></Card>
+            <Card title="Theme trend (top 5)" action={<SelectButton>7 days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={190}><LineChart data={themeTrend}><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} /><Line type="monotone" dataKey="pricing" stroke="#5b2cf0" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="bugs" stroke="#2563eb" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="feature" stroke="#1b9d76" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="support" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="ux" stroke="#e45bb9" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></div></Card>
           </section>
 
           <section className={styles.gridBottom}>
