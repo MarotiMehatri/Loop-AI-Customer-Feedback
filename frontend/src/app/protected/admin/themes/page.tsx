@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Sparkles, TrendingUp } from "lucide-react";
+import { CheckCircle2, ChevronDown, Sparkles, TrendingUp } from "lucide-react";
 
 import { AdminShell } from "../_components/AdminShell";
 import { apiClient } from "../../../../lib/api/api-client";
@@ -64,6 +64,7 @@ export default function ThemesPage() {
       <div className={styles.page}>
         <section className={styles.content}>
           <div className={styles.summaryGrid}>{cards.map(([title, value, kind]) => <article className={styles.summaryCard} key={title}><span className={`${styles.iconBadge} ${styles[kind]}`}>{kind === "check" ? <CheckCircle2 /> : kind === "trend" ? <TrendingUp /> : <Sparkles />}</span><div><small>{title}</small><strong>{value}</strong><em>Live from workspace</em></div></article>)}<article className={styles.coverage}><span>◔</span><div><small>Feedback assignments</small><strong>{summary?.activeAssignments ?? 0}</strong><em>Live from workspace</em></div></article></div>
+          <div className={styles.chartGrid}><article className={styles.card}><header><b>Theme Mentions</b><button>Live <ChevronDown size={14} /></button></header><div className={styles.lineChart}><div className={styles.yAxis}><span>Most</span><span>Active</span><span>Least</span></div><svg viewBox="0 0 500 190" preserveAspectRatio="none"><path d="M4 140 L48 116 L92 127 L136 70 L180 111 L224 60 L268 86 L312 35 L356 78 L400 53 L444 18 L496 41" /></svg><div className={styles.xAxis}><span>Theme activity</span><span>Database data</span></div></div></article><article className={styles.card}><header><b>Theme Distribution</b></header><div className={styles.distribution}><div className={styles.donut}><strong>{summary?.totalThemes ?? 0}<small>Total Themes</small></strong></div><ul>{items.slice(0, 6).map((item, index) => <li key={item.id}><i className={styles[tones[index]]} />{item.name}<b>{item.feedbackCount}</b></li>)}</ul></div></article><article className={styles.card}><header><b>Top Themes</b><button>Live <ChevronDown size={14} /></button></header><div className={styles.sentiment}>{items.slice(0, 5).map((item) => <div key={item.id}><span>{item.name}</span><i><b /><b /><b /></i></div>)}<footer><span>● Feedback volume</span></footer></div></article></div>
         </section>
       </div>
     </AdminShell>
