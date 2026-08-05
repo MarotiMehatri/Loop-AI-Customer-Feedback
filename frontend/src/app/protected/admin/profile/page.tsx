@@ -39,6 +39,8 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
   const [timezone, setTimezone] = useState("Asia/Kolkata");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -77,6 +79,15 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const changePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      await apiClient.patch("/profile/password", { currentPassword, newPassword });
+      setCurrentPassword(""); setNewPassword("");
+      toast.success("Password updated");
+    } catch (error) { toast.error(getErrorMessage(error)); }
   };
 
   return (
@@ -163,6 +174,15 @@ export default function ProfilePage() {
                 </label>
               ))}
             </div>
+          </section>
+          <section className={ui.card}>
+            <header><div><h2>Security</h2><p>Change your account password</p></div></header>
+            <form onSubmit={changePassword}>
+              <label className={ui.field}>Current password<input className={ui.input} type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
+              <label className={ui.field}>New password<input className={ui.input} type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} required /></label>
+              <p className={ui.muted} style={{ fontSize: 11 }}>Use at least 8 characters, including uppercase, lowercase and a number.</p>
+              <button className={ui.primary} type="submit">Update password</button>
+            </form>
           </section>
         </div>
       </div>
