@@ -90,6 +90,13 @@ export default function ProfilePage() {
     } catch (error) { toast.error(getErrorMessage(error)); }
   };
 
+  const uploadAvatar = async (file?: File) => {
+    if (!file) return;
+    const form = new FormData(); form.append("avatar", file);
+    try { const { data } = await apiClient.patch<{ data: Profile }>("/profile/avatar", form, { headers: { "Content-Type": "multipart/form-data" } }); setProfile(data.data); toast.success("Profile photo updated"); }
+    catch (error) { toast.error(getErrorMessage(error)); }
+  };
+
   return (
     <AdminShell title="Profile" subtitle="Your account details and preferences" active="dashboard">
       <div className={ui.body}>
@@ -103,14 +110,13 @@ export default function ProfilePage() {
             </header>
             <form onSubmit={handleSave}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-                <span className={ui.avatar} style={{ width: 56, height: 56, fontSize: 17 }}>
-                  {profile ? initials(profile.name) : "?"}
-                </span>
+                {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Profile" className={ui.avatar} style={{ width: 56, height: 56, objectFit: "cover" }} /> : <span className={ui.avatar} style={{ width: 56, height: 56, fontSize: 17 }}>{profile ? initials(profile.name) : "?"}</span>}
                 <div>
                   <b style={{ fontSize: 15 }}>{profile?.name ?? "…"}</b>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: "#667085" }}>{profile?.email}</p>
                   <span className={`${ui.badge} ${ui.new}`}>{profile?.role ?? ""}</span>
                 </div>
+                <label className={ui.ghost} style={{ marginLeft: "auto", cursor: "pointer" }}>Upload photo<input type="file" accept="image/*" hidden onChange={(event) => void uploadAvatar(event.target.files?.[0])} /></label>
               </div>
               <label className={ui.field}>
                 Full name
