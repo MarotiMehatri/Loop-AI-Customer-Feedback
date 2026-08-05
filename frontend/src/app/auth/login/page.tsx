@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { getErrorMessage } from "../../../lib/api/api-error";
@@ -11,9 +11,11 @@ import styles from "./login.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
+  const isViewerLogin = searchParams.get("role") === "viewer";
 
-  const [email, setEmail] = useState("admin@loop.com");
+  const [email, setEmail] = useState(isViewerLogin ? "viewer@loop.com" : "admin@loop.com");
   const [password, setPassword] = useState("Loop@123");
   const [submitting, setSubmitting] = useState(false);
 
@@ -21,9 +23,9 @@ export default function LoginPage() {
     event.preventDefault();
     setSubmitting(true);
     try {
-      await login(email, password);
+      const user = await login(email, password);
       toast.success("Welcome back to LOOP");
-      router.push("/protected/admin/dashboard");
+      router.push(user.role === "VIEWER" ? "/protected/viewer" : "/protected/admin/dashboard");
     } catch (error) {
       toast.error(getErrorMessage(error));
       setSubmitting(false);
@@ -77,7 +79,7 @@ export default function LoginPage() {
           </button>
 
           <p className={styles.hint}>
-            Demo access: <b>admin@loop.com</b> / <b>Loop@123</b>
+            Demo access: <b>{isViewerLogin ? "viewer@loop.com" : "admin@loop.com"}</b> / <b>Loop@123</b>
           </p>
         </form>
       </section>

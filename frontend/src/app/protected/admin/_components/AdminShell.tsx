@@ -17,21 +17,31 @@ import {
   Users,
 } from "lucide-react";
 
+import type { LucideIcon } from "lucide-react";
+
+import type { Role } from "../../../../Features/Auth/auth.types";
 import { apiClient } from "../../../../lib/api/api-client";
 import { useAuthStore } from "../../../../store";
 
 import shell from "../analytics/analytics.module.css";
 
-const NAVIGATION = [
-  [Grid2X2, "Dashboard", "/protected/admin/dashboard"],
-  [Inbox, "Inbox", "/protected/admin/inbox"],
-  [BarChart3, "Analytics", "/protected/admin/analytics"],
-  [Settings2, "Themes", "/protected/admin/themes"],
-  [FileText, "Reports", "/protected/admin/reports"],
-  [Sparkles, "Ask LOOP AI", "/protected/admin/ask-loop"],
-  [Users, "Data sources", "/protected/admin/add-feedback"],
-  [Download, "Exports", "/protected/admin/reports"],
-] as const;
+interface NavItem {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  roles: Role[];
+}
+
+const NAVIGATION: NavItem[] = [
+  { icon: Grid2X2, label: "Dashboard", href: "/protected/admin/dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Inbox, label: "Inbox", href: "/protected/admin/inbox", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: BarChart3, label: "Analytics", href: "/protected/admin/analytics", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Settings2, label: "Themes", href: "/protected/admin/themes", roles: ["ADMIN", "ANALYST"] },
+  { icon: FileText, label: "Reports", href: "/protected/admin/reports", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Sparkles, label: "Ask LOOP AI", href: "/protected/admin/ask-loop", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Users, label: "Data sources", href: "/protected/admin/add-feedback", roles: ["ADMIN", "ANALYST"] },
+  { icon: Download, label: "Exports", href: "/protected/admin/reports", roles: ["ADMIN", "ANALYST"] },
+];
 
 export type ActiveView =
   | "dashboard"
@@ -65,6 +75,10 @@ export function AdminShell({ title, subtitle, active, children }: AdminShellProp
   const logout = useAuthStore((state) => state.logout);
   const [unread, setUnread] = useState(0);
 
+  const navigation = NAVIGATION.filter((item) =>
+    item.roles.includes(user?.role ?? "VIEWER"),
+  );
+
   useEffect(() => {
     apiClient
       .get<{ data: number }>("/notifications/unread-count")
@@ -92,7 +106,7 @@ export function AdminShell({ title, subtitle, active, children }: AdminShellProp
           Intelligence Platform
         </p>
         <nav>
-          {NAVIGATION.map(([Icon, label, href]) => (
+          {navigation.map(({ icon: Icon, label, href }) => (
             <button
               key={label}
               onClick={() => router.push(href)}

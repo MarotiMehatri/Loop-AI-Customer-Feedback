@@ -22,6 +22,7 @@ import {
   useInboxStatusCount,
 } from '../../../../Features/analytics/hooks/useAnalytics';
 import type { AnalyticsDashboard, AnalyticsInsight } from '../../../../Features/analytics/analytics.types';
+import { useAuthStore } from '../../../../store';
 
 import styles from './analytics.module.css';
 
@@ -131,11 +132,18 @@ function insightColor(type: AnalyticsInsight['type']): { color: string; icon: st
   return { color: 'blue', icon: 'i' };
 }
 
-export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytics' | 'dashboard' | 'inbox' }) {
+export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytics' | 'dashboard' | 'inbox' | 'viewer' }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const router = useRouter();
-  const pageTitle = view === 'dashboard' ? 'Dashboard' : view === 'inbox' ? 'Inbox' : 'Analytics';
-  const subtitle = view === 'dashboard' ? 'Your customer feedback overview' : view === 'inbox' ? 'Review and manage customer feedback' : 'Deep insights from your customer feedback';
+  const user = useAuthStore((state) => state.user);
+  const isViewer = view === 'viewer';
+  const pageTitle = isViewer ? 'Viewer Dashboard' : view === 'dashboard' ? 'Dashboard' : view === 'inbox' ? 'Inbox' : 'Analytics';
+  const subtitle = isViewer ? 'Read-only overview of your customer feedback' : view === 'dashboard' ? 'Your customer feedback overview' : view === 'inbox' ? 'Review and manage customer feedback' : 'Deep insights from your customer feedback';
+  const visibleNavigation = isViewer
+    ? navigation.filter(([, label]) => label === 'Dashboard')
+    : navigation;
+  const userInitials = (user?.name ?? 'LOOP').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+  const userRole = user?.role ? `${user.role[0]}${user.role.slice(1).toLowerCase()}` : 'Viewer';
 
   const analyticsQuery = useAnalytics({ days: 7, groupBy: 'day' });
   const newFeedbackQuery = useInboxStatusCount('NEW');
@@ -255,10 +263,10 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
     <aside className={styles.sidebar}>
       <div className={styles.logo}><span>∞</span> LOOP</div>
       <p className={styles.tagline}>AI Customer Feedback<br />Intelligence Platform</p>
-      <nav>{navigation.map(([Icon, label, href]) => <button key={label} onClick={() => router.push(href)} className={label.toLowerCase() === view ? styles.activeNav : ''}><Icon size={19} /> <span>{label}</span></button>)}</nav>
+      <nav>{visibleNavigation.map(([Icon, label, href]) => <button key={label} onClick={() => router.push(isViewer ? '/protected/viewer' : href)} className={label.toLowerCase() === view || (isViewer && label === 'Dashboard') ? styles.activeNav : ''}><Icon size={19} /> <span>{label}</span></button>)}</nav>
       <div className={styles.sidebarFooter}>
         <small>Current workspace</small><button className={styles.workspace}>Acme Corp <ChevronDown size={15} /></button>
-        <div className={styles.userMini}><span>AT</span><div><b>Alex Thompson</b><small>Analyst</small></div><ChevronDown size={14} /></div>
+        <div className={styles.userMini}><span>{userInitials}</span><div><b>{user?.name ?? 'LOOP User'}</b><small>{userRole}</small></div><ChevronDown size={14} /></div>
         <button><CircleHelp size={19} /><span>Help & support</span></button>
       </div>
     </aside>
@@ -267,7 +275,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
       <header className={styles.topbar}>
         <button className={styles.menuButton} aria-label="Open navigation"><Menu size={25} /></button>
         <div><h1>{pageTitle} <BarChart3 size={20} /></h1><p>{subtitle}</p></div>
-        <div className={styles.headerActions}><button className={styles.dateButton}>{dateRange} <CalendarDays size={16} /></button><button className={styles.iconButton}><Bell size={21} /><i>{overview?.unresolved ?? 0}</i></button><button className={styles.help}><CircleHelp size={22} /></button><div className={styles.headerUser}><span>AT</span><div><b>Alex Thompson</b><small>Analyst</small></div><ChevronDown size={15} /></div></div>
+        <div className={styles.headerActions}><button className={styles.dateButton}>{dateRange} <CalendarDays size={16} /></button><button className={styles.iconButton}><Bell size={21} /><i>{overview?.unresolved ?? 0}</i></button><button className={styles.help}><CircleHelp size={22} /></button><div className={styles.headerUser}><span>{userInitials}</span><div><b>{user?.name ?? 'LOOP User'}</b><small>{userRole}</small></div><ChevronDown size={15} /></div></div>
       </header>
 
       <div className={styles.body}>
