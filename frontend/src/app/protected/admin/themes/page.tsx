@@ -31,6 +31,17 @@ export default function ThemesPage() {
   };
   useEffect(() => { void load(); }, []);
 
+  const create = async () => {
+    const name = window.prompt("Theme name"); if (!name?.trim()) return;
+    const description = window.prompt("Description (optional)") ?? "";
+    await apiClient.post("/theme", { name: name.trim(), description }); await load();
+  };
+  const edit = async (theme: Theme) => {
+    const name = window.prompt("Theme name", theme.name); if (!name?.trim()) return;
+    const description = window.prompt("Description", theme.description ?? "") ?? "";
+    await apiClient.patch(`/theme/${theme.id}`, { name: name.trim(), description }); await load();
+  };
+
   return (
     <AdminShell title="Themes" subtitle="Discover and analyze key themes from customer feedback" active="themes">
       <div className={styles.page}>
