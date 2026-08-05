@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import {
   //FeedbackChannel,
   //FeedbackStatus,
@@ -145,9 +147,9 @@ async function main(): Promise<void> {
   // }
 
   console.log("✅ LOOP demo data created");
-  console.log("Admin   : admin@loop.com / Password@123");
-  console.log("Analyst : analyst@loop.com / Password@123");
-  console.log("Viewer  : viewer@loop.com / Password@123");
+  console.log("Admin   : admin@loop.com / Loop@123");
+  console.log("Analyst : analyst@loop.com / Loop@123");
+  console.log("Viewer  : viewer@loop.com / Loop@123");
 }
 
 main()

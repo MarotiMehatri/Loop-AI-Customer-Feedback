@@ -40,7 +40,7 @@ export function assertCanGenerateReport(role: Role): void {
 }
 
 export function assertCanExportReport(role: Role): void {
-  const allowed: Role[] = ["ADMIN", "ANALYST"];
+  const allowed: Role[] = ["ADMIN", "ANALYST", "VIEWER"];
 
   if (!allowed.includes(role)) {
     throw new ApiError(403, "You do not have permission to export reports");

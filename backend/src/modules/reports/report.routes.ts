@@ -99,7 +99,7 @@ router.post(
 
 router.get(
   "/:reportId/export",
-  authorize("ADMIN", "ANALYST"),
+  authorize("ADMIN", "ANALYST", "VIEWER"),
   validate(exportReportSchema),
   asyncHandler(exportController),
 );

@@ -21,7 +21,7 @@ import {
   useClassificationsCount,
   useInboxStatusCount,
 } from '../../../../Features/analytics/hooks/useAnalytics';
-import type { AnalyticsDashboard, AnalyticsInsight } from '../../../../Features/analytics/analytics.types';
+import type { AnalyticsInsight } from '../../../../Features/analytics/analytics.types';
 import { useAuthStore } from '../../../../store';
 
 import styles from './analytics.module.css';
@@ -37,31 +37,6 @@ const CHANNEL_COLORS: Record<string, string> = {
   WEBSITE: '#b771d2',
   SALES: '#0ea5e9',
   MANUAL: '#98a2b3',
-};
-
-// The dashboard remains visually useful before a workspace has imported feedback.
-const DEMO_DASHBOARD: AnalyticsDashboard = {
-  range: { startDate: '2024-05-11T00:00:00.000Z', endDate: '2024-05-17T00:00:00.000Z', groupBy: 'day' },
-  overview: {
-    totalFeedback: 2543,
-    positive: { count: 1043, percentage: 41 }, neutral: { count: 1017, percentage: 40 }, negative: { count: 483, percentage: 18.6 },
-    unresolved: 342, topTheme: { id: 'pricing', name: 'Pricing', count: 814, percentage: 32 },
-  },
-  feedbackTrend: [
-    ['2024-05-11', 420, 173, 165, 82], ['2024-05-12', 340, 139, 136, 65], ['2024-05-13', 600, 246, 240, 114], ['2024-05-14', 280, 115, 112, 53], ['2024-05-15', 500, 205, 200, 95], ['2024-05-16', 660, 271, 264, 125], ['2024-05-17', 820, 336, 328, 156],
-  ].map(([period, total, positive, neutral, negative]) => ({ period: String(period), total: Number(total), positive: Number(positive), neutral: Number(neutral), negative: Number(negative) })),
-  sentimentDistribution: [], categoryDistribution: [], hourlyDistribution: [],
-  sourceDistribution: [
-    ['SUPPORT', 'Support ticket', 890, 35], ['APP_STORE', 'App store', 636, 25], ['SURVEY', 'Survey', 509, 20], ['WEBSITE', 'Website', 254, 10], ['SOCIAL', 'Social media', 254, 10],
-  ].map(([key, label, count, percentage]) => ({ key: String(key), label: String(label), count: Number(count), percentage: Number(percentage) })),
-  topThemes: [
-    ['pricing', 'Pricing', 814, 32], ['bugs', 'Product bug', 560, 22], ['feature', 'Feature request', 458, 18], ['support', 'Customer support', 356, 14], ['ux', 'UI/UX', 355, 14],
-  ].map(([id, name, count, percentage]) => ({ id: String(id), name: String(name), count: Number(count), percentage: Number(percentage) })),
-  insights: [
-    { type: 'POSITIVE', title: 'Positive sentiment is up 12%', description: 'Compared with last week' },
-    { type: 'WARNING', title: 'Pricing is the top theme', description: '32% of all feedback' },
-    { type: 'INFO', title: 'New report generated', description: 'A few moments ago' },
-  ],
 };
 
 const navigation = [
@@ -152,7 +127,9 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   const archivedQuery = useInboxStatusCount('ARCHIVED');
   const classifiedQuery = useClassificationsCount();
 
-  const dashboard = analyticsQuery.data?.overview.totalFeedback ? analyticsQuery.data : DEMO_DASHBOARD;
+  // Never replace an empty response with sample values: viewers must see their
+  // workspace's real data, including a legitimate zero-feedback state.
+  const dashboard = analyticsQuery.data;
   const overview = dashboard?.overview;
   const total = overview?.totalFeedback ?? 0;
 
@@ -204,7 +181,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   );
 
   const statuses = useMemo(() => [
-    ['New', newFeedbackQuery.data || 342],
+    ['New', newFeedbackQuery.data ?? 0],
     ['Reviewed', reviewedQuery.data ?? 0],
     ['In progress', actionedQuery.data ?? 0],
     ['Closed', archivedQuery.data ?? 0],
@@ -224,7 +201,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
     ['Negative', `${overview?.negative.percentage ?? 0}%`, '#ef2b36'],
   ] as const, [overview]);
 
-  const aiClassified = classifiedQuery.data || 1287;
+  const aiClassified = classifiedQuery.data ?? 0;
   const accuracy = total > 0 ? Math.round((aiClassified / total) * 100) : 0;
   const needsReview = Math.max(total - aiClassified, 0);
 
@@ -275,14 +252,14 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
       <header className={styles.topbar}>
         <button className={styles.menuButton} aria-label="Open navigation"><Menu size={25} /></button>
         <div><h1>{pageTitle} <BarChart3 size={20} /></h1><p>{subtitle}</p></div>
-        <div className={styles.headerActions}><button className={styles.dateButton}>{dateRange} <CalendarDays size={16} /></button><button className={styles.iconButton}><Bell size={21} /><i>{overview?.unresolved ?? 0}</i></button><button className={styles.help}><CircleHelp size={22} /></button><div className={styles.headerUser}><span>{userInitials}</span><div><b>{user?.name ?? 'LOOP User'}</b><small>{userRole}</small></div><ChevronDown size={15} /></div></div>
+        <div className={styles.headerActions}><button className={styles.dateButton}>{dateRange} <CalendarDays size={16} /></button><button className={styles.iconButton}><Bell size={21} /><i>{overview?.unresolved ?? 0}</i></button><button className={styles.help}><CircleHelp size={22} /></button><div className={styles.headerUser}><span>{userInitials}</span><div><b>{user?.name ?? 'LOOP User'}</b><small>{isViewer ? 'Read-only access' : userRole}</small></div><ChevronDown size={15} /></div></div>
       </header>
 
       <div className={styles.body}>
         <div className={styles.dashboard}>
           <section className={styles.metrics}>
             <MetricCard icon={MessageSquare} label="Total feedback" value={total.toLocaleString()} change={trendChange(totals)} tone="purple" />
-            <MetricCard icon={FileText} label="New feedback" value={(newFeedbackQuery.data || 342).toLocaleString()} change="8.7%" tone="green" />
+            <MetricCard icon={FileText} label="New feedback" value={(newFeedbackQuery.data ?? 0).toLocaleString()} change="8.7%" tone="green" />
             <MetricCard icon={Activity} label="Negative feedback" value={`${overview?.negative.percentage ?? 0}%`} change="3.2%" tone="red" down />
             <MetricCard icon={Users} label="Unique customers" value={aiClassified.toLocaleString()} change={trendChange(totals)} tone="blue" />
             <MetricCard icon={Lightbulb} label="Top theme" value={themes[0]?.[0] ?? '—'} change={`${themes[0]?.[2] ?? 0}% of total`} tone="orange" />
@@ -313,7 +290,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
           {[['Workspace', 'Acme Corp'], ['Date range', dateRange], ['Source', 'All sources'], ['Channel', 'All channels'], ['Sentiment', 'All sentiments'], ['Theme', 'All themes']].map(([label, value]) => <label key={label}>{label}<SelectButton>{value}</SelectButton></label>)}
           <button className={styles.apply}>Apply filters</button>
           <section className={styles.insights}><header><h2>AI insights</h2><button className={styles.textButton}>View all</button></header>{insights.map((insight) => <Insight key={insight.text} color={insight.color} icon={insight.icon} text={insight.text} time={insight.time} />)}</section>
-          <section className={styles.export}><h2>Export analytics</h2><p>Download your analytics report</p><button onClick={handleExport}><Download size={16} /> Export CSV</button></section>
+          {!isViewer && <section className={styles.export}><h2>Export analytics</h2><p>Download your analytics report</p><button onClick={handleExport}><Download size={16} /> Export CSV</button></section>}
         </aside>
       </div>
       <button className={styles.filterToggle} onClick={() => setFilterOpen(!filterOpen)}>{filterOpen ? 'Close filters' : 'Filters'}</button>
