@@ -36,6 +36,9 @@ export default function ProfilePage() {
   const [jobTitle, setJobTitle] = useState("");
   const [department, setDepartment] = useState("");
   const [location, setLocation] = useState("");
+  const [phone, setPhone] = useState("");
+  const [bio, setBio] = useState("");
+  const [timezone, setTimezone] = useState("Asia/Kolkata");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -47,6 +50,9 @@ export default function ProfilePage() {
         setJobTitle(data.data.jobTitle ?? "");
         setDepartment(data.data.department ?? "");
         setLocation(data.data.location ?? "");
+        setPhone(data.data.phone ?? "");
+        setBio(data.data.bio ?? "");
+        setTimezone(data.data.timezone ?? "Asia/Kolkata");
       })
       .catch(() => undefined);
   }, []);
@@ -60,6 +66,9 @@ export default function ProfilePage() {
         jobTitle: jobTitle || null,
         department: department || null,
         location: location || null,
+        phone: phone || null,
+        bio: bio || null,
+        timezone: timezone || null,
       });
       setProfile(data.data);
       toast.success("Profile updated");
@@ -108,6 +117,9 @@ export default function ProfilePage() {
                 Location
                 <input className={ui.input} value={location} onChange={(e) => setLocation(e.target.value)} />
               </label>
+              <label className={ui.field}>Phone number<input className={ui.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 00000 00000" /></label>
+              <label className={ui.field}>Timezone<select className={ui.input} value={timezone} onChange={(e) => setTimezone(e.target.value)}><option value="Asia/Kolkata">Asia/Kolkata (IST)</option><option value="UTC">UTC</option><option value="America/New_York">America/New York</option></select></label>
+              <label className={ui.field}>About you<textarea className={ui.input} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell your team a little about yourself" style={{ minHeight: 82, resize: "vertical" }} /></label>
               <button className={ui.primary} type="submit" disabled={saving}>
                 {saving ? "Saving…" : "Save changes"}
               </button>
