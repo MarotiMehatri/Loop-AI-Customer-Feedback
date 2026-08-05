@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { CheckCircle2, Sparkles, TrendingUp } from "lucide-react";
 
 import { AdminShell } from "../_components/AdminShell";
 import { apiClient } from "../../../../lib/api/api-client";
@@ -57,11 +58,12 @@ export default function ThemesPage() {
     await load();
   };
 
+  const cards = [["Total Themes", summary?.totalThemes ?? 0, "folder"], ["Active Themes", count(summary, "ACTIVE"), "chat"], ["Emerging Themes", count(summary, "EMERGING"), "trend"], ["Resolved Themes", count(summary, "RESOLVED"), "check"]] as const;
   return (
     <AdminShell title="Themes" subtitle="Discover and analyze key themes from customer feedback" active="themes">
       <div className={styles.page}>
         <section className={styles.content}>
-          {loading ? <p>Loading themes…</p> : null}
+          <div className={styles.summaryGrid}>{cards.map(([title, value, kind]) => <article className={styles.summaryCard} key={title}><span className={`${styles.iconBadge} ${styles[kind]}`}>{kind === "check" ? <CheckCircle2 /> : kind === "trend" ? <TrendingUp /> : <Sparkles />}</span><div><small>{title}</small><strong>{value}</strong><em>Live from workspace</em></div></article>)}<article className={styles.coverage}><span>◔</span><div><small>Feedback assignments</small><strong>{summary?.activeAssignments ?? 0}</strong><em>Live from workspace</em></div></article></div>
         </section>
       </div>
     </AdminShell>
