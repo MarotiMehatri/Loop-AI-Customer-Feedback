@@ -65,7 +65,7 @@ const DEMO_DASHBOARD: AnalyticsDashboard = {
 };
 
 const navigation = [
-  [Grid2X2, 'Dashboard', '/protected/admin/dashboard'], [Inbox, 'Inbox', '/protected/admin/inbox'], [BarChart3, 'Analytics', '/protected/admin/analytics'], [Settings2, 'Themes', '/protected/admin/themes'],
+  [Grid2X2, 'Dashboard', '/protected/admin/dashboard'], [Inbox, 'Inbox', '/protected/admin/inbox'], [BarChart3, 'Trends', '/protected/admin/analytics'], [Settings2, 'Themes', '/protected/admin/themes'],
   [FileText, 'Reports', '/protected/admin/reports'], [Sparkles, 'Ask LOOP AI', '/protected/admin/ask-loop'], [Users, 'Data sources', '/protected/admin/add-feedback'], [Download, 'Exports', '/protected/admin/reports'],
 ] as const;
 
@@ -137,8 +137,8 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const isViewer = view === 'viewer';
-  const pageTitle = isViewer ? 'Viewer Dashboard' : view === 'dashboard' ? 'Dashboard' : view === 'inbox' ? 'Inbox' : 'Analytics';
-  const subtitle = isViewer ? 'Read-only overview of your customer feedback' : view === 'dashboard' ? 'Your customer feedback overview' : view === 'inbox' ? 'Review and manage customer feedback' : 'Deep insights from your customer feedback';
+  const pageTitle = isViewer ? 'Viewer Dashboard' : view === 'dashboard' ? 'Dashboard' : view === 'inbox' ? 'Inbox' : 'Trends';
+  const subtitle = isViewer ? 'Read-only overview of your customer feedback' : view === 'dashboard' ? 'Your customer feedback overview' : view === 'inbox' ? 'Review and manage customer feedback' : 'Track patterns and changes in customer feedback over time';
   const visibleNavigation = isViewer
     ? navigation.filter(([, label]) => label === 'Dashboard')
     : navigation;
@@ -263,7 +263,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
     <aside className={styles.sidebar}>
       <div className={styles.logo}><span>∞</span> LOOP</div>
       <p className={styles.tagline}>AI Customer Feedback<br />Intelligence Platform</p>
-      <nav>{visibleNavigation.map(([Icon, label, href]) => <button key={label} onClick={() => router.push(isViewer ? '/protected/viewer' : href)} className={label.toLowerCase() === view || (isViewer && label === 'Dashboard') ? styles.activeNav : ''}><Icon size={19} /> <span>{label}</span></button>)}</nav>
+      <nav>{visibleNavigation.map(([Icon, label, href]) => <button key={label} onClick={() => router.push(isViewer ? '/protected/viewer' : href)} className={label.toLowerCase() === view || (view === 'analytics' && label === 'Trends') || (isViewer && label === 'Dashboard') ? styles.activeNav : ''}><Icon size={19} /> <span>{label}</span></button>)}</nav>
       <div className={styles.sidebarFooter}>
         <small>Current workspace</small><button className={styles.workspace}>Acme Corp <ChevronDown size={15} /></button>
         <div className={styles.userMini}><span>{userInitials}</span><div><b>{user?.name ?? 'LOOP User'}</b><small>{userRole}</small></div><ChevronDown size={14} /></div>
