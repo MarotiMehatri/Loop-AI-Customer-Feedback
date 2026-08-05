@@ -8,54 +8,66 @@ const optionalDateSchema = z
     value ? new Date(value) : undefined,
   );
 
-export const askLoopQuestionSchema = z
-  .object({
-    question: z
-      .string()
-      .trim()
-      .min(2, "Question must contain at least 2 characters")
-      .max(2000, "Question cannot exceed 2000 characters"),
+export const askLoopQuestionSchema = z.object({
+  body: z
+    .object({
+      question: z
+        .string()
+        .trim()
+        .min(2, "Question must contain at least 2 characters")
+        .max(2000, "Question cannot exceed 2000 characters"),
 
-    conversationId: z.string().uuid().optional(),
+      conversationId: z.string().uuid().optional(),
 
-    startDate: optionalDateSchema,
+      startDate: optionalDateSchema,
 
-    endDate: optionalDateSchema,
-  })
-  .refine(
-    (value) =>
-      !value.startDate ||
-      !value.endDate ||
-      value.startDate.getTime() <= value.endDate.getTime(),
-    {
-      message: "startDate cannot be later than endDate",
-      path: ["startDate"],
-    },
-  );
+      endDate: optionalDateSchema,
+    })
+    .refine(
+      (value) =>
+        !value.startDate ||
+        !value.endDate ||
+        value.startDate.getTime() <= value.endDate.getTime(),
+      {
+        message: "startDate cannot be later than endDate",
+        path: ["startDate"],
+      },
+    ),
+});
 
 export const conversationIdSchema = z.object({
-  conversationId: z.string().uuid(),
+  params: z.object({
+    conversationId: z.string().uuid(),
+  }),
 });
 
 export const conversationListSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
+  query: z.object({
+    page: z.coerce.number().int().min(1).default(1),
 
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(50)
-    .default(20),
+    limit: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(50)
+      .default(20),
+  }),
 });
 
 export const messageFeedbackSchema = z.object({
-  helpful: z.boolean(),
+  params: z.object({
+    messageId: z.string().uuid(),
+  }),
 
-  note: z
-    .string()
-    .trim()
-    .max(500)
-    .optional(),
+  body: z.object({
+    helpful: z.boolean(),
+
+    note: z
+      .string()
+      .trim()
+      .max(500)
+      .optional(),
+  }),
 });
 
 export const savedQuerySchema = z.object({
@@ -84,5 +96,7 @@ export const savedQueryUpdateSchema = z.object({
 });
 
 export const savedQueryParamsSchema = z.object({
-  savedQueryId: z.string().uuid(),
+  params: z.object({
+    savedQueryId: z.string().uuid(),
+  }),
 });

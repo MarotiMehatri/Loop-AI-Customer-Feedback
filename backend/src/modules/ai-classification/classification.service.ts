@@ -3,7 +3,7 @@ import { ApiError } from "../../utils/apiError.js";
 import { classifyByKeywords, mergeClassificationResults, validateContent } from "./classification.processor.js";
 import { classificationRepository } from "./classification.repository.js";
 import { classificationFallbackService } from "./classification-fallback.service.js";
-import { assertCanClassify } from "./classification.permissions.js";
+import { assertCanClassify, assertCanViewClassifications } from "./classification.permissions.js";
 import { CLASSIFICATION_MESSAGES } from "./classification.constants.js";
 import { mapClassificationResult } from "./classification.mapper.js";
 
@@ -145,7 +145,7 @@ export const classificationService = {
     actor: ClassificationActorContext,
     query: ListClassificationsQuery,
   ) {
-    assertCanClassify(actor.role);
+    assertCanViewClassifications(actor.role);
 
     const result = await classificationRepository.list(actor.workspaceId, query);
 

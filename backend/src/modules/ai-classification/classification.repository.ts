@@ -24,7 +24,6 @@ export const classificationRepository = {
       where: {
         id: classificationId,
         workspaceId,
-        isClassified: true,
       },
     });
   },

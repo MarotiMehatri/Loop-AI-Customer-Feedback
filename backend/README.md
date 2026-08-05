@@ -39,6 +39,9 @@ npm run prisma:migrate
 # Seed the database (optional)
 npm run seed
 
+# Seed demo feedback data (optional, 34 records)
+npm run seed:demo
+
 # Start development server
 npm run dev
 ```
@@ -58,6 +61,7 @@ npm run dev
 | `npm run prisma:format`   | Format Prisma schema            |
 | `npm run prisma:validate` | Validate Prisma schema          |
 | `npm run seed`        | Seed the database                   |
+| `npm run seed:demo`   | Seed demo feedback + themes (34 records) |
 
 ## API Overview
 
@@ -131,11 +135,23 @@ backend/
 
 ## Deployment
 
-### Docker
+### Docker (backend + PostgreSQL)
+
+`docker-compose.yml` runs PostgreSQL 16 and the backend. On container start the backend
+automatically applies pending migrations (`prisma migrate deploy`), so a fresh deploy is:
 
 ```bash
-# Build and start all services
-docker compose up -d
+# 1. Configure .env (DATABASE_URL should point at the compose postgres host)
+cp .env.example .env
+#   DATABASE_URL=postgresql://username:password@postgres:5432/loop_db?schema=public
+
+# 2. Build and start all services
+docker compose up -d --build
+
+# 3. Seed users + demo data (once)
+docker compose exec backend npx prisma migrate deploy
+docker compose exec backend npm run seed
+docker compose exec backend npm run seed:demo
 
 # View logs
 docker compose logs -f backend
@@ -144,10 +160,26 @@ docker compose logs -f backend
 docker compose down
 ```
 
+> The image builds with `.dockerignore` excluding `node_modules`, `.env`, and `dist`,
+> and `prisma` is a runtime dependency so the production image can run
+> `prisma generate` / `migrate deploy` on the Alpine runtime.
+
+### Without Docker
+
+```bash
+npm ci
+npm run prisma:generate
+npx prisma migrate deploy   # production-safe migration (vs prisma migrate dev)
+npm run build
+NODE_ENV=production node dist/src/server.js
+```
+
 ### Production Checklist
 
 1. Set `NODE_ENV=production` in `.env`
 2. Use strong, unique values for `JWT_SECRET` and database credentials
-3. Run `npm run prisma:migrate` before starting the server
-4. Serve behind a reverse proxy (nginx/Caddy) with TLS
-5. Set `FRONTEND_URL` to your production frontend domain
+3. Provide a valid `GEMINI_API_KEY` so AI classification and Ask LOOP work
+4. Set `FRONTEND_URL` to your production frontend domain
+5. Serve behind a reverse proxy (nginx/Caddy) with TLS
+6. Migrations run automatically on container start (`migrate deploy`); run `seed` once
+   for the Acme Corp demo workspace

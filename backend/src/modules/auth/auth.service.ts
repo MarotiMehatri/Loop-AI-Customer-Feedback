@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import * as bcrypt from "bcrypt";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 
 import { env } from "../../config/env.js";

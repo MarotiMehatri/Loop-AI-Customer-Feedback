@@ -43,14 +43,6 @@ export const dashboardService = {
     query: DashboardQuery,
   ): Promise<DashboardResponse> {
     assertDashboardAccess(context.role);
-<<<<<<< HEAD
-=======
-    assertPermission(
-      context.role,
-      PERMISSION.DASHBOARD_READ,
-      "You do not have permission to view the Admin dashboard",
-    );
->>>>>>> ec9119b (feat(frontend): set up admin pages, components, services, hooks, types, and responsive layouts)
 
     const period = resolveDashboardPeriod(query);
 

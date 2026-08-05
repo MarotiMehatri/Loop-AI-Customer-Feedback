@@ -55,4 +55,4 @@ apiRouter.use('/trends', trendsRouter);
 apiRouter.use('/ai-classification', classificationRouter);
 apiRouter.use('/data-sources', dataSourcesRouter);
 apiRouter.use('/exports', exportsRouter);
-apiRouter.use('workspace', workspaceRouter);
+apiRouter.use('/workspace', workspaceRouter);
