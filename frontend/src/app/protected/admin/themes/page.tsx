@@ -41,6 +41,21 @@ export default function ThemesPage() {
     const description = window.prompt("Description", theme.description ?? "") ?? "";
     await apiClient.patch(`/theme/${theme.id}`, { name: name.trim(), description }); await load();
   };
+  const view = async (theme: Theme) => {
+    const [{ data: analytics }, { data: feedbackResponse }] = await Promise.all([
+      apiClient.get<{ data: { totalFeedback: number; averageConfidence: number; sentiment: Array<{ sentiment: string; percentage: number }> } }>(`/theme/${theme.id}/analytics`),
+      apiClient.get<{ data: { items: Array<{ content: string }> } }>(`/theme/${theme.id}/feedback`, { params: { page: 1, limit: 3 } }),
+    ]);
+    const feedback = { data: feedbackResponse };
+    const sentiment = analytics.data.sentiment.map((item) => `${item.sentiment}: ${Math.round(item.percentage)}%`).join(", ") || "No sentiment data";
+    const samples = feedback.data.data.items.map((item) => `• ${item.content}`).join("\n") || "No feedback assigned yet.";
+    window.alert(`${theme.name}\n\nFeedback: ${analytics.data.totalFeedback}\nAverage confidence: ${Math.round(analytics.data.averageConfidence * 100)}%\nSentiment: ${sentiment}\n\nRecent feedback\n${samples}`);
+  };
+  const remove = async (theme: Theme) => {
+    if (!window.confirm(`Delete “${theme.name}”? This cannot be undone.`)) return;
+    await apiClient.delete(`/theme/${theme.id}`);
+    await load();
+  };
 
   return (
     <AdminShell title="Themes" subtitle="Discover and analyze key themes from customer feedback" active="themes">
