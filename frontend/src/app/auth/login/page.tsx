@@ -1,88 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-
+import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import { getErrorMessage } from "../../../lib/api/api-error";
 import { useAuthStore } from "../../../store";
-
 import styles from "./login.module.css";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const login = useAuthStore((state) => state.login);
-  const isViewerLogin = searchParams.get("role") === "viewer";
-
-  const [email, setEmail] = useState(isViewerLogin ? "viewer@loop.com" : "admin@loop.com");
-  const [password, setPassword] = useState("Loop@123");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setSubmitting(true);
-    try {
-      const user = await login(email, password);
-      toast.success("Welcome back to LOOP");
-      router.push(user.role === "VIEWER" ? "/protected/viewer" : "/protected/admin/dashboard");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <main className={styles.page}>
-      <section className={styles.panel}>
-        <div className={styles.brand}>
-          <span className={styles.logo}>
-            <i>∞</i> LOOP
-          </span>
-          <p className={styles.tagline}>
-            AI Customer Feedback<br />Intelligence Platform
-          </p>
-        </div>
-
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <h1>Sign in to your workspace</h1>
-          <p className={styles.subtitle}>
-            Monitor, analyse and act on customer feedback with AI.
-          </p>
-
-          <label>
-            Email
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@company.com"
-              autoComplete="email"
-              required
-            />
-          </label>
-
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              required
-            />
-          </label>
-
-          <button className={styles.submit} type="submit" disabled={submitting}>
-            {submitting ? "Signing in…" : "Sign in"}
-          </button>
-
-          <p className={styles.hint}>
-            Demo access: <b>{isViewerLogin ? "viewer@loop.com" : "admin@loop.com"}</b> / <b>Loop@123</b>
-          </p>
-        </form>
-      </section>
-    </main>
-  );
-}
+const roles=[['ADMIN','♔','Admin','Full Access','Manage users, settings and all platform features.'],['ANALYST','▥','Analyst','Insights Access','Access insights, reports, and advanced analytics.'],['VIEWER','◉','Viewer','Read Only','View feedback and insights.']] as const;
+export default function LoginPage(){const router=useRouter();const searchParams=useSearchParams();const login=useAuthStore(s=>s.login);const [role,setRole]=useState<'ADMIN'|'ANALYST'|'VIEWER'>(searchParams.get('role')==='viewer'?'VIEWER':'ANALYST');const [email,setEmail]=useState(role==='VIEWER'?'viewer@loop.com':'admin@loop.com');const [password,setPassword]=useState('Loop@123');const [show,setShow]=useState(false);const [remember,setRemember]=useState(true);const [submitting,setSubmitting]=useState(false);
+const handleLogin=async(event:React.FormEvent)=>{event.preventDefault();setSubmitting(true);try{const user=await login(email,password);if(user.role!==role){toast.message(`Signed in as ${user.role.toLowerCase()}`);}if(!remember)sessionStorage.removeItem('loop-auth');toast.success('Welcome back to LOOP');router.push(user.role==='VIEWER'?'/protected/viewer':'/protected/admin/dashboard');}catch(error){toast.error(getErrorMessage(error));}finally{setSubmitting(false)}};
+return <main className={styles.page}><aside className={styles.story}><div className={styles.brand}><i>∞</i>LOOP</div><p className={styles.tag}>AI Customer Feedback<br/>Intelligence Platform</p><h1>Understand Feedback.<br/>Drive <em>Better Experiences.</em></h1><p>LOOP helps you view and stay informed with real-time feedback insights, reports, and updates that matter to you.</p><div className={styles.points}>{[['◉','View Real-time Insights','Access up-to-date feedback summaries and key metrics.'],['▤','Stay Informed','Keep track of important updates, trends, and notifications.'],['♢','Secure & Reliable','Your data is protected with enterprise-grade security.'],['♧','Personalized Experience','A focused experience tailored for viewing and staying informed.']].map(([icon,title,text])=><div className={styles.point} key={title}><i>{icon}</i><div><b>{title}</b><span>{text}</span></div></div>)}</div></aside><section className={styles.formWrap}><button className={styles.theme} aria-label="Toggle theme">◐</button><form className={styles.form} onSubmit={handleLogin}><div className={styles.badge}>♙</div><h2>Welcome back! 👋</h2><p className={styles.subtitle}>Sign in to your LOOP account</p><label>Select your role</label><div className={styles.roles}>{roles.map(([key,icon,title,access,text])=><button type="button" key={key} onClick={()=>{setRole(key);setEmail(key==='VIEWER'?'viewer@loop.com':'admin@loop.com')}} className={`${styles.role} ${role===key?styles.active:''}`}><i>{icon}</i><b>{title} <small>{access}</small></b><small>{text}</small></button>)}</div><label>Work email<div className={styles.password}><Mail size={18}/><input className={styles.input} style={{paddingLeft:43}} type="email" value={email} onChange={event=>setEmail(event.target.value)} placeholder="name@company.com" required/></div></label><label>Password<div className={styles.password}><LockKeyhole size={18}/><input className={styles.input} style={{paddingLeft:43}} type={show?'text':'password'} value={password} onChange={event=>setPassword(event.target.value)} placeholder="Enter password" required/><button type="button" onClick={()=>setShow(!show)}>{show?<EyeOff size={18}/>:<Eye size={18}/>}</button></div></label><div className={styles.options}><label className={styles.remember}><input type="checkbox" checked={remember} onChange={event=>setRemember(event.target.checked)}/>Remember me</label><Link href="/auth/forget-password">Forgot password?</Link></div><button className={styles.submit} type="submit" disabled={submitting}><LockKeyhole size={17}/> {submitting?'Logging in…':'Login'}</button><p className={styles.bottom}>Don&apos;t have an account? <Link href="/auth/signup">Sign up</Link></p></form></section></main>}
