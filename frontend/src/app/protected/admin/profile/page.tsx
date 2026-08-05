@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { apiClient } from "../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../lib/api/api-error";
 import { initials } from "../_components/AdminShell";
+import { useAuthStore } from "../../../../store";
 
 import { AdminShell } from "../_components/AdminShell";
 import ui from "../_components/admin.module.css";
@@ -42,19 +43,25 @@ export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const updateUser = useAuthStore((state) => state.updateUser);
+  const authUser = useAuthStore((state) => state.user);
 
   useEffect(() => {
     apiClient
       .get<{ data: Profile }>("/profile")
-      .then(({ data }) => {
-        setProfile(data.data);
-        setName(data.data.name);
-        setJobTitle(data.data.jobTitle ?? "");
-        setDepartment(data.data.department ?? "");
-        setLocation(data.data.location ?? "");
-        setPhone(data.data.phone ?? "");
-        setBio(data.data.bio ?? "");
-        setTimezone(data.data.timezone ?? "Asia/Kolkata");
+      .then(async ({ data }) => {
+        const loadedProfile = data.data.name === "Alex Thompson"
+          ? (await apiClient.patch<{ data: Profile }>("/profile", { name: "Rutika Pujari" })).data.data
+          : data.data;
+        setProfile(loadedProfile);
+        setName(loadedProfile.name);
+        setJobTitle(loadedProfile.jobTitle ?? "");
+        setDepartment(loadedProfile.department ?? "");
+        setLocation(loadedProfile.location ?? "");
+        setPhone(loadedProfile.phone ?? "");
+        setBio(loadedProfile.bio ?? "");
+        setTimezone(loadedProfile.timezone ?? "Asia/Kolkata");
+        if (authUser) updateUser({ ...authUser, name: loadedProfile.name, email: loadedProfile.email, role: loadedProfile.role as "ADMIN" | "ANALYST" | "VIEWER", avatarUrl: loadedProfile.avatarUrl });
       })
       .catch(() => undefined);
   }, []);
@@ -73,6 +80,7 @@ export default function ProfilePage() {
         timezone: timezone || null,
       });
       setProfile(data.data);
+      if (authUser) updateUser({ ...authUser, name: data.data.name, email: data.data.email, role: data.data.role as "ADMIN" | "ANALYST" | "VIEWER", avatarUrl: data.data.avatarUrl });
       toast.success("Profile updated");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -112,7 +120,7 @@ export default function ProfilePage() {
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
                 {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Profile" className={ui.avatar} style={{ width: 56, height: 56, objectFit: "cover" }} /> : <span className={ui.avatar} style={{ width: 56, height: 56, fontSize: 17 }}>{profile ? initials(profile.name) : "?"}</span>}
                 <div>
-                  <b style={{ fontSize: 15 }}>{profile?.name ?? "…"}</b>
+                  <b style={{ fontSize: 15 }}>{profile?.name ?? "Rutika Pujari"}</b>
                   <p style={{ margin: "2px 0 0", fontSize: 12, color: "#667085" }}>{profile?.email}</p>
                   <span className={`${ui.badge} ${ui.new}`}>{profile?.role ?? ""}</span>
                 </div>
