@@ -38,8 +38,8 @@ authRouter.post("/password-reset/confirm", asyncHandler(resetPasswordController)
 
 authRouter.post("/password-change", authenticate, asyncHandler(changePasswordController));
 
-authRouter.post("/email-verification/request", authenticate, asyncHandler(requestEmailVerificationController));
+authRouter.post("/email-verification/request", asyncHandler(requestEmailVerificationController));
 
 authRouter.post("/email-verification/confirm", asyncHandler(verifyEmailController));
 
-authRouter.post("/email-verification/resend", authenticate, asyncHandler(resendVerificationController));
+authRouter.post("/email-verification/resend", asyncHandler(resendVerificationController));

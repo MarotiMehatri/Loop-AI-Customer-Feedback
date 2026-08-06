@@ -139,14 +139,16 @@ export const changePasswordController = async (
 };
 
 export const requestEmailVerificationController = async (
-  request: AuthenticatedRequest,
+  request: Request,
   response: Response,
 ): Promise<void> => {
-  if (!request.user) {
-    throw new ApiError(401, "Authentication required");
+  const { email } = request.body as { email?: string };
+
+  if (!email) {
+    throw new ApiError(400, "Email is required");
   }
 
-  const result = await requestEmailVerification(request.user.userId);
+  const result = await requestEmailVerification(email);
 
   response.status(200).json({
     success: true,
@@ -158,13 +160,13 @@ export const verifyEmailController = async (
   request: Request,
   response: Response,
 ): Promise<void> => {
-  const { token } = request.body as { token: string };
+  const { email, otp } = request.body as { email?: string; otp?: string };
 
-  if (!token) {
-    throw new ApiError(400, "Token is required");
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and verification code are required");
   }
 
-  const result = await verifyEmail(token);
+  const result = await verifyEmail(email, otp);
 
   response.status(200).json({
     success: true,
@@ -173,14 +175,16 @@ export const verifyEmailController = async (
 };
 
 export const resendVerificationController = async (
-  request: AuthenticatedRequest,
+  request: Request,
   response: Response,
 ): Promise<void> => {
-  if (!request.user) {
-    throw new ApiError(401, "Authentication required");
+  const { email } = request.body as { email?: string };
+
+  if (!email) {
+    throw new ApiError(400, "Email is required");
   }
 
-  const result = await resendVerification(request.user.userId);
+  const result = await resendVerification(email);
 
   response.status(200).json({
     success: true,
