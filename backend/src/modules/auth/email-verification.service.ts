@@ -2,11 +2,11 @@ import { randomInt } from "node:crypto";
 
 import { prisma } from "../../config/prisma.js";
 import { ApiError } from "../../utils/apiError.js";
-import { isEmailConfigured, sendOtpEmail } from "./email.service.js";
+import { sendOtpEmail } from "./email.service.js";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
-export async function requestEmailVerification(email: string): Promise<{ message: string; expiresIn: number; otp?: string }> {
+export async function requestEmailVerification(email: string): Promise<{ message: string; expiresIn: number; otp?: string; previewUrl?: string }> {
   const normalized = email.trim().toLowerCase();
 
   if (!normalized) {
@@ -25,21 +25,24 @@ export async function requestEmailVerification(email: string): Promise<{ message
     data: { email: normalized, otp, expiresAt },
   });
 
-  if (!isEmailConfigured()) {
-    console.warn(`[email] SENDGRID_API_KEY not set - email NOT sent. Dev OTP for ${normalized}: ${otp}`);
+  try {
+    const { previewUrl } = await sendOtpEmail(normalized, otp);
+
     return {
-      message: "Email service not configured - showing dev OTP",
+      message: previewUrl
+        ? "Verification code sent - check the email preview"
+        : "Verification code sent to your email",
+      expiresIn: OTP_EXPIRY_MS / 1000,
+      previewUrl,
+    };
+  } catch (error) {
+    console.warn(`[email] Sending OTP email failed for ${normalized}:`, error);
+    return {
+      message: "Email sending failed - showing dev OTP",
       expiresIn: OTP_EXPIRY_MS / 1000,
       otp,
     };
   }
-
-  await sendOtpEmail(normalized, otp);
-
-  return {
-    message: "Verification code sent to your email",
-    expiresIn: OTP_EXPIRY_MS / 1000,
-  };
 }
 
 export async function verifyEmail(email: string, otp: string): Promise<{ message: string }> {

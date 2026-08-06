@@ -1,5 +1,5 @@
 import sgMail from "@sendgrid/mail";
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 
 import { env } from "../../config/env.js";
 
@@ -19,8 +19,23 @@ const transporter = smtpConfigured
     })
   : null;
 
+let etherealTransport: Transporter | null = null;
+
 export function isEmailConfigured(): boolean {
   return sendgridConfigured || smtpConfigured;
+}
+
+async function getEtherealTransport(): Promise<Transporter> {
+  if (!etherealTransport) {
+    const testAccount = await nodemailer.createTestAccount();
+    etherealTransport = nodemailer.createTransport({
+      host: testAccount.smtp.host,
+      port: testAccount.smtp.port,
+      secure: testAccount.smtp.secure,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+  }
+  return etherealTransport;
 }
 
 function buildMail(to: string, otp: string) {
@@ -43,31 +58,38 @@ function buildMail(to: string, otp: string) {
   };
 }
 
-export async function sendOtpEmail(to: string, otp: string): Promise<void> {
+export async function sendOtpEmail(
+  to: string,
+  otp: string,
+): Promise<{ previewUrl?: string }> {
   const mail = buildMail(to, otp);
+  const fromName = env.MAIL_FROM_NAME;
 
   if (transporter) {
-    try {
-      await transporter.sendMail({
-        from: { name: env.MAIL_FROM_NAME, address: env.SMTP_USER },
-        to,
-        ...mail,
-      });
-      return;
-    } catch (error) {
-      console.error("[email] SMTP failed to send OTP email:", error);
-      throw error;
-    }
-  }
-
-  try {
-    await sgMail.send({
+    await transporter.sendMail({
+      from: { name: fromName, address: env.SMTP_USER },
       to,
-      from: { email: env.MAIL_FROM, name: env.MAIL_FROM_NAME },
       ...mail,
     });
-  } catch (error) {
-    console.error("[email] SendGrid failed to send OTP email:", error);
-    throw error;
+    return {};
   }
+
+  if (sendgridConfigured) {
+    await sgMail.send({
+      to,
+      from: { email: env.MAIL_FROM, name: fromName },
+      ...mail,
+    });
+    return {};
+  }
+
+  const ethereal = await getEtherealTransport();
+  const info = await ethereal.sendMail({
+    from: { name: fromName, address: env.MAIL_FROM },
+    to,
+    ...mail,
+  });
+  const previewUrl = nodemailer.getTestMessageUrl(info);
+
+  return { previewUrl: previewUrl || undefined };
 }
