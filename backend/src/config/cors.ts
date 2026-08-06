@@ -15,7 +15,11 @@ export const corsOptions: CorsOptions = {
       return;
     }
 
-    if (allowedOrigins.includes(origin)) {
+    /*
+     * During development the frontend may run from any local
+     * URL (localhost, 127.0.0.1 or a LAN IP), so allow all origins.
+     */
+    if (env.NODE_ENV === "development" || allowedOrigins.includes(origin)) {
       callback(null, true);
       return;
     }
@@ -29,3 +33,4 @@ export const corsOptions: CorsOptions = {
 
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
