@@ -44,6 +44,19 @@ const envSchema = z.object({
     .default("gemini-2.5-flash"),
 
   GEMINI_EMBEDDING_MODEL: z.string().trim().default("gemini-embedding-001"),
+
+  SENDGRID_API_KEY: z.string().trim().default(""),
+  MAIL_FROM: z.string().email().default("noreply@loop-platform.com"),
+  MAIL_FROM_NAME: z.string().trim().default("LOOP AI Platform"),
+
+  SMTP_HOST: z.string().trim().default(""),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  SMTP_USER: z.string().trim().default(""),
+  SMTP_PASS: z.string().trim().default(""),
+  SMTP_SECURE: z
+    .string()
+    .default("true")
+    .transform((value) => value.toLowerCase() !== "false"),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
