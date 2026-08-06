@@ -353,12 +353,13 @@ const FEEDBACK_SEED = [
 ] as const;
 
 async function main(): Promise<void> {
+  const workspaceSlug = process.env.LOOP_DEMO_WORKSPACE_SLUG ?? "acme-corp";
   const workspace = await prisma.workspace.findUnique({
-    where: { slug: "acme-corp" },
+    where: { slug: workspaceSlug },
   });
 
   if (!workspace) {
-    throw new Error("Workspace not found. Run `npm run seed` first.");
+    throw new Error(`Workspace "${workspaceSlug}" not found.`);
   }
 
   const admin = await prisma.user.findFirst({

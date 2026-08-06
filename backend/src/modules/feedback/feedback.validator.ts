@@ -17,7 +17,16 @@ const feedbackSourceSchema = z.enum([
   "MANUAL",
 ]);
 
-const sentimentSchema = z.enum(["POS", "NEU", "NEG"]);
+// The database stores the full enum names. Accept the older short values from
+// the manual-feedback form as well, then normalize before Prisma receives them.
+const sentimentSchema = z
+  .enum(["POS", "NEU", "NEG", "POSITIVE", "NEUTRAL", "NEGATIVE"])
+  .transform((value) => {
+    if (value === "POS") return "POSITIVE";
+    if (value === "NEU") return "NEUTRAL";
+    if (value === "NEG") return "NEGATIVE";
+    return value;
+  });
 
 const feedbackStatusSchema = z.enum([
   "NEW",
