@@ -22,6 +22,18 @@ export const findUserByEmail = async (email: string) => {
   });
 };
 
+export const hasRecentEmailVerification = async (email: string) => {
+  return prisma.emailVerification.findFirst({
+    where: {
+      email,
+      usedAt: { gte: new Date(Date.now() - 10 * 60 * 1000) },
+      expiresAt: { gte: new Date() },
+    },
+    orderBy: { usedAt: "desc" },
+    select: { id: true },
+  });
+};
+
 export const findPublicUserById = async (
   userId: string,
 ) => {
@@ -56,6 +68,7 @@ export const createWorkspaceWithAdmin = async (
           email: input.email,
           passwordHash: input.passwordHash,
           role: Role.ADMIN,
+          emailVerifiedAt: new Date(),
         },
       },
     },

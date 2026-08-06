@@ -11,6 +11,7 @@ import {
   createWorkspaceWithAdmin,
   findPublicUserById,
   findUserByEmail,
+  hasRecentEmailVerification,
   updateLastLogin,
 } from "./auth.repository.js";
 
@@ -55,6 +56,12 @@ export const registerUser = async (
 
   if (existingUser) {
     throw new ApiError(409, "A user with this email address already exists");
+  }
+
+  const verifiedEmail = await hasRecentEmailVerification(email);
+
+  if (!verifiedEmail) {
+    throw new ApiError(400, "Verify your email address before creating a workspace");
   }
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_SALT_ROUNDS);

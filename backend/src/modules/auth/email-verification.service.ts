@@ -27,10 +27,9 @@ export async function requestEmailVerification(email: string): Promise<{ message
 
   try {
     const { previewUrl } = await sendOtpEmail(normalized, otp);
-
     return {
       message: previewUrl
-        ? "Verification code sent - check the email preview"
+        ? "Verification code sent - click the email preview to view it"
         : "Verification code sent to your email",
       expiresIn: OTP_EXPIRY_MS / 1000,
       previewUrl,
@@ -38,11 +37,15 @@ export async function requestEmailVerification(email: string): Promise<{ message
   } catch (error) {
     console.warn(`[email] Sending OTP email failed for ${normalized}:`, error);
     return {
-      message: "Email sending failed - showing dev OTP",
+      message: "Email sending failed - showing development OTP",
       expiresIn: OTP_EXPIRY_MS / 1000,
       otp,
     };
   }
+}
+
+export async function resendVerification(email: string): Promise<{ message: string; expiresIn: number; otp?: string; previewUrl?: string }> {
+  return requestEmailVerification(email);
 }
 
 export async function verifyEmail(email: string, otp: string): Promise<{ message: string }> {
@@ -83,8 +86,4 @@ export async function verifyEmail(email: string, otp: string): Promise<{ message
   }
 
   return { message: "Email verified successfully" };
-}
-
-export async function resendVerification(email: string): Promise<{ message: string; expiresIn: number }> {
-  return requestEmailVerification(email);
 }

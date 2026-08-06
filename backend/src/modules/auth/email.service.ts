@@ -66,21 +66,29 @@ export async function sendOtpEmail(
   const fromName = env.MAIL_FROM_NAME;
 
   if (transporter) {
-    await transporter.sendMail({
-      from: { name: fromName, address: env.SMTP_USER },
-      to,
-      ...mail,
-    });
-    return {};
+    try {
+      await transporter.sendMail({
+        from: { name: fromName, address: env.SMTP_USER },
+        to,
+        ...mail,
+      });
+      return {};
+    } catch (error) {
+      console.warn(`[email] SMTP failed for ${to}, falling back to Ethereal:`, error);
+    }
   }
 
   if (sendgridConfigured) {
-    await sgMail.send({
-      to,
-      from: { email: env.MAIL_FROM, name: fromName },
-      ...mail,
-    });
-    return {};
+    try {
+      await sgMail.send({
+        to,
+        from: { email: env.MAIL_FROM, name: fromName },
+        ...mail,
+      });
+      return {};
+    } catch (error) {
+      console.warn(`[email] SendGrid failed for ${to}, falling back to Ethereal:`, error);
+    }
   }
 
   const ethereal = await getEtherealTransport();
