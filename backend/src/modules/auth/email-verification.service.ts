@@ -1,64 +1,87 @@
+import { randomInt } from "node:crypto";
+
 import { prisma } from "../../config/prisma.js";
 import { ApiError } from "../../utils/apiError.js";
-import { generateEmailVerificationToken, verifyEmailVerificationToken } from "./token.service.js";
+import { isEmailConfigured, sendOtpEmail } from "./email.service.js";
 
-export async function requestEmailVerification(userId: string): Promise<{ message: string }> {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
-  if (!user) {
-    throw new ApiError(404, "User not found");
+export async function requestEmailVerification(email: string): Promise<{ message: string; expiresIn: number; otp?: string }> {
+  const normalized = email.trim().toLowerCase();
+
+  if (!normalized) {
+    throw new ApiError(400, "Email is required");
   }
 
-  if (!user.isActive) {
-    throw new ApiError(403, "Account is disabled");
+  const otp = String(randomInt(100000, 999999));
+  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+
+  await prisma.emailVerification.updateMany({
+    where: { email: normalized, usedAt: null },
+    data: { usedAt: new Date() },
+  });
+
+  await prisma.emailVerification.create({
+    data: { email: normalized, otp, expiresAt },
+  });
+
+  if (!isEmailConfigured()) {
+    console.warn(`[email] SENDGRID_API_KEY not set - email NOT sent. Dev OTP for ${normalized}: ${otp}`);
+    return {
+      message: "Email service not configured - showing dev OTP",
+      expiresIn: OTP_EXPIRY_MS / 1000,
+      otp,
+    };
   }
 
-  const verificationToken = generateEmailVerificationToken(user.id, user.email);
+  await sendOtpEmail(normalized, otp);
 
-  // In production, send email with verification link
-  // await emailService.sendVerification(user.email, verificationToken);
-
-  return { message: "Verification email sent" };
+  return {
+    message: "Verification code sent to your email",
+    expiresIn: OTP_EXPIRY_MS / 1000,
+  };
 }
 
-export async function verifyEmail(token: string): Promise<{ message: string }> {
-  const { userId, email } = verifyEmailVerificationToken(token);
+export async function verifyEmail(email: string, otp: string): Promise<{ message: string }> {
+  const normalized = email.trim().toLowerCase();
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-
-  if (!user) {
-    throw new ApiError(404, "User not found");
+  if (!normalized || !otp) {
+    throw new ApiError(400, "Email and verification code are required");
   }
 
-  if (!user.isActive) {
-    throw new ApiError(403, "Account is disabled");
+  const record = await prisma.emailVerification.findFirst({
+    where: { email: normalized, usedAt: null },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!record) {
+    throw new ApiError(400, "No verification code requested for this email");
   }
 
-  if (user.email !== email.toLowerCase()) {
-    throw new ApiError(400, "Invalid verification token");
+  if (record.otp !== otp) {
+    throw new ApiError(400, "Invalid verification code");
   }
 
-  // If email verification field existed on user model, update it here
-  // await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+  if (record.expiresAt.getTime() < Date.now()) {
+    throw new ApiError(400, "Verification code has expired");
+  }
+
+  await prisma.emailVerification.update({
+    where: { id: record.id },
+    data: { usedAt: new Date() },
+  });
+
+  const user = await prisma.user.findUnique({ where: { email: normalized } });
+  if (user) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerifiedAt: new Date() },
+    });
+  }
 
   return { message: "Email verified successfully" };
 }
 
-export async function resendVerification(userId: string): Promise<{ message: string }> {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-
-  if (!user) {
-    throw new ApiError(404, "User not found");
-  }
-
-  if (!user.isActive) {
-    throw new ApiError(403, "Account is disabled");
-  }
-
-  const verificationToken = generateEmailVerificationToken(user.id, user.email);
-
-  // In production, send email
-  // await emailService.sendVerification(user.email, verificationToken);
-
-  return { message: "Verification email resent" };
+export async function resendVerification(email: string): Promise<{ message: string; expiresIn: number }> {
+  return requestEmailVerification(email);
 }
