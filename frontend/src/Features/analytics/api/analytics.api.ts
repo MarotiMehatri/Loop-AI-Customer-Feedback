@@ -13,6 +13,7 @@ export interface AnalyticsQueryParams {
   sentiment?: string;
   status?: string;
   source?: string;
+  category?: string;
 }
 
 export interface InboxQueryParams {

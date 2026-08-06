@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
+import ErrorOverlay from "../components/ErrorOverlay";
 
 export const metadata: Metadata = {
   title: "Loop | Analytics",
@@ -16,6 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>{children}</Providers>
+        <ErrorOverlay />
       </body>
     </html>
   );

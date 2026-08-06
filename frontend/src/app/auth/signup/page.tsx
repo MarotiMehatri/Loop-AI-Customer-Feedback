@@ -27,7 +27,7 @@ export default function SignupPage() {
       const result = await register({ name, email, password, workspaceName });
       await login(email, password);
       toast.success(`Workspace created. Welcome, ${result.user.name}!`);
-      router.push("/protected/admin/dashboard");
+      router.push("/protected/admin/add-feedback");
     } catch (error) {
       toast.error(getErrorMessage(error));
       setSubmitting(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BarChart3, Bell, CalendarDays, CheckSquare, ChevronDown, ChevronLeft, ChevronRight,
@@ -10,6 +10,7 @@ import {
 
 import shell from '../analytics/analytics.module.css';
 import styles from './inbox.module.css';
+import { useInboxList } from '../../../../Features/analytics/hooks/useAnalytics';
 
 const navigation = [
   [Grid2X2, 'Dashboard', '/protected/admin/dashboard'], [Inbox, 'Inbox', '/protected/admin/inbox'], [BarChart3, 'Analytics', '/protected/admin/analytics'], [Settings2, 'Themes', '/protected/admin/themes'],
@@ -48,6 +49,18 @@ export default function InboxPage() {
   const [viewing, setViewing] = useState<FeedbackRow | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [filters, setFilters] = useState({ source: '', sentiment: '', status: '' });
+  const inboxQuery = useInboxList({ page: 1, limit: 100 });
+  useEffect(() => {
+    const records = inboxQuery.data?.items;
+    if (!records) return;
+    const statusLabels: Record<string, string> = { NEW: 'New', REVIEWED: 'Reviewed', ACTIONED: 'In Progress', ARCHIVED: 'Resolved' };
+    const sourceLabels: Record<string, string> = { SUPPORT: 'Support Ticket', APP_STORE: 'App Store', SURVEY: 'Survey', SALES: 'Sales', SOCIAL: 'Social', WEBSITE: 'Website', EMAIL: 'Email', MANUAL: 'Manual' };
+    const sentimentLabels: Record<string, string> = { POSITIVE: 'Positive', NEUTRAL: 'Neutral', NEGATIVE: 'Negative' };
+    setItems(records.map((record) => {
+      const createdAt = new Date(record.createdAt);
+      return { id: record.id, feedback: record.content, source: sourceLabels[record.source] ?? record.source, customer: record.customerName ?? 'Anonymous customer', sentiment: sentimentLabels[record.sentiment] ?? record.sentiment, theme: 'Uncategorized', status: statusLabels[record.status] ?? record.status, date: createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }), time: createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
+    }));
+  }, [inboxQuery.data]);
   const filteredRows = useMemo(() => items.filter((row) => (
     row.feedback.toLowerCase().includes(search.toLowerCase()) || row.customer.toLowerCase().includes(search.toLowerCase()) || row.source.toLowerCase().includes(search.toLowerCase())
   ) && (!filters.source || row.source === filters.source) && (!filters.sentiment || row.sentiment === filters.sentiment) && (!filters.status || row.status === filters.status)), [items, search, filters]);
@@ -63,6 +76,11 @@ export default function InboxPage() {
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const link = document.createElement('a'); link.href = url; link.download = 'feedback-export.csv'; link.click(); URL.revokeObjectURL(url);
   };
+
+  function getInitials(name: string) {
+    if (!name) return '??';
+    return name.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+  }
 
   return <main className={shell.page}>
     <aside className={shell.sidebar}>
@@ -87,7 +105,7 @@ export default function InboxPage() {
           <section className={styles.tableCard}>
             <header className={styles.tableToolbar}><h2>All Feedback <span>({items.length})</span></h2><div className={styles.tableActions}><label className={styles.search}><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search feedback, customer, source..." /><Search size={14} /></label><button onClick={bulkMarkReviewed} disabled={selected.length === 0}>Mark reviewed ({selected.length}) <CheckSquare size={14} /></button><button onClick={exportCsv}><Download size={14} /> Export CSV</button></div></header>
             <div className={styles.tableHead}><input type="checkbox" checked={allSelected} onChange={() => setSelected(allSelected ? [] : filteredRows.map((row) => row.id))} aria-label="Select all feedback" /><span>Feedback</span><span>Source</span><span>Customer</span><span>Sentiment</span><span>Theme</span><span>Status</span><span>Date ↓</span><span>Actions</span></div>
-            <div className={styles.tableRows}>{filteredRows.map((row) => <div className={styles.row} key={row.id}><input type="checkbox" checked={selected.includes(row.id)} onChange={() => toggleSelected(row.id)} aria-label={`Select feedback from ${row.customer}`} /><span className={styles.feedback}>{row.feedback}<small>#{row.id}</small></span><span><Badge value={row.source} type="source" /></span><span>{row.customer}</span><span><Badge value={row.sentiment} type="sentiment" /></span><span>{row.theme}</span><span><Badge value={row.status} type="status" /></span><span className={styles.date}>{row.date}<small>{row.time}</small></span><span className={styles.rowActions}><button aria-label={`View ${row.id}`} title="View feedback" onClick={() => setViewing(row)}><Eye size={13} /></button><button aria-label={`Edit ${row.id}`} title="Edit feedback" onClick={() => setEditing({ ...row })}><Pencil size={13} /></button><span className={styles.moreMenu}><button aria-label={`More actions for ${row.id}`} title="More actions" onClick={() => setOpenMenuId((current) => current === row.id ? null : row.id)}><MoreHorizontal size={15} /></button>{openMenuId === row.id && <span className={styles.menu}><button onClick={() => markReviewed(row.id)}>Mark reviewed</button><button className={styles.deleteAction} onClick={() => removeFeedback(row.id)}>Delete</button></span>}</span></span></div>)}</div>
+            <div className={styles.tableRows}>{filteredRows.map((row) => <div className={styles.row} key={row.id}><input type="checkbox" checked={selected.includes(row.id)} onChange={() => toggleSelected(row.id)} aria-label={`Select feedback from ${row.customer}`} /><span className={styles.feedbackRow}><span className={styles.avatar}>{getInitials(row.customer)}</span><span className={styles.feedback}>{row.feedback}<small>#{row.id}</small></span></span><span><Badge value={row.source} type="source" /></span><span>{row.customer}</span><span><Badge value={row.sentiment} type="sentiment" /></span><span>{row.theme}</span><span><Badge value={row.status} type="status" /></span><span className={styles.date}>{row.date}<small>{row.time}</small></span><span className={styles.rowActions}><button aria-label={`View ${row.id}`} title="View feedback" onClick={() => setViewing(row)}><Eye size={13} /></button><button aria-label={`Edit ${row.id}`} title="Edit feedback" onClick={() => setEditing({ ...row })}><Pencil size={13} /></button><span className={styles.moreMenu}><button aria-label={`More actions for ${row.id}`} title="More actions" onClick={() => setOpenMenuId((current) => current === row.id ? null : row.id)}><MoreHorizontal size={15} /></button>{openMenuId === row.id && <span className={styles.menu}><button onClick={() => markReviewed(row.id)}>Mark reviewed</button><button className={styles.deleteAction} onClick={() => removeFeedback(row.id)}>Delete</button></span>}</span></span></div>)}</div>
             <footer className={styles.pagination}><span>Showing 1 to {filteredRows.length} of 2,543 results</span><div><button><ChevronLeft size={13} /></button><b>1</b><button>2</button><button>3</button><button>4</button><button>5</button><span>…</span><button>255</button><button><ChevronRight size={13} /></button><button className={styles.perPage}>10 / page <ChevronDown size={13} /></button></div></footer>
           </section>
         </div>
