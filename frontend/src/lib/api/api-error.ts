@@ -10,7 +10,6 @@ export class ApiError extends Error {
 
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message;
-  if (error instanceof Error) return error.message;
   if (
     typeof error === "object" &&
     error !== null &&
@@ -19,5 +18,6 @@ export function getErrorMessage(error: unknown): string {
   ) {
     return (error as { response: { data: { message: string } } }).response.data.message;
   }
+  if (error instanceof Error) return error.message;
   return "Something went wrong";
 }
