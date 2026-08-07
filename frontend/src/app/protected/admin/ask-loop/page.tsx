@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, Send } from "lucide-react";
+import { Bot, ChevronRight, Send, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
 import { apiClient } from "../../../../lib/api/api-client";
@@ -185,8 +185,18 @@ export default function AskLoopPage() {
     <AdminShell title="Ask LOOP AI" subtitle="Ask questions about your customer feedback in plain language" active="ask-loop">
       <div className={styles.body}>
         <aside className={styles.rail}>
-          <h2>Conversations</h2>
-          <p>Previous chats with LOOP</p>
+          <section className={styles.sideSection}>
+            <h2>Suggested Questions</h2>
+            <div className={styles.suggestionList}>{suggestionsToShow.map((suggestion) => <button key={suggestion} onClick={() => ask(suggestion)}>{suggestion}<ChevronRight size={15} /></button>)}</div>
+          </section>
+          <section className={styles.sideSection}>
+            <h2>Key Insights</h2>
+            <div className={styles.keyInsight}><i className={styles.negative}><TrendingUp size={18} /></i><p><b>Negative feedback needs attention</b><span>Ask LOOP for the latest trend and affected themes.</span></p></div>
+            <div className={styles.keyInsight}><i className={styles.positive}><TrendingDown size={18} /></i><p><b>Explore what customers love</b><span>Find positive themes and successful sources.</span></p></div>
+            <div className={styles.keyInsight}><i className={styles.theme}><Sparkles size={18} /></i><p><b>Discover your top theme</b><span>Use a question to explore recurring feedback.</span></p></div>
+          </section>
+          <section className={styles.sideSection}>
+          <h2>Recent Conversations</h2>
           {conversations.length === 0 && <p style={{ fontSize: 11, color: "#98a2b3" }}>No conversations yet.</p>}
           {conversations.map((conversation) => (
             <button
@@ -211,6 +221,7 @@ export default function AskLoopPage() {
               ))}
             </>
           )}
+          </section>
         </aside>
 
         <section className={styles.chat}>

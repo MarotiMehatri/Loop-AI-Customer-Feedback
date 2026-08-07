@@ -13,10 +13,11 @@ export function getErrorMessage(error: unknown): string {
   if (
     typeof error === "object" &&
     error !== null &&
-    "response" in error &&
-    typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
+    "response" in error
   ) {
-    return (error as { response: { data: { message: string } } }).response.data.message;
+    const data = (error as { response?: { data?: { message?: string; error?: string } } }).response?.data;
+    if (data?.message === "Internal server error" && data.error) return data.error;
+    if (typeof data?.message === "string") return data.message;
   }
   if (error instanceof Error) return error.message;
   return "Something went wrong";

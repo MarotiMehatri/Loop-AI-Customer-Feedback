@@ -27,12 +27,18 @@ export default function ViewerInboxPage() {
   const [source, setSource] = useState('');
   const [sentiment, setSentiment] = useState('');
   const [status, setStatus] = useState('');
-  const list = useInboxList({ page: 1, limit: 10, search: search || undefined, source: source || undefined, sentiment: sentiment || undefined, status: status || undefined });
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const list = useInboxList({ page, limit: pageSize, search: search || undefined, source: source || undefined, sentiment: sentiment || undefined, status: status || undefined });
   const analytics = useAnalytics({ days: 30, groupBy: 'day' });
   const unread = useInboxStatusCount('NEW');
   const resolved = useInboxStatusCount('ARCHIVED');
   const total = analytics.data?.overview.totalFeedback ?? 0;
   const rows = list.data?.items ?? [];
+  const pagination = list.data?.pagination;
+  const totalPages = pagination?.totalPages ?? 1;
+  const firstItem = pagination?.total ? (page - 1) * pageSize + 1 : 0;
+  const lastItem = pagination?.total ? Math.min(page * pageSize, pagination.total) : 0;
   const distribution = analytics.data?.sourceDistribution ?? [];
   const sentiments = [
     ['Positive', analytics.data?.overview.positive.count ?? 0, styles.positive],
@@ -74,11 +80,11 @@ export default function ViewerInboxPage() {
         <section className={styles.bodyGrid}>
           <div className={styles.mainColumn}>
             <div className={styles.filters}>
-              <label><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search feedback..." /><Search size={16} /></label>
-              <select value={source} onChange={e => setSource(e.target.value)}><option value="">All Sources</option>{distribution.map(item => <option value={item.key} key={item.key}>{item.label}</option>)}</select>
-              <select value={sentiment} onChange={e => setSentiment(e.target.value)}><option value="">All Sentiments</option><option value="POSITIVE">Positive</option><option value="NEUTRAL">Neutral</option><option value="NEGATIVE">Negative</option></select>
+              <label><input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Search feedback..." /><Search size={16} /></label>
+              <select value={source} onChange={e => { setSource(e.target.value); setPage(1); }}><option value="">All Sources</option>{distribution.map(item => <option value={item.key} key={item.key}>{item.label}</option>)}</select>
+              <select value={sentiment} onChange={e => { setSentiment(e.target.value); setPage(1); }}><option value="">All Sentiments</option><option value="POSITIVE">Positive</option><option value="NEUTRAL">Neutral</option><option value="NEGATIVE">Negative</option></select>
               <select className={styles.themes}><option>All Themes</option></select>
-              <select value={status} onChange={e => setStatus(e.target.value)}><option value="">All Statuses</option><option value="NEW">New</option><option value="REVIEWED">Reviewed</option><option value="ACTIONED">In Progress</option><option value="ARCHIVED">Resolved</option></select>
+              <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}><option value="">All Statuses</option><option value="NEW">New</option><option value="REVIEWED">Reviewed</option><option value="ACTIONED">In Progress</option><option value="ARCHIVED">Resolved</option></select>
               <button className={styles.moreFilters}><Filter size={14} /> More Filters</button>
               <select className={styles.sort}><option>Sort: Newest</option></select>
             </div>
@@ -87,7 +93,7 @@ export default function ViewerInboxPage() {
                 <tbody>{rows.map((item, index) => <tr key={item.id}><td><input type="checkbox" aria-label={`select ${item.id}`} /></td><td>FB-{item.id.slice(-5)}</td><td className={styles.preview}><i className={styles.previewIcon}><MessageSquare size={15} /></i><span>{item.content}</span></td><td><mark className={styles.source}>{item.source}</mark></td><td><mark className={`${styles.sentiment} ${styles[item.sentiment.toLowerCase()]}`}>{item.sentiment}</mark></td><td><mark className={styles.theme}>{index % 2 ? 'Product Features' : 'Customer Support'}</mark></td><td><mark className={`${styles.status} ${statusClass(item.status)}`}>{item.status === 'ACTIONED' ? 'In Progress' : item.status}</mark></td><td>{format(new Date(item.createdAt), 'MMM d, yyyy')}<small>{format(new Date(item.createdAt), 'hh:mm a')}</small></td><td>{item.customerName ?? '—'}</td><td><button className={styles.more}><MoreHorizontal size={17} /></button></td></tr>)}</tbody>
               </table>
               {!rows.length && <p className={styles.empty}>No feedback matches these filters.</p>}
-              <footer><span>Showing 1 to {rows.length} of {list.data?.pagination.total ?? 0} feedback</span><div className={styles.pagination}><button><ChevronLeft size={15} /></button><b>1</b><button>2</button><button>3</button><button>4</button><button>5</button><span>…</span><button><ChevronRight size={15} /></button></div><select><option>10 / page</option></select></footer>
+              <footer><span>Showing {firstItem} to {lastItem} of {pagination?.total ?? 0} feedback</span><div className={styles.pagination}><button type="button" onClick={() => setPage(current => Math.max(1, current - 1))} disabled={!pagination?.hasPreviousPage} aria-label="Previous page"><ChevronLeft size={15} /></button>{Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index + 1).map(number => number === page ? <b key={number}>{number}</b> : <button type="button" key={number} onClick={() => setPage(number)}>{number}</button>)}{totalPages > 5 && <span>…</span>}<button type="button" onClick={() => setPage(current => Math.min(totalPages, current + 1))} disabled={!pagination?.hasNextPage} aria-label="Next page"><ChevronRight size={15} /></button></div><select><option>10 / page</option></select></footer>
             </section>
           </div>
           <aside className={styles.rail}>

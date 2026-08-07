@@ -12,9 +12,12 @@ import {
   Grid2X2,
   Inbox,
   Menu,
+  Plus,
   Settings2,
   Sparkles,
   Users,
+  LogOut,
+  CalendarDays,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -35,12 +38,12 @@ interface NavItem {
 const NAVIGATION: NavItem[] = [
   { icon: Grid2X2, label: "Dashboard", href: "/protected/admin/dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { icon: Inbox, label: "Inbox", href: "/protected/admin/inbox", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Plus, label: "Add Feedback", href: "/protected/admin/add-feedback", roles: ["ADMIN", "ANALYST"] },
   { icon: BarChart3, label: "Analytics", href: "/protected/admin/analytics", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { icon: Settings2, label: "Themes", href: "/protected/admin/themes", roles: ["ADMIN", "ANALYST"] },
-  { icon: FileText, label: "Reports", href: "/protected/admin/reports", roles: ["ADMIN", "ANALYST", "VIEWER"] },
   { icon: Sparkles, label: "Ask LOOP AI", href: "/protected/admin/ask-loop", roles: ["ADMIN", "ANALYST", "VIEWER"] },
-  { icon: Users, label: "Data sources", href: "/protected/admin/add-feedback", roles: ["ADMIN", "ANALYST"] },
-  { icon: Download, label: "Exports", href: "/protected/admin/reports", roles: ["ADMIN", "ANALYST"] },
+  { icon: FileText, label: "Reports", href: "/protected/admin/reports", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Users, label: "Team", href: "/protected/admin/team", roles: ["ADMIN"] },
+  { icon: Settings2, label: "Settings", href: "/protected/admin/settings", roles: ["ADMIN", "ANALYST"] },
 ];
 
 export type ActiveView =
@@ -86,13 +89,15 @@ export function AdminShell({ title, subtitle, active, children }: AdminShellProp
       .catch(() => undefined);
   }, []);
 
-  const handleUserMenu = () => {
+  const handleLogout = () => {
     const action = window.confirm("Log out of LOOP?");
     if (action) {
       logout();
       router.push("/auth/login");
     }
   };
+
+  const openProfile = () => router.push("/protected/admin/profile");
 
   return (
     <main className={shell.page}>
@@ -121,16 +126,16 @@ export function AdminShell({ title, subtitle, active, children }: AdminShellProp
           <button className={shell.workspace}>
             Acme Corp <ChevronDown size={15} />
           </button>
-          <div className={shell.userMini}>
+          <button className={shell.userMini} onClick={openProfile} aria-label="Open profile">
             <span>{initials(user?.name)}</span>
             <div>
               <b>{user?.name ?? "Alex Thompson"}</b>
               <small>{user?.role ?? "Analyst"}</small>
             </div>
             <ChevronDown size={14} />
-          </div>
-          <button onClick={handleUserMenu}>
-            <CircleHelp size={19} /> <span>Help &amp; support</span>
+          </button>
+          <button onClick={handleLogout}>
+            <LogOut size={19} /> <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -145,6 +150,9 @@ export function AdminShell({ title, subtitle, active, children }: AdminShellProp
             <p>{subtitle}</p>
           </div>
           <div className={shell.headerActions}>
+            <button className={shell.dateButton} type="button" aria-label="Current date range">
+              May 11 – May 17, 2024 <CalendarDays size={16} />
+            </button>
             <button className={shell.iconButton} onClick={() => router.push("/protected/admin/notifications")}>
               <Bell size={21} />
               {unread > 0 && <i>{unread}</i>}
@@ -152,14 +160,14 @@ export function AdminShell({ title, subtitle, active, children }: AdminShellProp
             <button className={shell.help}>
               <CircleHelp size={22} />
             </button>
-            <div className={shell.headerUser} onClick={handleUserMenu}>
+            <button className={shell.headerUser} onClick={openProfile} aria-label="Open profile">
               <span>{initials(user?.name)}</span>
               <div>
                 <b>{user?.name ?? "Alex Thompson"}</b>
                 <small>{user?.role ?? "Analyst"}</small>
               </div>
               <ChevronDown size={15} />
-            </div>
+            </button>
           </div>
         </header>
         {children}
