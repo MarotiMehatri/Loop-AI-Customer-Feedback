@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -94,18 +94,26 @@ interface ChartTooltipEntry {
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: ChartTooltipEntry[]; label?: string | number }) {
   if (!active || !payload || payload.length === 0) return null;
-  return (
-    <div className={styles.tooltip}>
-      {label != null && <b>{label}</b>}
-      {payload.map((entry, index) => (
-        <p key={`${entry.name ?? entry.dataKey}-${index}`}>
-          <i style={{ background: entry.color ?? entry.stroke ?? entry.fill ?? '#5b2cf0' }} />
-          {entry.name}
-          <strong>{entry.value}</strong>
-        </p>
-      ))}
-    </div>
-  );
+  try {
+    return (
+      <div className={styles.tooltip}>
+        {label != null && <b>{label}</b>}
+        {payload.map((entry, index) => (
+          <p key={`${entry.name ?? entry.dataKey}-${index}`}>
+            <i style={{ background: entry.color ?? entry.stroke ?? entry.fill ?? '#5b2cf0' }} />
+            {entry.name}
+            <strong>{entry.value}</strong>
+          </p>
+        ))}
+      </div>
+    );
+  } catch (err) {
+    // Defensive: sometimes third-party libs may pass unexpected values (e.g., Event objects).
+    // Log and avoid crashing the whole page.
+    // eslint-disable-next-line no-console
+    console.error('ChartTooltip render error', err, payload);
+    return null;
+  }
 }
 
 function shortDate(iso: string): string {
@@ -132,6 +140,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   const [filterOpen, setFilterOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const isViewer = view === 'viewer';
@@ -142,6 +151,8 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
     : navigation;
   const userInitials = (user?.name ?? 'LOOP').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
   const userRole = user?.role ? `${user.role[0]}${user.role.slice(1).toLowerCase()}` : 'Viewer';
+
+  useEffect(() => { setMounted(true); }, []);
 
   const analyticsQuery = useAnalytics({
     days: appliedFilters.days,
@@ -320,9 +331,11 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
             {!isViewer && <button onClick={() => router.push('/protected/admin/add-feedback')}>Add feedback</button>}
           </section>}
 
-          <nav className={styles.analyticsTabs} aria-label="Analytics sections">
-            {['Overview', 'Trends', 'Themes', 'Sources', 'Sentiment', 'Performance'].map((tab) => <button key={tab} onClick={() => setActiveTab(tab)} className={activeTab === tab ? styles.activeTab : ''}>{tab}</button>)}
-          </nav>
+          {mounted && (
+            <nav className={styles.analyticsTabs} aria-label="Analytics sections">
+              {['Overview', 'Trends', 'Themes', 'Sources', 'Sentiment', 'Performance'].map((tab) => <button key={tab} onClick={() => setActiveTab(tab)} className={activeTab === tab ? styles.activeTab : ''}>{tab}</button>)}
+            </nav>
+          )}
 
           <section className={styles.gridTop}>
             <Card title="Feedback over time" action={<SelectButton>{appliedFilters.days} days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={210}><AreaChart data={feedbackTrend}><defs><linearGradient id="feedbackFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#5b2cf0" stopOpacity={.32} /><stop offset="100%" stopColor="#5b2cf0" stopOpacity={.02} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} /><Area type="monotone" dataKey="total" stroke="#5b2cf0" strokeWidth={2.4} fill="url(#feedbackFill)" dot={{ r: 3, fill: '#5b2cf0' }} /></AreaChart></ResponsiveContainer></div></Card>

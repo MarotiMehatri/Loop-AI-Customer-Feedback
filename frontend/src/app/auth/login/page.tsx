@@ -58,7 +58,10 @@ export default function LoginPage() {
       if (user.role !== role) { logout(); toast.error(`This account is ${user.role.toLowerCase()}. Select that role or use the correct ${role.toLowerCase()} account.`); return; }
       if (!remember) sessionStorage.removeItem("loop-auth");
       toast.success("Welcome back to LOOP");
-      router.push(user.role === "VIEWER" ? "/protected/viewer" : "/protected/admin/add-feedback");
+      // Route users by role: viewers -> viewer area, analysts -> analytics, admins -> admin dashboard
+      if (user.role === "VIEWER") router.push("/protected/viewer");
+      else if (user.role === "ANALYST") router.push("/protected/admin/analytics");
+      else router.push("/protected/admin/dashboard");
     } catch (error) { toast.error(getErrorMessage(error)); } finally { setSubmitting(false); }
   };
 

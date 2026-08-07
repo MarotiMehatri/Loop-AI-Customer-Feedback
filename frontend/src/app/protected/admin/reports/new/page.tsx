@@ -63,9 +63,23 @@ export default function NewReportPage() {
   return (
     <AdminShell title="New report" subtitle="Configure a new customer feedback report" active="reports">
       <div className={ui.body}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {['Report Details', 'Filters & Segments', 'Metrics & Visuals', 'Review & Generate'].map((label, idx) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 999, background: idx === 0 ? '#5b2cf0' : '#eef2ff', color: idx === 0 ? '#fff' : '#5b2cf0', display: 'grid', placeItems: 'center', fontWeight: 700 }}>{idx + 1}</div>
+                  <div style={{ fontSize: 13, color: '#475569' }}>{label}</div>
+                  {idx < 3 && <div style={{ width: 28, height: 2, background: '#eef2ff' }} />}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className={ui.grid2}>
-            <section className={ui.card}>
+            <div>
+              <section className={ui.card}>
               <header>
                 <div>
                   <h2>Details</h2>
@@ -86,9 +100,9 @@ export default function NewReportPage() {
                   {TYPES.map((value) => <option key={value} value={value}>{value.replace(/_/g, " ")}</option>)}
                 </select>
               </label>
-            </section>
+              </section>
 
-            <section className={ui.card}>
+              <section className={ui.card}>
               <header>
                 <div>
                   <h2>Data</h2>
@@ -131,16 +145,45 @@ export default function NewReportPage() {
                   </button>
                 ))}
               </div>
-            </section>
-          </div>
+                </section>
+              </div>
 
-          <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
-            <button className={ui.primary} type="submit" disabled={submitting}>
-              {submitting ? "Creating…" : "Create report"}
-            </button>
-            <button className={ui.ghost} type="button" onClick={() => router.push("/protected/admin/reports")}>
-              Cancel
-            </button>
+            <aside>
+              <section className={ui.card}>
+                <header>
+                  <div>
+                    <h2>Report Summary</h2>
+                    <p>Preview and quick actions</p>
+                  </div>
+                </header>
+                <div style={{ display: 'grid', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 8 }}>
+                    <div className={ui.card} style={{ padding: 10 }}>
+                      <small style={{ color: '#94a3b8' }}>Total Feedback</small>
+                      <div style={{ fontSize: 18, fontWeight: 700 }}>2,543</div>
+                    </div>
+                    <div className={ui.card} style={{ padding: 10 }}>
+                      <small style={{ color: '#94a3b8' }}>Negative</small>
+                      <div style={{ fontSize: 18, fontWeight: 700 }}>484</div>
+                    </div>
+                  </div>
+                  <div style={{ height: 110, background: '#fbfbfd', borderRadius: 8, display: 'grid', placeItems: 'center' }}>Live preview chart</div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <h3 style={{ margin: 0, fontSize: 13 }}>Report Summary</h3>
+                    <ol style={{ margin: 0, paddingLeft: 18, color: '#64748b' }}>
+                      <li>Choose data sources</li>
+                      <li>Apply filters and segments</li>
+                      <li>Select metrics and visuals</li>
+                      <li>Generate and export report</li>
+                    </ol>
+                  </div>
+                </div>
+              </section>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
+                <button className={ui.ghost} type="button" onClick={() => router.push('/protected/admin/reports')}>Cancel</button>
+                <button className={ui.primary} type="submit" disabled={submitting}>{submitting ? 'Creating…' : 'Create report'}</button>
+              </div>
+            </aside>
           </div>
         </form>
       </div>
