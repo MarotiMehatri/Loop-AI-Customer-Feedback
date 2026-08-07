@@ -14,6 +14,8 @@ import { apiRouter } from "./routes/index.js";
 
 export const app = express();
 
+export default app;
+
 app.disable("x-powered-by");
 
 app.use(helmet());
