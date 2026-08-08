@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "env": {
+    "VERCEL_EXPERIMENTAL_BACKENDS": "1"
+  },
   "services": {
     "frontend": {
       "root": "frontend",
