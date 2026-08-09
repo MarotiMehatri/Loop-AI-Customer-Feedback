@@ -4,6 +4,9 @@ import helmet from "helmet";
 import morgan from "morgan";
 import path from "node:path"
 
+import "./types/env.js";
+import "./types/express.js";
+
 import { corsOptions } from "./config/cors.js";
 import { env } from "./config/env.js";
 
