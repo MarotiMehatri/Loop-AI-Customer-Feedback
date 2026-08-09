@@ -41,8 +41,21 @@ export default function LoginPage() {
   const requestVerification = async () => {
     if (!email) return toast.error("Enter your email first");
     setSubmitting(true);
-    try { const { data } = await apiClient.post<{ message: string }>("/auth/email-verification/request", { email }); setCode(["", "", "", "", "", ""]); setRequested(true); setVerified(false); toast.success(data.message); }
-    catch (error) { toast.error(getErrorMessage(error)); } finally { setSubmitting(false); }
+    try {
+      const { data } = await apiClient.post<{ message: string; otp?: string; previewUrl?: string }>("/auth/email-verification/request", { email });
+      setCode(["", "", "", "", "", ""]);
+      setRequested(true);
+      setVerified(false);
+      if (data.otp) {
+        toast.success(`${data.message} • Dev OTP: ${data.otp}`);
+      } else {
+        toast.success(data.message);
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setSubmitting(false);
+    }
   };
   const verifyCode = async () => {
     const otp = code.join("");

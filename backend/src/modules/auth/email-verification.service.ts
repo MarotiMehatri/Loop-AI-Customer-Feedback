@@ -1,8 +1,9 @@
 import { randomInt } from "node:crypto";
 
+import { env } from "../../config/env.js";
 import { prisma } from "../../config/prisma.js";
 import { ApiError } from "../../utils/apiError.js";
-import { sendOtpEmail } from "./email.service.js";
+import { isEmailConfigured, sendOtpEmail } from "./email.service.js";
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
 
@@ -27,12 +28,15 @@ export async function requestEmailVerification(email: string): Promise<{ message
 
   try {
     const { previewUrl } = await sendOtpEmail(normalized, otp);
+    const shouldShowOtp = env.NODE_ENV === "development" || !isEmailConfigured();
+
     return {
       message: previewUrl
         ? "Verification code sent - click the email preview to view it"
         : "Verification code sent to your email",
       expiresIn: OTP_EXPIRY_MS / 1000,
       previewUrl,
+      ...(shouldShowOtp ? { otp } : {}),
     };
   } catch (error) {
     console.warn(`[email] Sending OTP email failed for ${normalized}:`, error);

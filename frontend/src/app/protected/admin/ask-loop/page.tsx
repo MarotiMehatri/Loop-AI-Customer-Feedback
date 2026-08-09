@@ -187,7 +187,7 @@ export default function AskLoopPage() {
         <aside className={styles.rail}>
           <section className={styles.sideSection}>
             <h2>Suggested Questions</h2>
-            <div className={styles.suggestionList}>{suggestionsToShow.map((suggestion) => <button key={suggestion} onClick={() => ask(suggestion)}>{suggestion}<ChevronRight size={15} /></button>)}</div>
+            <div className={styles.suggestionList}>{suggestionsToShow.map((suggestion, index) => <button key={`${suggestion}-${index}`} onClick={() => ask(suggestion)}>{suggestion}<ChevronRight size={15} /></button>)}</div>
           </section>
           <section className={styles.sideSection}>
             <h2>Key Insights</h2>
@@ -235,8 +235,8 @@ export default function AskLoopPage() {
                   sources and recent comments — with citations you can trace back.
                 </p>
                 <div className={styles.chips}>
-                  {WELCOME_SUGGESTIONS.map((suggestion) => (
-                    <button key={suggestion} className={styles.chip} onClick={() => ask(suggestion)}>
+                  {WELCOME_SUGGESTIONS.map((suggestion, index) => (
+                    <button key={`${suggestion}-${index}`} className={styles.chip} onClick={() => ask(suggestion)}>
                       {suggestion}
                     </button>
                   ))}
@@ -261,8 +261,8 @@ export default function AskLoopPage() {
                 )}
                 {message.followUps && message.followUps.length > 0 && (
                   <div className={styles.followups}>
-                    {message.followUps.map((followUp) => (
-                      <button key={followUp} className={styles.followup} onClick={() => ask(followUp)}>
+                    {message.followUps.map((followUp, index) => (
+                      <button key={`${followUp}-${index}`} className={styles.followup} onClick={() => ask(followUp)}>
                         {followUp}
                       </button>
                     ))}
