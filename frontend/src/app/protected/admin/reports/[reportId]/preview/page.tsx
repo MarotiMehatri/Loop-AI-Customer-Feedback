@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -37,7 +37,7 @@ export default function ReportPreviewPage() {
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const { data: reportData } = await apiClient.get<{ data: ReportConfig & { title: string } }>(`/reports/${reportId}`);
@@ -53,11 +53,11 @@ export default function ReportPreviewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportId]);
 
   useEffect(() => {
     if (reportId) load();
-  }, [reportId]);
+  }, [load, reportId]);
 
   const maxValue = Math.max(...(preview?.feedbackOverTime.map((point) => point.value) ?? [1]));
   const themeMax = Math.max(...(preview?.topThemes.map((theme) => theme.value) ?? [1]));

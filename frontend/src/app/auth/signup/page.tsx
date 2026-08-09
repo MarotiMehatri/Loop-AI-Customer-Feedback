@@ -13,7 +13,6 @@ import styles from "./signup.module.css";
 
 export default function SignupPage() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
@@ -24,10 +23,9 @@ export default function SignupPage() {
     event.preventDefault();
     setSubmitting(true);
     try {
-      const result = await register({ name, email, password, workspaceName });
-      await login(email, password);
-      toast.success(`Workspace created. Welcome, ${result.user.name}!`);
-      router.push("/protected/admin/add-feedback");
+      await register({ name, email, password, workspaceName });
+      toast.success("Account created successfully. Please sign in to continue.");
+      router.push("/auth/login");
     } catch (error) {
       toast.error(getErrorMessage(error));
       setSubmitting(false);

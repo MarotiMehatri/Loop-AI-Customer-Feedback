@@ -64,7 +64,7 @@ export default function ProfilePage() {
         if (authUser) updateUser({ ...authUser, name: loadedProfile.name, email: loadedProfile.email, role: loadedProfile.role as "ADMIN" | "ANALYST" | "VIEWER", avatarUrl: loadedProfile.avatarUrl });
       })
       .catch(() => undefined);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentional: load profile once on mount
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -118,6 +118,7 @@ export default function ProfilePage() {
             </header>
             <form onSubmit={handleSave}>
               <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- avatar may be an uploaded blob/data URL */}
                 {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Profile" className={ui.avatar} style={{ width: 56, height: 56, objectFit: "cover" }} /> : <span className={ui.avatar} style={{ width: 56, height: 56, fontSize: 17 }}>{profile ? initials(profile.name) : "?"}</span>}
                 <div>
                   <b style={{ fontSize: 15 }}>{profile?.name ?? "Rutika Pujari"}</b>

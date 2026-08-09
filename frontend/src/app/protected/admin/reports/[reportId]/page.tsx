@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { ArrowLeft, Download, Play, Sparkles } from "lucide-react";
@@ -42,7 +42,7 @@ export default function ReportDetailPage() {
   const [report, setReport] = useState<ReportDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await apiClient.get<{ data: ReportDetail }>(`/reports/${reportId}`);
@@ -52,11 +52,11 @@ export default function ReportDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportId]);
 
   useEffect(() => {
     if (reportId) load();
-  }, [reportId]);
+  }, [load, reportId]);
 
   const generate = async () => {
     try {

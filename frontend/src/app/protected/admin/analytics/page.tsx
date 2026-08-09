@@ -39,6 +39,8 @@ const CHANNEL_COLORS: Record<string, string> = {
   MANUAL: '#98a2b3',
 };
 
+const THEME_DOTS = ['#5b2cf0', '#2563eb', '#1b9d76', '#f59e0b', '#e45bb9', '#0ea5e9'];
+
 const SOURCE_OPTIONS = [
   ['SUPPORT', 'Support'], ['APP_STORE', 'App Store'], ['SURVEY', 'Survey'],
   ['SALES', 'Sales'], ['SOCIAL', 'Social'], ['WEBSITE', 'Website'],
@@ -73,6 +75,14 @@ function MetricCard({ icon: Icon, label, value, change, tone, down = false }: { 
 
 function Card({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return <section className={styles.card}><header><h2>{title}</h2>{action}</header>{children}</section>;
+}
+
+function EmptyVisual({ label }: { label: string }) {
+  return <div className={styles.emptyVisual}>
+    <span><BarChart3 size={22} /></span>
+    <strong>{label}</strong>
+    <p>Add feedback to start building this view.</p>
+  </div>;
 }
 
 function SelectButton({ children }: { children: React.ReactNode }) { return <button className={styles.selectButton}>{children}<ChevronDown size={14} /></button>; }
@@ -110,7 +120,6 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   } catch (err) {
     // Defensive: sometimes third-party libs may pass unexpected values (e.g., Event objects).
     // Log and avoid crashing the whole page.
-    // eslint-disable-next-line no-console
     console.error('ChartTooltip render error', err, payload);
     return null;
   }
@@ -222,7 +231,7 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   );
 
   const channels = useMemo(
-    () => (dashboard?.sourceDistribution ?? []).slice(0, 5).map((source) => [source.label, source.percentage] as const),
+    () => (dashboard?.sourceDistribution ?? []).slice(0, 5).map((source) => [source.key, source.label, source.percentage] as const),
     [dashboard],
   );
 
@@ -260,6 +269,225 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
   );
 
   const totals = useMemo(() => (dashboard?.feedbackTrend ?? []).map((point) => point.total), [dashboard]);
+
+  const feedbackOverTimeCard = (
+    <Card title="Feedback over time" action={<SelectButton>{appliedFilters.days} days</SelectButton>}>
+      {isEmpty ? <EmptyVisual label="No feedback trend yet" /> : <div className={styles.chart}>
+        <ResponsiveContainer width="100%" height={210}>
+          <AreaChart data={feedbackTrend}>
+            <defs>
+              <linearGradient id="feedbackFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#5b2cf0" stopOpacity={0.32} />
+                <stop offset="100%" stopColor="#5b2cf0" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="#ebeaf1" />
+            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} />
+            <Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} />
+            <Area type="monotone" dataKey="total" stroke="#5b2cf0" strokeWidth={2.4} fill="url(#feedbackFill)" dot={{ r: 3, fill: '#5b2cf0' }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>}
+    </Card>
+  );
+
+  const sentimentDistributionCard = (
+    <Card title="Sentiment distribution">
+      <div className={styles.donutContent}>
+        <div className={styles.donut}>
+          <ResponsiveContainer width="100%" height={190}>
+            <PieChart>
+              <Pie data={sentimentDonut} dataKey="value" innerRadius={56} outerRadius={79} startAngle={90} endAngle={-270}>
+                {['#16a34a', '#f59e0b', '#ef2b36'].map((color) => <Cell key={color} fill={color} />)}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div>
+            <b>{total.toLocaleString()}</b>
+            <span>Total</span>
+          </div>
+        </div>
+        <div className={styles.sentimentLegend}>
+          {sentimentLegend.map(([label, value, color]) => (
+            <p key={label}>
+              <i style={{ backgroundColor: color }} />
+              {label}
+              <b>{value}</b>
+            </p>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+
+  const sentimentOverTimeCard = (
+    <Card title="Sentiment over time" action={<SelectButton>{appliedFilters.days} days</SelectButton>}>
+      {isEmpty ? <EmptyVisual label="No sentiment data yet" /> : <><div className={styles.chart}>
+        <ResponsiveContainer width="100%" height={190}>
+          <LineChart data={sentimentTrend}>
+            <CartesianGrid vertical={false} stroke="#ebeaf1" />
+            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} />
+            <Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} />
+            <Line type="monotone" dataKey="positive" stroke="#16a34a" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="neutral" stroke="#f59e0b" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="negative" stroke="#ef2b36" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className={styles.chartLegend}>
+        <span className={styles.positiveDot} />Positive <span className={styles.neutralDot} />Neutral <span className={styles.negativeDot} />Negative
+      </div></>}
+    </Card>
+  );
+
+  const feedbackBySourceCard = (
+    <Card title="Feedback by source">
+      {isEmpty ? <EmptyVisual label="No source data yet" /> : <div className={styles.sourceContent}>
+        <div className={styles.sourceDonut}>
+          <ResponsiveContainer width="100%" height={174}>
+            <PieChart>
+              <Pie data={sources} dataKey="value" innerRadius={45} outerRadius={68}>
+                {sources.map((source) => <Cell key={source.label} fill={source.color} />)}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className={styles.sourceList}>
+          {sources.map((source) => (
+            <p key={source.label}>
+              <i style={{ backgroundColor: source.color }} />
+              {source.label}
+              <b>{source.value}%</b>
+            </p>
+          ))}
+        </div>
+      </div>}
+    </Card>
+  );
+
+  const topThemesCard = (
+    <Card title="Top themes" action={<button className={styles.textButton}>View all</button>}>
+      {isEmpty ? <EmptyVisual label="No themes discovered yet" /> : <><div className={styles.themeHeader}><span>Theme</span><span>Feedback</span><span>%</span></div>
+      <div className={styles.themeList}>
+        {themes.map(([label, count, percent], index) => (
+          <div key={label}>
+            <i className={styles.themeDot} style={{ background: THEME_DOTS[index % THEME_DOTS.length] }} />
+            <span>{label}</span>
+            <b>{count}</b>
+            <i className={styles.themeBar}><em style={{ width: `${percent}%` }} /></i>
+            <strong>{percent}%</strong>
+          </div>
+        ))}
+      </div></>}
+    </Card>
+  );
+
+  const themeTrendCard = (
+    <Card title="Theme trend (top 5)" action={<SelectButton>{appliedFilters.days} days</SelectButton>}>
+      {isEmpty ? <EmptyVisual label="No theme trend yet" /> : <div className={styles.chart}>
+        <ResponsiveContainer width="100%" height={190}>
+          <LineChart data={themeTrend}>
+            <CartesianGrid vertical={false} stroke="#ebeaf1" />
+            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} />
+            <Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} />
+            <Line type="monotone" dataKey="pricing" stroke="#5b2cf0" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="bugs" stroke="#2563eb" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="feature" stroke="#1b9d76" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="support" stroke="#f59e0b" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="ux" stroke="#e45bb9" strokeWidth={2} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>}
+    </Card>
+  );
+
+  const feedbackByChannelCard = (
+    <Card title="Feedback by channel">
+      {isEmpty ? <EmptyVisual label="No channel data yet" /> : <div className={styles.channelList}>
+        {channels.map(([key, label, value]) => (
+          <div key={label}>
+            <span><i className={styles.channelDot} style={{ background: CHANNEL_COLORS[key] ?? '#98a2b3' }} />{label}</span>
+            <i className={styles.channelTrack}><b style={{ width: `${value}%`, background: CHANNEL_COLORS[key] ?? '#5b2cf0' }} /></i>
+            <strong>{value}%</strong>
+          </div>
+        ))}
+      </div>}
+    </Card>
+  );
+
+  const engagementImpactCard = (
+    <Card title="Customer engagement impact">
+      <div className={styles.impact}>
+        <div><span>✦ Positive share</span><b>↑ {overview?.positive.percentage ?? 0}%</b><small>of total feedback</small></div>
+        <div><span>⌁ Neutral share</span><b>↑ {overview?.neutral.percentage ?? 0}%</b><small>of total feedback</small></div>
+        <div><span>↗ Negative share</span><b className={styles.down}>↓ {overview?.negative.percentage ?? 0}%</b><small>of total feedback</small></div>
+      </div>
+      <h3>Feedback status breakdown</h3>
+      <div className={styles.statusBar}>
+        {statuses.map(([label, count]) => (
+          <i key={label} style={{ width: `${Math.max(((count as number) / statusTotal) * 100, 0.5)}%` }} />
+        ))}
+      </div>
+      <div className={styles.statusLabels}>
+        {statuses.map(([label, count]) => (
+          <span key={label}>{label} <b>{count}</b></span>
+        ))}
+      </div>
+    </Card>
+  );
+
+  const aiOverviewCard = (
+    <Card title="AI classification overview">
+      <div className={styles.aiContent}>
+        <div className={styles.accuracy}><b>{accuracy}%</b><span>Accuracy</span></div>
+        <div>
+          <p>Total processed <b>{total.toLocaleString()}</b></p>
+          <p>Auto classified <b>{aiClassified.toLocaleString()} ({accuracy}%)</b></p>
+          <p>Needs review <b>{needsReview.toLocaleString()} ({total > 0 ? Math.round((needsReview / total) * 100) : 0}%)</b></p>
+        </div>
+      </div>
+      <h3>Most confident themes</h3>
+      <div className={styles.confidence}>
+        {(dashboard?.topThemes ?? []).slice(0, 3).map((theme) => (
+          <span key={theme.id}>{theme.name} <b>{Math.round(theme.percentage)}%</b></span>
+        ))}
+      </div>
+    </Card>
+  );
+
+  const tabContent: Record<string, React.ReactNode> = {
+    Overview: (
+      <>
+        <section className={styles.gridTop}>{feedbackOverTimeCard}{sentimentOverTimeCard}</section>
+        <section className={styles.gridMiddle}>{feedbackBySourceCard}{topThemesCard}{themeTrendCard}</section>
+        <section className={styles.gridBottom}>{feedbackByChannelCard}{engagementImpactCard}{aiOverviewCard}</section>
+      </>
+    ),
+    Trends: (
+      <>
+        <section className={styles.gridTop}>{feedbackOverTimeCard}{sentimentOverTimeCard}</section>
+        <section className={styles.gridBottom}>{themeTrendCard}</section>
+      </>
+    ),
+    Themes: (
+      <section className={styles.gridMiddle}>{topThemesCard}{themeTrendCard}</section>
+    ),
+    Sources: (
+      <section className={styles.gridMiddle}>{feedbackBySourceCard}{feedbackByChannelCard}</section>
+    ),
+    Sentiment: (
+      <>
+        <section className={styles.gridTop}>{sentimentDistributionCard}{sentimentOverTimeCard}</section>
+        <section className={styles.gridBottom}>{engagementImpactCard}</section>
+      </>
+    ),
+    Performance: (
+      <section className={styles.gridTop}>{aiOverviewCard}{engagementImpactCard}</section>
+    ),
+  };
 
   const dateRange = dashboard?.range
     ? `${shortDate(dashboard.range.startDate)} – ${shortDate(dashboard.range.endDate)}, ${format(new Date(dashboard.range.endDate), 'yyyy')}`
@@ -337,23 +565,11 @@ export default function AnalyticsPage({ view = 'analytics' }: { view?: 'analytic
             </nav>
           )}
 
-          <section className={styles.gridTop}>
-            <Card title="Feedback over time" action={<SelectButton>{appliedFilters.days} days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={210}><AreaChart data={feedbackTrend}><defs><linearGradient id="feedbackFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#5b2cf0" stopOpacity={.32} /><stop offset="100%" stopColor="#5b2cf0" stopOpacity={.02} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} /><Area type="monotone" dataKey="total" stroke="#5b2cf0" strokeWidth={2.4} fill="url(#feedbackFill)" dot={{ r: 3, fill: '#5b2cf0' }} /></AreaChart></ResponsiveContainer></div></Card>
-            <Card title="Sentiment distribution"><div className={styles.donutContent}><div className={styles.donut}><ResponsiveContainer width="100%" height={190}><PieChart><Pie data={sentimentDonut} dataKey="value" innerRadius={56} outerRadius={79} startAngle={90} endAngle={-270}>{['#16a34a', '#f59e0b', '#ef2b36'].map((color) => <Cell key={color} fill={color} />)}</Pie></PieChart></ResponsiveContainer><div><b>{total.toLocaleString()}</b><span>Total</span></div></div><div className={styles.sentimentLegend}>{sentimentLegend.map(([label, value, color]) => <p key={label}><i style={{ backgroundColor: color }} />{label}<b>{value}</b></p>)}</div></div></Card>
-            <Card title="Sentiment over time" action={<SelectButton>{appliedFilters.days} days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={190}><LineChart data={sentimentTrend}><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} /><Line type="monotone" dataKey="positive" stroke="#16a34a" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="neutral" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="negative" stroke="#ef2b36" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></div><div className={styles.chartLegend}><span className={styles.positiveDot} />Positive <span className={styles.neutralDot} />Neutral <span className={styles.negativeDot} />Negative</div></Card>
-          </section>
-
-          <section className={styles.gridMiddle}>
-            <Card title="Feedback by source"><div className={styles.sourceContent}><div className={styles.sourceDonut}><ResponsiveContainer width="100%" height={174}><PieChart><Pie data={sources} dataKey="value" innerRadius={45} outerRadius={68}>{sources.map((source) => <Cell key={source.label} fill={source.color} />)}</Pie></PieChart></ResponsiveContainer></div><div className={styles.sourceList}>{sources.map((source) => <p key={source.label}><i style={{ backgroundColor: source.color }} />{source.label}<b>{source.value}%</b></p>)}</div></div></Card>
-            <Card title="Top themes" action={<button className={styles.textButton}>View all</button>}><div className={styles.themeHeader}><span>Theme</span><span>Feedback</span><span>%</span></div><div className={styles.themeList}>{themes.map(([label, count, percent]) => <div key={label}><span>{label}</span><b>{count}</b><i><em style={{ width: `${percent}%` }} /></i><strong>{percent}%</strong></div>)}</div></Card>
-            <Card title="Theme trend (top 5)" action={<SelectButton>{appliedFilters.days} days</SelectButton>}><div className={styles.chart}><ResponsiveContainer width="100%" height={190}><LineChart data={themeTrend}><CartesianGrid vertical={false} stroke="#ebeaf1" /><XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#667085' }} /><Tooltip content={<ChartTooltip />} contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(91,44,240,0.06)' }} /><Line type="monotone" dataKey="pricing" stroke="#5b2cf0" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="bugs" stroke="#2563eb" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="feature" stroke="#1b9d76" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="support" stroke="#f59e0b" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="ux" stroke="#e45bb9" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></div></Card>
-          </section>
-
-          <section className={styles.gridBottom}>
-            <Card title="Feedback by channel"><div className={styles.channelList}>{channels.map(([label, value]) => <div key={label as string}><span>{label}</span><i><b style={{ width: `${value}%` }} /></i><strong>{value}%</strong></div>)}</div></Card>
-            <Card title="Customer engagement impact"><div className={styles.impact}><div><span>✦ Positive share</span><b>↑ {overview?.positive.percentage ?? 0}%</b><small>of total feedback</small></div><div><span>⌁ Neutral share</span><b>↑ {overview?.neutral.percentage ?? 0}%</b><small>of total feedback</small></div><div><span>↗ Negative share</span><b className={styles.down}>↓ {overview?.negative.percentage ?? 0}%</b><small>of total feedback</small></div></div><h3>Feedback status breakdown</h3><div className={styles.statusBar}>{statuses.map(([label, count]) => <i key={label} style={{ width: `${Math.max((count as number) / statusTotal * 100, 0.5)}%` }} />)}</div><div className={styles.statusLabels}>{statuses.map(([label, count]) => <span key={label}>{label} <b>{count}</b></span>)}</div></Card>
-            <Card title="AI classification overview"><div className={styles.aiContent}><div className={styles.accuracy}><b>{accuracy}%</b><span>Accuracy</span></div><div><p>Total processed <b>{total.toLocaleString()}</b></p><p>Auto classified <b>{aiClassified.toLocaleString()} ({accuracy}%)</b></p><p>Needs review <b>{needsReview.toLocaleString()} ({total > 0 ? Math.round((needsReview / total) * 100) : 0}%)</b></p></div></div><h3>Most confident themes</h3><div className={styles.confidence}>{(dashboard?.topThemes ?? []).slice(0, 3).map((theme) => <span key={theme.id}>{theme.name} <b>{Math.round(theme.percentage)}%</b></span>)}</div></Card>
-          </section>
+          <div>
+            {Object.entries(tabContent).map(([tab, content]) => (
+              <div key={tab} className={activeTab === tab ? styles.tabPanel : styles.tabPanelHidden}>{content}</div>
+            ))}
+          </div>
         </div>
 
         <aside className={`${styles.rail} ${filterOpen ? styles.open : ''}`}>
