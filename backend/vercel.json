@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "express",
+  "buildCommand": "prisma generate && tsc -p tsconfig.json",
+  "env": {
+    "VERCEL_EXPERIMENTAL_BACKENDS": "1"
+  },
+  "functions": {
+    "src/app.ts": {
+      "includeFiles": "src/generated/prisma/**",
+      "maxDuration": 60
+    }
+  }
+}
