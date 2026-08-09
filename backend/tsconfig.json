@@ -22,9 +22,7 @@
     "forceConsistentCasingInFileNames": true,
 
     "sourceMap": true,
-    "declaration": false,
-
-    "types": ["node"]
+    "declaration": false
   },
 
   "include": [
