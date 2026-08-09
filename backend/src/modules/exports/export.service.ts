@@ -3,7 +3,6 @@ import { ApiError } from "../../utils/apiError.js";
 import {
   assertCanReadExports,
   assertCanCreateExports,
-  assertCanDeleteExports,
 } from "./export.permissions.js";
 
 import { exportRepository } from "./export.repository.js";

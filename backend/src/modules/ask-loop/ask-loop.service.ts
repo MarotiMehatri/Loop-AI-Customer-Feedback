@@ -10,7 +10,7 @@ import { askLoopSuggestion } from "./ask-loop.suggestion.js";
 import { askLoopFeedbackService } from "./ask-loop-feedback.service.js";
 import { askLoopSavedQuery } from "./ask-loop.saved-query.js";
 import { askLoopChartService } from "./ask-loop-chart.service.js";
-import { parseAskLoopResponse, mapChartToJsonValue, mapMetadataToJsonValue } from "./ask-loop.mapper.js";
+import { parseAskLoopResponse, mapMetadataToJsonValue } from "./ask-loop.mapper.js";
 import type { AskLoopActorContext, AskLoopAnswer, AskLoopQueryInput, AskLoopContext, ParsedAIResponse } from "./ask-loop.types.js";
 
 export const askLoopService = {

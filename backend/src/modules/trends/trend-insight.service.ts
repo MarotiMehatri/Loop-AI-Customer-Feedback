@@ -1,6 +1,5 @@
 import { calculateGrowthRate, calculateSentimentScore, detectAnomalies } from "./trend.calculator.js";
 import { TREND_ANOMALY_THRESHOLD } from "./trend.constants.js";
-import { mapInsights } from "./trend.mapper.js";
 import { trendRepository } from "./trend.repository.js";
 import type { TrendFilterQuery, TrendInsight, TrendPeriod } from "./trends.types.js";
 
@@ -46,7 +45,7 @@ function getDateKey(date: Date, period: TrendPeriod): string {
 async function detectVolumeShiftInsight(
   workspaceId: string,
   query: TrendFilterQuery,
-  period: TrendPeriod,
+  _period: TrendPeriod,
 ): Promise<TrendInsight | null> {
   const currentEnd = new Date(query.endDate ?? new Date());
   const currentStart = new Date(currentEnd);

@@ -1,21 +1,10 @@
 import { prisma } from "../../config/prisma.js";
 
-import { TREND_MESSAGES } from "./trend.constants.js";
 import { assertCanViewTrends, assertCanDetectTrends, assertCanGenerateInsights } from "./trend.permissions.js";
-import { trendRepository } from "./trend.repository.js";
 import { trendDetectionService } from "./trend-detection.service.js";
 import { trendInsightService } from "./trend-insight.service.js";
-import {
-  calculateGrowthRate,
-  calculateMovingAverage,
-  calculateStandardDeviation,
-  calculateVolatility,
-  calculateTrendDirection,
-} from "./trend.calculator.js";
 
 import type {
-  GetTrendsComparisonQuery,
-  GetTrendsQuery,
   TrendActorContext,
   TrendAnomalyQuery,
   TrendDataPoint,

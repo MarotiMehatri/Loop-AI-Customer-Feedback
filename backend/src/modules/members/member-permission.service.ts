@@ -8,8 +8,6 @@ import { logMemberActivity } from "./member-activity.service.js";
 
 import { memberRepository } from "./member.repository.js";
 
-import { memberInviteRepository } from "./member-invite.repository.js";
-
 import { mapMember } from "./member.mapper.js";
 
 export const memberPermissionService = {

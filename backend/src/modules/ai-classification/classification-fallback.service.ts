@@ -1,4 +1,4 @@
-import { classifyByKeywords, classifyBatchByKeywords } from "./classification.processor.js";
+import { classifyByKeywords } from "./classification.processor.js";
 import type { BatchClassificationResult, ClassificationResult, ClassifyFeedbackInput } from "./classification.types.js";
 
 export const classificationFallbackService = {

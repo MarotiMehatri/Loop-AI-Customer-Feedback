@@ -1,4 +1,4 @@
-import type { Prisma, ReportStatus } from "../../generated/prisma/client.js";
+import type { Prisma } from "../../generated/prisma/client.js";
 
 import type { ReportListQuery } from "./report.types.js";
 

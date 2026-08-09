@@ -6,13 +6,6 @@ import { env } from "../config/env.js";
 import type { Role } from "../generated/prisma/client.js";
 import { ApiError } from "../utils/apiError.js";
 
-interface TokenPayload {
-  userId: string;
-  email: string;
-  role: Role;
-  workspaceId: string;
-}
-
 export const authenticate = (
   request: Request,
   _response: Response,

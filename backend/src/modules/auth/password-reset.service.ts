@@ -17,7 +17,7 @@ export async function requestPasswordReset(email: string): Promise<{ message: st
     return { message: "If an account exists with this email, a reset link has been sent" };
   }
 
-  const resetToken = generatePasswordResetToken(user.id, user.email);
+  const _resetToken = generatePasswordResetToken(user.id, user.email);
 
   // In production, send email with reset link
   // await emailService.sendPasswordReset(user.email, resetToken);

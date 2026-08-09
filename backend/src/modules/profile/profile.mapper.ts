@@ -1,8 +1,4 @@
-import type {
-  Prisma,
-  UserTheme,
-  Language,
-} from "../../generated/prisma/client.js";
+import type { Prisma } from "../../generated/prisma/client.js";
 
 import type { ProfileResponse } from "./profile.types.js";
 

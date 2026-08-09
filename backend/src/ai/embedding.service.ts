@@ -5,7 +5,7 @@ export interface GenerateFeedbackEmbeddingInput {
 
 export const embeddingService = {
   async generateFeedbackEmbedding(
-    input: GenerateFeedbackEmbeddingInput,
+    _input: GenerateFeedbackEmbeddingInput,
   ): Promise<void> {
     // Embedding implementation
   },

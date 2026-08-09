@@ -4,11 +4,7 @@ import { authorize } from "../../middleware/authorize.middleware.js";
 import { validate } from "../../middleware/validate.middleware.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { analyticsController } from "./analytics.controller.js";
-import {
-  createLiveUrlSchema,
-  liveUrlParamsSchema,
-  analyticsQuerySchema,
-} from "./analytics.validator.js";
+import { createLiveUrlSchema } from "./analytics.validator.js";
 
 const analyticsRouter = Router();
 

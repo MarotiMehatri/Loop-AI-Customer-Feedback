@@ -2,7 +2,7 @@ import type { ClassificationRecord, ClassificationResult } from "./classificatio
 
 export function mapClassificationResult(
   result: ClassificationResult,
-  feedbackId?: string,
+  _feedbackId?: string,
 ): {
   sentiment: string;
   category: string;

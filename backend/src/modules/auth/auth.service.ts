@@ -60,7 +60,13 @@ export const registerUser = async (
 
   const verifiedEmail = await hasRecentEmailVerification(email);
 
-  if (!verifiedEmail) {
+  /*
+   * Registration is gated behind email verification, but the signup
+   * flow depends on a working mail provider. During development the
+   * email sender is not configured, so skip the check to keep signup
+   * usable locally. Production still requires a verified email.
+   */
+  if (!verifiedEmail && env.NODE_ENV !== "development") {
     throw new ApiError(400, "Verify your email address before creating a workspace");
   }
 

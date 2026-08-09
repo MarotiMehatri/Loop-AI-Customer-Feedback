@@ -9,7 +9,6 @@ import { activityService } from "./activity.service.js";
 import type {
   ActivityActorContext,
   ActivityListQuery,
-  ActivitySummaryQuery,
   ClearActivityInput,
   RecentActivityQuery,
 } from "./activity.types.js";

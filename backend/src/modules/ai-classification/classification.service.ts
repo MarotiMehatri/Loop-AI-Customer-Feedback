@@ -2,10 +2,8 @@ import { ApiError } from "../../utils/apiError.js";
 
 import { classifyByKeywords, mergeClassificationResults, validateContent } from "./classification.processor.js";
 import { classificationRepository } from "./classification.repository.js";
-import { classificationFallbackService } from "./classification-fallback.service.js";
 import { assertCanClassify, assertCanViewClassifications } from "./classification.permissions.js";
 import { CLASSIFICATION_MESSAGES } from "./classification.constants.js";
-import { mapClassificationResult } from "./classification.mapper.js";
 
 import type {
   BatchClassificationResult,
@@ -14,7 +12,6 @@ import type {
   ClassificationActorContext,
   ClassificationResult,
   ListClassificationsQuery,
-  SaveClassificationInput,
 } from "./classification.types.js";
 
 async function classifyWithAI(content: string): Promise<ClassificationResult | null> {

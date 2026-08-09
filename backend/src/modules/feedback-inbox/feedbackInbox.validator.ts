@@ -13,7 +13,7 @@ const feedbackChannelSchema = z.enum([
 
 const sentimentSchema = z.enum(["POS", "NEU", "NEG"]);
 
-const feedbackStatusSchema = z.enum(["NEW", "REVIEWED", "ACTIONED"]);
+const feedbackStatusSchema = z.enum(["NEW", "REVIEWED", "ACTIONED", "ARCHIVED"]);
 
 export const feedbackInboxListSchema = z.object({
   query: z.object({

@@ -1,14 +1,12 @@
 import { TREND_MIN_DATA_POINTS, TREND_ANOMALY_THRESHOLD } from "./trend.constants.js";
-import { mapDetectionResult, mapForecast } from "./trend.mapper.js";
+import { mapForecast } from "./trend.mapper.js";
 import { trendRepository } from "./trend.repository.js";
 
 import {
-  calculateMovingAverage,
   calculateStandardDeviation,
   calculateVolatility,
   calculateTrendDirection,
   calculateSeasonalIndex,
-  calculateConfidenceInterval,
   linearRegression,
 } from "./trend.calculator.js";
 

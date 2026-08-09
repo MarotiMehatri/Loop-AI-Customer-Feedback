@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-import {
-  SAVED_VIEW_LIMITS,
-  SAVED_VIEW_SORT_FIELDS,
-  SAVED_VIEW_SORT_ORDERS,
-} from "./savedViews.constants.js";
+import { SAVED_VIEW_LIMITS } from "./savedViews.constants.js";
 
 export const createSavedViewSchema = z.object({
   body: z.object({

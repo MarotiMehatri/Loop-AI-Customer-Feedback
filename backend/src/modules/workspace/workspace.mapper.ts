@@ -1,7 +1,6 @@
 import type {
   WorkspaceFullResponse,
   WorkspaceResponse,
-  WorkspaceSettingsResponse,
 } from "./workspace.types.js";
 
 interface WorkspaceRecord {

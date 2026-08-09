@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-import {
-  DATA_SOURCE_LIMITS,
-  DATA_SOURCE_SORT_FIELDS,
-  DATA_SOURCE_SORT_ORDERS,
-} from "./data-source.constants.js";
+import { DATA_SOURCE_LIMITS } from "./data-source.constants.js";
 
 const dataSourceTypeSchema = z.enum([
   "API",

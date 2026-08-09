@@ -32,7 +32,6 @@ export const errorMiddleware: ErrorRequestHandler = (
 
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2002") {
-      const target = error.meta?.["target"];
       response.status(409).json({
         success: false,
         message: "A record with this unique value already exists",

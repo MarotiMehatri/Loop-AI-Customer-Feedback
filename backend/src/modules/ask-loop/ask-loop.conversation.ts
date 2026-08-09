@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { prisma } from "../../config/prisma.js";
 import type { MessageRole, Prisma } from "../../generated/prisma/client.js";
 import type { AskLoopMessage } from "./ask-loop.types.js";

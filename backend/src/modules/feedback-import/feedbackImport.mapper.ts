@@ -24,15 +24,6 @@ const sourceAliases: Record<string, FeedbackChannel> = {
   manual: FeedbackChannel.MANUAL,
 };
 
-const sentimentAliases: Record<string, Sentiment> = {
-  positive: Sentiment.POSITIVE,
-  pos: Sentiment.POSITIVE,
-  neutral: Sentiment.NEUTRAL,
-  neu: Sentiment.NEUTRAL,
-  negative: Sentiment.NEGATIVE,
-  neg: Sentiment.NEGATIVE,
-};
-
 const statusAliases: Record<string, FeedbackStatus> = {
   new: FeedbackStatus.NEW,
   reviewed: FeedbackStatus.REVIEWED,

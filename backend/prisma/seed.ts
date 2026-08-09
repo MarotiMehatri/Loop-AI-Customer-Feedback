@@ -61,15 +61,13 @@ async function main(): Promise<void> {
     });
   }
 
-  const themeNames = [
-    "Pricing",
-    "Product Bug",
-    "Feature Request",
-    "Customer Support",
-    "Product Experience",
-  ];
-
-  // for (const name of themeNames) {
+  // for (const name of [
+  //   "Pricing",
+  //   "Product Bug",
+  //   "Feature Request",
+  //   "Customer Support",
+  //   "Product Experience",
+  // ]) {
   //   await prisma.theme.upsert({
   //     where: {
   //       workspaceId_name: {
