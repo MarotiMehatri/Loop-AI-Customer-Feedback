@@ -37,4 +37,4 @@ USER appuser
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/server.js"]
+CMD ["sh", "-c", "npx prisma migrate resolve --rolled-back 20260726074511_init || true; npx prisma migrate deploy && node dist/src/server.js"]
