@@ -1,26 +1,11 @@
--- CreateTable
-CREATE TABLE "Report" (
-    "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "data" JSONB,
-    "startDate" TIMESTAMP(3),
-    "endDate" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "workspaceId" TEXT NOT NULL,
-    "userId" TEXT,
-
-    CONSTRAINT "Report_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE INDEX "Report_workspaceId_idx" ON "Report"("workspaceId");
-
--- CreateIndex
-CREATE INDEX "Report_workspaceId_type_idx" ON "Report"("workspaceId", "type");
-
--- AddForeignKey
-ALTER TABLE "Report" ADD CONSTRAINT "Report_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Report" ADD CONSTRAINT "Report_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- This migration intentionally does nothing.
+-- The database objects it previously attempted to create were already created in earlier migrations:
+--   - NotificationType and Notification were created in 20260724071629_create_analytics_migrate
+--   - Notification was later expanded in 20260725195818_add_notifications
+--   - Report and its initial indexes/foreign keys were created in 20260724071629_create_analytics_migrate
+--   - Report was expanded in 20260725074443_expand_report_module
+--
+-- Keeping this file as a no-op preserves the migration history without re-creating existing production tables,
+-- enums, indexes, or foreign keys.
+--
+-- This avoids destructive changes while allowing Prisma to advance migration state safely.

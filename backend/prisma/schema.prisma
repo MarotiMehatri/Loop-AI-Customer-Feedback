@@ -78,9 +78,9 @@ model Workspace {
   settings         WorkspaceSettings?
   activityLogs     ActivityLog[]
 
-  savedViews  SavedView[]
-  dataSources DataSource[]
-  exportJobs  ExportJob[]
+  savedViews          SavedView[]
+  dataSources         DataSource[]
+  exportJobs          ExportJob[]
   savedAskLoopQueries SavedAskLoopQuery[]
 
   @@index([name])
@@ -102,13 +102,13 @@ model User {
   location   String?
   timezone   String? @default("Asia/Kolkata")
 
-  isActive               Boolean   @default(true)
-  emailVerifiedAt        DateTime?
-  verificationOtp        String?
+  isActive                 Boolean   @default(true)
+  emailVerifiedAt          DateTime?
+  verificationOtp          String?
   verificationOtpExpiresAt DateTime?
-  lastLoginAt            DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  lastLoginAt              DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -130,9 +130,9 @@ model User {
 
   createdWorkspaceInvites WorkspaceInvite[] @relation("WorkspaceInviteCreator")
 
-  createdSavedViews  SavedView[]
-  createdDataSources DataSource[]
-  createdExportJobs  ExportJob[]
+  createdSavedViews   SavedView[]
+  createdDataSources  DataSource[]
+  createdExportJobs   ExportJob[]
   savedAskLoopQueries SavedAskLoopQuery[]
 
   @@index([workspaceId])
@@ -392,7 +392,7 @@ model AIMessageFeedback {
 }
 
 model SavedAskLoopQuery {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   workspaceId String
   userId      String
   question    String
