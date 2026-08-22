@@ -23,7 +23,7 @@ const envSchema = z.object({
 
   FRONTEND_URL: z
     .string()
-    .default("http://localhost:3000")
+    .default("http://localhost:3000,https://loop-ai-platform.vercel.app")
     .transform((value) =>
       value
         .split(",")
