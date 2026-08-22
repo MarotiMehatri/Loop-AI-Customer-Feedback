@@ -30,7 +30,11 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     )
-    .pipe(z.array(z.string().url()).min(1, "At least one FRONTEND_URL is required")),
+    .pipe(
+      z.array(
+        z.string().url(),
+      ),
+    ),
 
   GEMINI_API_KEY: z
     .string()

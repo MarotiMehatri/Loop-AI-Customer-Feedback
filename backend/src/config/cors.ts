@@ -55,7 +55,9 @@ export const corsOptions: CorsOptions = {
      */
     console.error(`CORS blocked request from origin: ${origin}`);
 
-    callback(null, false);
+     callback(
+      new Error(`CORS blocked origin: ${origin}`),
+    );
   },
 
   /**
