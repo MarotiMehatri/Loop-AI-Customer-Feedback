@@ -30,7 +30,7 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     )
-    .pipe(z.array(z.string().url())),
+    .pipe(z.array(z.string().url()).min(1, "At least one FRONTEND_URL is required")),
 
   GEMINI_API_KEY: z
     .string()
@@ -40,7 +40,6 @@ const envSchema = z.object({
   GEMINI_MODEL: z
     .string()
     .trim()
-    .min(1, "genibi-1.5-flash")
     .default("gemini-2.5-flash"),
 
   GEMINI_EMBEDDING_MODEL: z.string().trim().default("gemini-embedding-001"),

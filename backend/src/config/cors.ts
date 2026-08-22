@@ -2,42 +2,70 @@ import type { CorsOptions } from "cors";
 
 import { env } from "./env.js";
 
-const allowedOrigins = new Set(env.FRONTEND_URL);
+/**
+ * FRONTEND_URL can contain one or multiple comma-separated origins.
+ *
+ * Example:
+ * FRONTEND_URL=http://localhost:3000,https://loop-ai-platform.vercel.app
+ */
+const allowedOrigins = new Set(
+  env.FRONTEND_URL);
 
 export const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
-    // Requests such as curl/Postman may have no Origin.
+    /**
+     * Requests without an Origin header can come from:
+     * - curl
+     * - Postman
+     * - server-to-server requests
+     * - health checks
+     */
     if (!origin) {
       callback(null, true);
       return;
     }
 
-    // Development: allow local development origins.
-    if (
-      env.NODE_ENV === "development" &&
-      (
+    /**
+     * Development
+     *
+     * Allow local frontend development.
+     */
+    if (env.NODE_ENV === "development") {
+      const isLocalhost =
         origin.startsWith("http://localhost:") ||
         origin.startsWith("http://127.0.0.1:") ||
-        origin.startsWith("http://192.168.")
-      )
-    ) {
-      callback(null, true);
-      return;
+        origin.startsWith("http://192.168.");
+
+      if (isLocalhost) {
+        callback(null, true);
+        return;
+      }
     }
 
-    // Production / explicitly allowed frontend.
+    /**
+     * Production / explicitly allowed frontend origins.
+     */
     if (allowedOrigins.has(origin)) {
       callback(null, true);
       return;
     }
 
+    /**
+     * Reject unknown origins.
+     */
     console.error(`CORS blocked request from origin: ${origin}`);
 
     callback(null, false);
   },
 
+  /**
+   * Required when using cookies / authentication credentials.
+   */
   credentials: true,
 
+  /**
+   * Allowed HTTP methods.
+   */
   methods: [
     "GET",
     "POST",
@@ -47,6 +75,9 @@ export const corsOptions: CorsOptions = {
     "OPTIONS",
   ],
 
+  /**
+   * Allowed request headers.
+   */
   allowedHeaders: [
     "Origin",
     "X-Requested-With",
@@ -55,5 +86,8 @@ export const corsOptions: CorsOptions = {
     "Authorization",
   ],
 
+  /**
+   * Successful OPTIONS preflight response.
+   */
   optionsSuccessStatus: 204,
 };
