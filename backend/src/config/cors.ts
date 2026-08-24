@@ -9,7 +9,8 @@ import { env } from "./env.js";
  * FRONTEND_URL=http://localhost:3000,https://loop-ai-platform.vercel.app
  */
 const allowedOrigins = new Set(
-  env.FRONTEND_URL);
+  env.FRONTEND_URL.map((origin) => origin.replace(/\/$/, "")),
+);
 
 export const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
@@ -57,7 +58,7 @@ export const corsOptions: CorsOptions = {
 
      callback(
       new Error(`CORS blocked origin: ${origin}`),
-    );
+      false,    );
   },
 
   /**
