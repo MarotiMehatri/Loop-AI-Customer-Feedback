@@ -12,23 +12,42 @@ export const apiClient = axios.create({
   timeout: 15000,
 });
 
-apiClient.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = window.localStorage.getItem(env.auth.tokenKey);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+apiClient.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token = window.localStorage.getItem(
+        env.auth.tokenKey,
+      );
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
-  }
-  return config;
-});
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
 
 apiClient.interceptors.response.use(
   (response) => response,
+
   (error) => {
-    if (error?.response?.status === 401 && typeof window !== "undefined") {
-      window.localStorage.removeItem(env.auth.tokenKey);
-      window.localStorage.removeItem(env.auth.userKey);
+    if (
+      error?.response?.status === 401 &&
+      typeof window !== "undefined"
+    ) {
+      window.localStorage.removeItem(
+        env.auth.tokenKey,
+      );
+
+      window.localStorage.removeItem(
+        env.auth.userKey,
+      );
     }
+
     return Promise.reject(error);
   },
 );

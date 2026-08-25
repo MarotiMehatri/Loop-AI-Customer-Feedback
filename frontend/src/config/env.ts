@@ -16,4 +16,9 @@ if (!apiUrl) {
 
 export const env = {
   apiUrl: apiUrl.replace(/\/+$/, ""),
+
+   auth: {
+    tokenKey: "loop_access_token",
+    userKey: "loop_user",
+  },
 } as const;
