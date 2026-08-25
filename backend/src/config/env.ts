@@ -23,14 +23,18 @@ const envSchema = z.object({
 
   FRONTEND_URL: z
     .string()
-    .default("http://localhost:3000")
+    .default("http://localhost:3000,https://loop-ai-customer-feedback-kfpn.vercel.app")
     .transform((value) =>
       value
         .split(",")
         .map((origin) => origin.trim())
         .filter(Boolean),
     )
-    .pipe(z.array(z.string().url())),
+    .pipe(
+      z.array(
+        z.string().url(),
+      ),
+    ),
 
   GEMINI_API_KEY: z
     .string()
@@ -40,7 +44,6 @@ const envSchema = z.object({
   GEMINI_MODEL: z
     .string()
     .trim()
-    .min(1, "genibi-1.5-flash")
     .default("gemini-2.5-flash"),
 
   GEMINI_EMBEDDING_MODEL: z.string().trim().default("gemini-embedding-001"),

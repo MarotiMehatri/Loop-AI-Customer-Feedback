@@ -7,7 +7,10 @@ import { prisma } from "./config/prisma.js";
 let server: Server | null = null;
 let isShuttingDown = false;
 
-const BASE_URL = `http://localhost:${env.PORT}`;
+const BASE_URL =
+  env.NODE_ENV === "production"
+    ? "production"
+    : `http://localhost:${env.PORT}`;
 
 async function startServer(): Promise<void> {
   try {
@@ -44,7 +47,10 @@ async function closeHttpServer(): Promise<void> {
   server = null;
 }
 
-async function shutdown(signal: string, exitCode = 0): Promise<void> {
+async function shutdown(
+  signal: string,
+  exitCode = 0,
+): Promise<void> {
   if (isShuttingDown) {
     return;
   }

@@ -8,15 +8,9 @@ import {
   logoutController,
   profileController,
   registerController,
-} from "./auth.controller.js";
-
-import {
   requestPasswordResetController,
   resetPasswordController,
   changePasswordController,
-} from "./auth.controller.js";
-
-import {
   requestEmailVerificationController,
   verifyEmailController,
   resendVerificationController,
@@ -24,22 +18,57 @@ import {
 
 export const authRouter = Router();
 
-authRouter.post("/register", asyncHandler(registerController));
+// Public routes
+authRouter.post(
+  "/register",
+  asyncHandler(registerController),
+);
 
-authRouter.post("/login", asyncHandler(loginController));
+authRouter.post(
+  "/login",
+  asyncHandler(loginController),
+);
 
-authRouter.get("/profile", authenticate, asyncHandler(profileController));
+authRouter.post(
+  "/password-reset/request",
+  asyncHandler(requestPasswordResetController),
+);
 
-authRouter.post("/logout", authenticate, asyncHandler(logoutController));
+authRouter.post(
+  "/password-reset/confirm",
+  asyncHandler(resetPasswordController),
+);
 
-authRouter.post("/password-reset/request", asyncHandler(requestPasswordResetController));
+authRouter.post(
+  "/email-verification/request",
+  asyncHandler(requestEmailVerificationController),
+);
 
-authRouter.post("/password-reset/confirm", asyncHandler(resetPasswordController));
+authRouter.post(
+  "/email-verification/confirm",
+  asyncHandler(verifyEmailController),
+);
 
-authRouter.post("/password-change", authenticate, asyncHandler(changePasswordController));
+authRouter.post(
+  "/email-verification/resend",
+  asyncHandler(resendVerificationController),
+);
 
-authRouter.post("/email-verification/request", asyncHandler(requestEmailVerificationController));
+// Protected routes
+authRouter.get(
+  "/profile",
+  authenticate,
+  asyncHandler(profileController),
+);
 
-authRouter.post("/email-verification/confirm", asyncHandler(verifyEmailController));
+authRouter.post(
+  "/logout",
+  authenticate,
+  asyncHandler(logoutController),
+);
 
-authRouter.post("/email-verification/resend", asyncHandler(resendVerificationController));
+authRouter.post(
+  "/password-change",
+  authenticate,
+  asyncHandler(changePasswordController),
+);

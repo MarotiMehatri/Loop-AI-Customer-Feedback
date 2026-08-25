@@ -1,0 +1,177 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  BarChart3,
+  Bell,
+  ChevronDown,
+  CircleHelp,
+  Download,
+  FileText,
+  Grid2X2,
+  Inbox,
+  Menu,
+  Plus,
+  Settings2,
+  Sparkles,
+  Users,
+  LogOut,
+  CalendarDays,
+} from "lucide-react";
+
+import type { LucideIcon } from "lucide-react";
+
+import type { Role } from "../../../../Features/Auth/auth.types";
+import { apiClient } from "../../../../lib/api/api-client";
+import { useAuthStore } from "../../../../store";
+
+import shell from "../analytics/analytics.module.css";
+
+interface NavItem {
+  icon: LucideIcon;
+  label: string;
+  href: string;
+  roles: Role[];
+}
+
+const NAVIGATION: NavItem[] = [
+  { icon: Grid2X2, label: "Dashboard", href: "/protected/admin/dashboard", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Inbox, label: "Inbox", href: "/protected/admin/inbox", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Plus, label: "Add Feedback", href: "/protected/admin/add-feedback", roles: ["ADMIN", "ANALYST"] },
+  { icon: BarChart3, label: "Analytics", href: "/protected/admin/analytics", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Sparkles, label: "Ask LOOP AI", href: "/protected/admin/ask-loop", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: FileText, label: "Reports", href: "/protected/admin/reports", roles: ["ADMIN", "ANALYST", "VIEWER"] },
+  { icon: Users, label: "Team", href: "/protected/admin/team", roles: ["ADMIN"] },
+  { icon: Settings2, label: "Settings", href: "/protected/admin/settings", roles: ["ADMIN", "ANALYST"] },
+];
+
+export type ActiveView =
+  | "dashboard"
+  | "inbox"
+  | "analytics"
+  | "themes"
+  | "reports"
+  | "ask-loop"
+  | "add-feedback";
+
+interface AdminShellProps {
+  title: string;
+  subtitle: string;
+  active: ActiveView;
+  children: React.ReactNode;
+}
+
+export function initials(name?: string | null): string {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export function AdminShell({ title, subtitle, active, children }: AdminShellProps) {
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const [unread, setUnread] = useState(0);
+
+  const navigation = NAVIGATION.filter((item) =>
+    item.roles.includes(user?.role ?? "VIEWER"),
+  );
+
+  useEffect(() => {
+    apiClient
+      .get<{ data: number }>("/notifications/unread-count")
+      .then(({ data }) => setUnread(data.data ?? 0))
+      .catch(() => undefined);
+  }, []);
+
+  const handleLogout = () => {
+    const action = window.confirm("Log out of LOOP?");
+    if (action) {
+      logout();
+      router.push("/auth/login");
+    }
+  };
+
+  const openProfile = () => router.push("/protected/admin/profile");
+
+  return (
+    <main className={shell.page}>
+      <aside className={shell.sidebar}>
+        <div className={shell.logo}>
+          <span>∞</span> LOOP
+        </div>
+        <p className={shell.tagline}>
+          AI Customer Feedback
+          <br />
+          Intelligence Platform
+        </p>
+        <nav>
+          {navigation.map(({ icon: Icon, label, href }) => (
+            <button
+              key={label}
+              onClick={() => router.push(href)}
+              className={label.toLowerCase() === active ? shell.activeNav : ""}
+            >
+              <Icon size={19} /> <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className={shell.sidebarFooter}>
+          <small>Current workspace</small>
+          <button className={shell.workspace}>
+            Acme Corp <ChevronDown size={15} />
+          </button>
+          <button className={shell.userMini} onClick={openProfile} aria-label="Open profile">
+            <span>{initials(user?.name)}</span>
+            <div>
+              <b>{user?.name ?? "Alex Thompson"}</b>
+              <small>{user?.role ?? "Analyst"}</small>
+            </div>
+            <ChevronDown size={14} />
+          </button>
+          <button onClick={handleLogout}>
+            <LogOut size={19} /> <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <div className={shell.main}>
+        <header className={shell.topbar}>
+          <button className={shell.menuButton} aria-label="Open navigation">
+            <Menu size={25} />
+          </button>
+          <div>
+            <h1>{title}</h1>
+            <p>{subtitle}</p>
+          </div>
+          <div className={shell.headerActions}>
+            <button className={shell.dateButton} type="button" aria-label="Current date range">
+              May 11 – May 17, 2024 <CalendarDays size={16} />
+            </button>
+            <button className={shell.iconButton} onClick={() => router.push("/protected/admin/notifications")}>
+              <Bell size={21} />
+              {unread > 0 && <i>{unread}</i>}
+            </button>
+            <button className={shell.help}>
+              <CircleHelp size={22} />
+            </button>
+            <button className={shell.headerUser} onClick={openProfile} aria-label="Open profile">
+              <span>{initials(user?.name)}</span>
+              <div>
+                <b>{user?.name ?? "Alex Thompson"}</b>
+                <small>{user?.role ?? "Analyst"}</small>
+              </div>
+              <ChevronDown size={15} />
+            </button>
+          </div>
+        </header>
+        {children}
+      </div>
+    </main>
+  );
+}
