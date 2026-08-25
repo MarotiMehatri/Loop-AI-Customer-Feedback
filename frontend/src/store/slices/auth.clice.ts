@@ -11,23 +11,47 @@ interface AuthState {
   token: string | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
+
   login: (email: string, password: string) => Promise<AuthUser>;
   updateUser: (user: AuthUser) => void;
   logout: () => void;
 }
 
-function syncAuthStorage(token: string | null, user: AuthUser | null): void {
+function syncAuthStorage(
+  token: string | null,
+  user: AuthUser | null,
+): void {
   if (typeof window === "undefined") {
     return;
   }
 
   if (token) {
-    window.localStorage.setItem(env.auth.tokenKey, token);
-    window.localStorage.setItem(env.auth.userKey, JSON.stringify(user));
-  } else {
-    window.localStorage.removeItem(env.auth.tokenKey);
-    window.localStorage.removeItem(env.auth.userKey);
+    window.localStorage.setItem(
+      env.auth.tokenKey,
+      token,
+    );
+
+    if (user) {
+      window.localStorage.setItem(
+        env.auth.userKey,
+        JSON.stringify(user),
+      );
+    } else {
+      window.localStorage.removeItem(
+        env.auth.userKey,
+      );
+    }
+
+    return;
   }
+
+  window.localStorage.removeItem(
+    env.auth.tokenKey,
+  );
+
+  window.localStorage.removeItem(
+    env.auth.userKey,
+  );
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -38,24 +62,40 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: async (email, password) => {
-        const result = await loginRequest({ email, password });
-        syncAuthStorage(result.accessToken, result.user);
+        const result = await loginRequest({
+          email,
+          password,
+        });
+
+        syncAuthStorage(
+          result.accessToken,
+          result.user,
+        );
+
         set({
           token: result.accessToken,
           user: result.user,
           isAuthenticated: true,
         });
+
         return result.user;
       },
 
       updateUser: (user) => {
-        const token = useAuthStore.getState().token;
+        const token =
+          useAuthStore.getState().token;
+
         syncAuthStorage(token, user);
-        set({ user });
+
+        set({
+          user,
+          isAuthenticated: Boolean(token),
+        });
       },
 
       logout: () => {
         syncAuthStorage(null, null);
+
         set({
           token: null,
           user: null,
@@ -63,16 +103,22 @@ export const useAuthStore = create<AuthState>()(
         });
       },
     }),
+
     {
       name: "loop-auth",
+
       partialize: (state) => ({
         token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
+
       onRehydrateStorage: () => (state) => {
         if (state?.token) {
-          syncAuthStorage(state.token, state.user);
+          syncAuthStorage(
+            state.token,
+            state.user,
+          );
         } else {
           syncAuthStorage(null, null);
         }
