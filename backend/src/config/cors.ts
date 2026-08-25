@@ -1,25 +1,20 @@
-import type { CorsOptions } from "cors";
+import cors from "cors";
 
 import { env } from "./env.js";
 
-/**
- * FRONTEND_URL can contain one or multiple comma-separated origins.
- *
- * Example:
- * FRONTEND_URL=http://localhost:3000,https://loop-ai-platform.vercel.app
- */
 const allowedOrigins = new Set(
-  env.FRONTEND_URL.map((origin) => origin.replace(/\/$/, "")),
+  env.FRONTEND_URL,
 );
 
-export const corsOptions: CorsOptions = {
+export const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     /**
-     * Requests without an Origin header can come from:
+     * Requests without Origin.
+     *
+     * Examples:
      * - curl
-     * - Postman
      * - server-to-server requests
-     * - health checks
+     * - some health checks
      */
     if (!origin) {
       callback(null, true);
@@ -27,24 +22,20 @@ export const corsOptions: CorsOptions = {
     }
 
     /**
-     * Development
-     *
-     * Allow local frontend development.
+     * Local development.
      */
-    if (env.NODE_ENV === "development") {
-      const isLocalhost =
-        origin.startsWith("http://localhost:") ||
-        origin.startsWith("http://127.0.0.1:") ||
-        origin.startsWith("http://192.168.");
+    const isLocalhost =
+      origin.startsWith("http://localhost:") ||
+      origin.startsWith("http://127.0.0.1:") ||
+      origin.startsWith("http://192.168.");
 
-      if (isLocalhost) {
-        callback(null, true);
-        return;
-      }
+    if (isLocalhost) {
+      callback(null, true);
+      return;
     }
 
     /**
-     * Production / explicitly allowed frontend origins.
+     * Production frontend.
      */
     if (allowedOrigins.has(origin)) {
       callback(null, true);
@@ -52,23 +43,21 @@ export const corsOptions: CorsOptions = {
     }
 
     /**
-     * Reject unknown origins.
+     * Unknown origin.
      */
-    console.error(`CORS blocked request from origin: ${origin}`);
+    console.error(
+      `CORS blocked request from origin: ${origin}`,
+    );
 
-     callback(
-      new Error(`CORS blocked origin: ${origin}`),
-      false);
+    callback(
+      new Error(
+        `CORS blocked origin: ${origin}`,
+      ),
+    );
   },
 
-  /**
-   * Required when using cookies / authentication credentials.
-   */
   credentials: true,
 
-  /**
-   * Allowed HTTP methods.
-   */
   methods: [
     "GET",
     "POST",
@@ -78,19 +67,10 @@ export const corsOptions: CorsOptions = {
     "OPTIONS",
   ],
 
-  /**
-   * Allowed request headers.
-   */
   allowedHeaders: [
-    "Origin",
-    "X-Requested-With",
     "Content-Type",
-    "Accept",
     "Authorization",
   ],
 
-  /**
-   * Successful OPTIONS preflight response.
-   */
   optionsSuccessStatus: 204,
 };

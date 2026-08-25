@@ -1,0 +1,4 @@
+* { box-sizing: border-box; }
+html, body { min-height: 100%; margin: 0; overflow-x: hidden; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
