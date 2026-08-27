@@ -23,6 +23,12 @@ export const registerSchema = z.object({
     .trim()
     .min(2, "Workspace name must contain at least 2 characters")
     .max(100, "Workspace name cannot exceed 100 characters"),
+
+  role: z.enum([
+    "ADMIN",
+    "ANALYST",
+    "VIEWER",
+  ]),
 });
 
 export const loginSchema = z.object({
@@ -32,9 +38,21 @@ export const loginSchema = z.object({
     .toLowerCase()
     .email("Please provide a valid email address"),
 
-  password: z.string().min(1, "Password is required"),
+  password: z
+    .string()
+    .min(1, "Password is required"),
+
+  role: z
+    .enum([
+      "ADMIN",
+      "ANALYST",
+      "VIEWER",
+    ])
+    .optional(),
 });
 
-export type RegisterSchemaInput = z.infer<typeof registerSchema>;
+export type RegisterSchemaInput =
+  z.infer<typeof registerSchema>;
 
-export type LoginSchemaInput = z.infer<typeof loginSchema>;
+export type LoginSchemaInput =
+  z.infer<typeof loginSchema>;

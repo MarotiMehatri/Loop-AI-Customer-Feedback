@@ -1,16 +1,19 @@
-import type { Request } from "express";
-import type { Role } from "../../generated/prisma/client.js";
+import type {
+  Role,
+} from "../../generated/prisma/client.js";
 
 export interface RegisterInput {
   name: string;
   email: string;
   password: string;
   workspaceName: string;
+  role: Role;
 }
 
 export interface LoginInput {
   email: string;
   password: string;
+  role?: Role;
 }
 
 export interface JwtPayload {
@@ -20,7 +23,7 @@ export interface JwtPayload {
   workspaceId: string;
 }
 
-export interface AuthenticatedUser {
+export interface AuthUser {
   id: string;
   name: string;
   email: string;
@@ -36,9 +39,5 @@ export interface AuthenticatedUser {
 export interface AuthResponse {
   message: string;
   accessToken: string;
-  user: AuthenticatedUser;
-}
-
-export interface AuthenticatedRequest extends Request {
-  user?: JwtPayload;
+  user: AuthUser;
 }
