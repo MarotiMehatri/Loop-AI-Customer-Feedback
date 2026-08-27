@@ -1,38 +1,3 @@
-// export type AuthRole = "ADMIN" | "ANALYST" | "VIEWER";
-// export type LoginRole =
-//   | "ADMIN"
-//   | "ANALYST"
-//   | "VIEWER";
-// export interface LoginPayload {
-//   email: string;
-//   password: string;
-// }
-
-// export interface AuthUser {
-//   id: string;
-//   name: string;
-//   email: string;
-//   role: AuthRole;
-//   workspaceId?: string | null;
-//   isActive?: boolean;
-//   emailVerified?: boolean;
-// }
-
-
-// export interface LoginResponse {
-//   accessToken: string;
-//   refreshToken?: string;
-//   user: AuthUser;
-// }
-
-// export interface ApiEnvelope<T> {
-//   success?: boolean;
-//   message?: string;
-//   data?: T;
-//   user?: AuthUser;
-//   accessToken?: string;
-//   refreshToken?: string;
-// }
 
 export type AuthRole =
   | "ADMIN"

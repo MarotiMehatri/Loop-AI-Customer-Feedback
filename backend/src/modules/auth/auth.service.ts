@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 
 import * as bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import type { SignOptions } from "jsonwebtoken";
+import type {
+  SignOptions,
+} from "jsonwebtoken";
 
 import { env } from "../../config/env.js";
 import { ApiError } from "../../utils/apiError.js";
@@ -11,7 +13,6 @@ import {
   createWorkspaceWithAdmin,
   findPublicUserById,
   findUserByEmail,
-  hasRecentEmailVerification,
   updateLastLogin,
 } from "./auth.repository.js";
 
@@ -24,36 +25,35 @@ import type {
 
 const BCRYPT_SALT_ROUNDS = 12;
 
-/**
- * =========================================================
- * WORKSPACE SLUG
- * =========================================================
- */
 const generateWorkspaceSlug = (
   workspaceName: string,
 ): string => {
-  const normalisedName = workspaceName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  const normalisedName =
+    workspaceName
+      .trim()
+      .toLowerCase()
+      .replace(
+        /[^a-z0-9]+/g,
+        "-",
+      )
+      .replace(
+        /^-+|-+$/g,
+        "",
+      );
 
-  const uniquePart = randomUUID().slice(0, 8);
-
-  return `${normalisedName || "workspace"}-${uniquePart}`;
+  return `${
+    normalisedName ||
+    "workspace"
+  }-${randomUUID().slice(0, 8)}`;
 };
 
-/**
- * =========================================================
- * JWT
- * =========================================================
- */
 const generateAccessToken = (
   payload: JwtPayload,
 ): string => {
   const options: SignOptions = {
     expiresIn:
       env.JWT_EXPIRES_IN as SignOptions["expiresIn"],
+
     issuer: "loop-backend",
     audience: "loop-frontend",
   };
@@ -65,250 +65,193 @@ const generateAccessToken = (
   );
 };
 
-/**
- * =========================================================
- * REGISTER USER
- * =========================================================
- *
- * POST /api/v1/auth/register
- */
-export const registerUser = async (
-  input: RegisterInput,
-): Promise<AuthResponse> => {
-  const email = input.email
-    .trim()
-    .toLowerCase();
+export const registerUser =
+  async (
+    input: RegisterInput,
+  ): Promise<AuthResponse> => {
+    const email =
+      input.email
+        .trim()
+        .toLowerCase();
 
-  /**
-   * -------------------------------------------------------
-   * Check whether email already exists.
-   * -------------------------------------------------------
-   */
-  const existingUser =
-    await findUserByEmail(email);
+    const existingUser =
+      await findUserByEmail(
+        email,
+      );
 
-  if (existingUser) {
-    throw new ApiError(
-      409,
-      "A user with this email address already exists",
-    );
-  }
+    if (existingUser) {
+      throw new ApiError(
+        409,
+        "A user with this email address already exists",
+      );
+    }
 
-  /**
-   * -------------------------------------------------------
-   * Email verification
-   * -------------------------------------------------------
-   *
-   * Development:
-   * verification is skipped.
-   *
-   * Production:
-   * verification is required.
-   */
-  const verifiedEmail =
-    await hasRecentEmailVerification(
-      email,
-    );
+    const passwordHash =
+      await bcrypt.hash(
+        input.password,
+        BCRYPT_SALT_ROUNDS,
+      );
 
-  if (
-    !verifiedEmail &&
-    env.NODE_ENV !== "development"
-  ) {
-    throw new ApiError(
-      400,
-      "Verify your email address before creating a workspace",
-    );
-  }
+    const result =
+      await createWorkspaceWithAdmin({
+        name:
+          input.name.trim(),
 
-  /**
-   * -------------------------------------------------------
-   * Hash password
-   * -------------------------------------------------------
-   */
-  const passwordHash =
-    await bcrypt.hash(
-      input.password,
-      BCRYPT_SALT_ROUNDS,
-    );
+        email,
 
-  /**
-   * -------------------------------------------------------
-   * Workspace name
-   * -------------------------------------------------------
-   *
-   * If frontend sends workspaceName, use it.
-   *
-   * If frontend does not send workspaceName,
-   * create a default workspace name.
-   */
-  const workspaceName =
-    input.workspaceName?.trim() ||
-    `${input.name.trim()}'s Workspace`;
+        passwordHash,
 
-  const workspaceSlug =
-    generateWorkspaceSlug(
-      workspaceName,
-    );
+        workspaceName:
+          input.workspaceName.trim(),
 
-  /**
-   * -------------------------------------------------------
-   * Create workspace and first user
-   * -------------------------------------------------------
-   */
-  const result =
-    await createWorkspaceWithAdmin({
-      name: input.name.trim(),
-      email,
-      passwordHash,
-      workspaceName,
-      workspaceSlug,
-    });
+        workspaceSlug:
+          generateWorkspaceSlug(
+            input.workspaceName,
+          ),
 
-  /**
-   * -------------------------------------------------------
-   * Create JWT
-   * -------------------------------------------------------
-   */
-  const tokenPayload: JwtPayload = {
-    userId: result.user.id,
-    email: result.user.email,
-    role: result.user.role,
-    workspaceId: result.user.workspaceId,
+        role: input.role,
+      });
+
+    const tokenPayload: JwtPayload =
+      {
+        userId:
+          result.user.id,
+
+        email:
+          result.user.email,
+
+        role:
+          result.user.role,
+
+        workspaceId:
+          result.user.workspaceId,
+      };
+
+    const accessToken =
+      generateAccessToken(
+        tokenPayload,
+      );
+
+    return {
+      message:
+        "Account created successfully",
+
+      accessToken,
+
+      user:
+        result.user,
+    };
   };
 
-  const accessToken =
-    generateAccessToken(
-      tokenPayload,
-    );
+export const loginUser =
+  async (
+    input: LoginInput,
+  ): Promise<AuthResponse> => {
+    const email =
+      input.email
+        .trim()
+        .toLowerCase();
 
-  /**
-   * -------------------------------------------------------
-   * Return authentication response
-   * -------------------------------------------------------
-   */
-  return {
-    message:
-      "Account created successfully",
+    const user =
+      await findUserByEmail(
+        email,
+      );
 
-    accessToken,
+    if (!user) {
+      throw new ApiError(
+        401,
+        "Invalid email address or password",
+      );
+    }
 
-    user: result.user,
-  };
-};
+    if (!user.isActive) {
+      throw new ApiError(
+        403,
+        "Your account has been disabled",
+      );
+    }
 
-/**
- * =========================================================
- * LOGIN USER
- * =========================================================
- *
- * POST /api/v1/auth/login
- */
-export const loginUser = async (
-  input: LoginInput,
-): Promise<AuthResponse> => {
-  const email = input.email
-    .trim()
-    .toLowerCase();
+    const passwordMatches =
+      await bcrypt.compare(
+        input.password,
+        user.passwordHash,
+      );
 
-  const user =
-    await findUserByEmail(email);
+    if (!passwordMatches) {
+      throw new ApiError(
+        401,
+        "Invalid email address or password",
+      );
+    }
 
-  /**
-   * Do not reveal whether an email exists.
-   */
-  if (!user) {
-    throw new ApiError(
-      401,
-      "Invalid email address or password",
-    );
-  }
+    if (
+      input.role &&
+      user.role !== input.role
+    ) {
+      throw new ApiError(
+        403,
+        `This account is registered as ${user.role}. Please select ${user.role} before signing in.`,
+      );
+    }
 
-  /**
-   * Account disabled.
-   */
-  if (!user.isActive) {
-    throw new ApiError(
-      403,
-      "Your account has been disabled",
-    );
-  }
+    const updatedUser =
+      await updateLastLogin(
+        user.id,
+      );
 
-  /**
-   * Check password.
-   */
-  const passwordMatches =
-    await bcrypt.compare(
-      input.password,
-      user.passwordHash,
-    );
+    const tokenPayload: JwtPayload =
+      {
+        userId:
+          updatedUser.id,
 
-  if (!passwordMatches) {
-    throw new ApiError(
-      401,
-      "Invalid email address or password",
-    );
-  }
+        email:
+          updatedUser.email,
 
-  /**
-   * Update last login.
-   */
-  const updatedUser =
-    await updateLastLogin(
-      user.id,
-    );
+        role:
+          updatedUser.role,
 
-  /**
-   * Create JWT.
-   */
-  const tokenPayload: JwtPayload = {
-    userId: updatedUser.id,
-    email: updatedUser.email,
-    role: updatedUser.role,
-    workspaceId:
-      updatedUser.workspaceId,
+        workspaceId:
+          updatedUser.workspaceId,
+      };
+
+    const accessToken =
+      generateAccessToken(
+        tokenPayload,
+      );
+
+    return {
+      message:
+        "Login successful",
+
+      accessToken,
+
+      user:
+        updatedUser,
+    };
   };
 
-  const accessToken =
-    generateAccessToken(
-      tokenPayload,
-    );
+export const getCurrentUser =
+  async (
+    userId: string,
+  ) => {
+    const user =
+      await findPublicUserById(
+        userId,
+      );
 
-  return {
-    message:
-      "Login successful",
+    if (!user) {
+      throw new ApiError(
+        404,
+        "User account not found",
+      );
+    }
 
-    accessToken,
+    if (!user.isActive) {
+      throw new ApiError(
+        403,
+        "Your account has been disabled",
+      );
+    }
 
-    user: updatedUser,
+    return user;
   };
-};
-
-/**
- * =========================================================
- * CURRENT USER
- * =========================================================
- */
-export const getCurrentUser = async (
-  userId: string,
-) => {
-  const user =
-    await findPublicUserById(
-      userId,
-    );
-
-  if (!user) {
-    throw new ApiError(
-      404,
-      "User account not found",
-    );
-  }
-
-  if (!user.isActive) {
-    throw new ApiError(
-      403,
-      "Your account has been disabled",
-    );
-  }
-
-  return user;
-};

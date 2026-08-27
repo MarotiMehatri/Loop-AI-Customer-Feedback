@@ -1,74 +1,77 @@
 import { Router } from "express";
 
-import { authenticate } from "../../middleware/authenticate.middleware.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+import {
+  authenticate,
+} from "../../middleware/authenticate.middleware.js";
+
+import {
+  asyncHandler,
+} from "../../utils/asyncHandler.js";
 
 import {
   loginController,
   logoutController,
   profileController,
   registerController,
-  requestPasswordResetController,
-  resetPasswordController,
-  changePasswordController,
-  requestEmailVerificationController,
-  verifyEmailController,
-  resendVerificationController,
 } from "./auth.controller.js";
 
 export const authRouter = Router();
 
-// Public routes
+/**
+ * ============================================================
+ * PUBLIC AUTH ROUTES
+ * ============================================================
+ */
+
+/**
+ * POST /api/v1/auth/register
+ */
 authRouter.post(
   "/register",
-  asyncHandler(registerController),
+  asyncHandler(
+    registerController,
+  ),
 );
 
+/**
+ * POST /api/v1/auth/login
+ */
 authRouter.post(
   "/login",
-  asyncHandler(loginController),
+  asyncHandler(
+    loginController,
+  ),
 );
 
-authRouter.post(
-  "/password-reset/request",
-  asyncHandler(requestPasswordResetController),
-);
+/**
+ * ============================================================
+ * PROTECTED AUTH ROUTES
+ * ============================================================
+ */
 
-authRouter.post(
-  "/password-reset/confirm",
-  asyncHandler(resetPasswordController),
-);
-
-authRouter.post(
-  "/email-verification/request",
-  asyncHandler(requestEmailVerificationController),
-);
-
-authRouter.post(
-  "/email-verification/confirm",
-  asyncHandler(verifyEmailController),
-);
-
-authRouter.post(
-  "/email-verification/resend",
-  asyncHandler(resendVerificationController),
-);
-
-// Protected routes
+/**
+ * GET /api/v1/auth/profile
+ *
+ * Authentication:
+ * Authorization: Bearer <JWT>
+ */
 authRouter.get(
   "/profile",
   authenticate,
-  asyncHandler(profileController),
+  asyncHandler(
+    profileController,
+  ),
 );
 
+/**
+ * POST /api/v1/auth/logout
+ */
 authRouter.post(
   "/logout",
   authenticate,
-  asyncHandler(logoutController),
+  asyncHandler(
+    logoutController,
+  ),
 );
 
-authRouter.post(
-  "/password-change",
-  authenticate,
-  asyncHandler(changePasswordController),
-);
+export default authRouter;
