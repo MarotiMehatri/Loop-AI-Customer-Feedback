@@ -19,6 +19,6 @@ export const env = {
 
    auth: {
     tokenKey: "loop_access_token",
-    userKey: "loop_user",
+    userKey: "loop_auth_user",
   },
 } as const;

@@ -423,10 +423,10 @@ const roles: Array<{
 function getRoleRoute(role: AuthRole): string {
   switch (role) {
     case "ADMIN":
-      return "/protected/admin";
+      return "/protected/admin/dashboard";
 
     case "ANALYST":
-      return "/protected/analyst";
+      return "/protected/admin/dashboard";
 
     case "VIEWER":
       return "/protected/viewer";

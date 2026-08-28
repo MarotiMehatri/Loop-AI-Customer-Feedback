@@ -119,8 +119,6 @@ export const useAuthStore = create<AuthState>()(
             state.token,
             state.user,
           );
-        } else {
-          syncAuthStorage(null, null);
         }
       },
     },

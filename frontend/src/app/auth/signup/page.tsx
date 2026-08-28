@@ -14,7 +14,6 @@ import styles from "./signup.module.css";
 
 import { signupUser } from "../../../lib/api/auth";
 import { getErrorMessage as getApiErrorMessage } from "../../../lib/api/api-error";
-import { saveAuthSession } from "../../../lib/auth/auth-storage";
 
 type SignupRole =
   | "ANALYST"
@@ -41,16 +40,6 @@ const roles: Array<{
     icon: "V",
   },
 ];
-
-function getRoleRoute(
-  role: SignupRole,
-): string {
-  if (role === "ANALYST") {
-    return "/protected/analyst";
-  }
-
-  return "/protected/viewer";
-}
 
 function getErrorMessage(
   error: unknown,
@@ -229,16 +218,8 @@ export default function SignupPage() {
         );
       }
 
-      if (!response.accessToken) {
-        throw new Error(
-          "Account created, but no access token was returned. Please sign in.",
-        );
-      }
-
-      saveAuthSession(response, true);
-
       router.replace(
-        getRoleRoute(returnedRole),
+        `/auth/login?role=${returnedRole.toLowerCase()}&registered=true`,
       );
     } catch (requestError) {
       setError(
