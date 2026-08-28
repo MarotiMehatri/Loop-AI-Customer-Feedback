@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { apiClient } from "../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../lib/api/api-error";
 
-import { AdminShell } from "../_components/AdminShell";
 import ui from "../_components/admin.module.css";
 
 interface Notification {
@@ -74,7 +73,7 @@ export default function NotificationsPage() {
   const unread = items.filter((item) => !item.isRead).length;
 
   return (
-    <AdminShell title="Notifications" subtitle="Updates, alerts and activity in your workspace" active="dashboard">
+    
       <div className={ui.body}>
         <section className={ui.card}>
           <header>
@@ -138,6 +137,6 @@ export default function NotificationsPage() {
           )}
         </section>
       </div>
-    </AdminShell>
+    
   );
 }

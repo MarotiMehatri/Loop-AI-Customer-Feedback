@@ -7,7 +7,6 @@ import { Mail, Send, X } from "lucide-react";
 import { apiClient } from "../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../lib/api/api-error";
 
-import { AdminShell } from "../_components/AdminShell";
 import ui from "../_components/admin.module.css";
 
 interface Member {
@@ -133,7 +132,7 @@ export default function TeamPage() {
   };
 
   return (
-    <AdminShell title="Team" subtitle="Manage workspace members and invitations" active="dashboard">
+    
       <div className={ui.body}>
         <section className={ui.card}>
           <header>
@@ -271,6 +270,6 @@ export default function TeamPage() {
           )}
         </section>
       </div>
-    </AdminShell>
+    
   );
 }

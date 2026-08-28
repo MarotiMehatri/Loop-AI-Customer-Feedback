@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { apiClient } from "../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../lib/api/api-error";
 
-import { AdminShell } from "../_components/AdminShell";
 import styles from "./ask-loop.module.css";
 
 interface Chart {
@@ -182,7 +181,7 @@ export default function AskLoopPage() {
     : messages[messages.length - 1]?.followUps ?? [];
 
   return (
-    <AdminShell title="Ask LOOP AI" subtitle="Ask questions about your customer feedback in plain language" active="ask-loop">
+    
       <div className={styles.body}>
         <aside className={styles.rail}>
           <section className={styles.sideSection}>
@@ -294,6 +293,6 @@ export default function AskLoopPage() {
           </form>
         </section>
       </div>
-    </AdminShell>
+    
   );
 }

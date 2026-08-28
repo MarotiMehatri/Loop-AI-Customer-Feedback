@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { apiClient } from "../../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../../lib/api/api-error";
 
-import { AdminShell } from "../../_components/AdminShell";
 import ui from "../../_components/admin.module.css";
 
 const TYPES = ["VOICE_OF_CUSTOMER", "INSIGHTS", "ANALYTICS", "SUMMARY", "SENTIMENT", "THEMES", "CUSTOM"] as const;
@@ -61,7 +60,7 @@ export default function NewReportPage() {
   };
 
   return (
-    <AdminShell title="New report" subtitle="Configure a new customer feedback report" active="reports">
+    
       <div className={ui.body}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -187,6 +186,6 @@ export default function NewReportPage() {
           </div>
         </form>
       </div>
-    </AdminShell>
+    
   );
 }

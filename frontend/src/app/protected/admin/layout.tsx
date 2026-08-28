@@ -1,33 +1,28 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
-import { getAccessToken } from "../../../lib/auth/auth-storage";
+import AdminSidebar from "../../../components/admin/AdminSidebar";
+import AdminHeader from "../../../components/admin/AdminHeader";
+
+import "./admin-shell.css";
+
+interface AdminLayoutProps {
+  children: ReactNode;
+}
 
 export default function AdminLayout({
   children,
-}: {
-  children: ReactNode;
-}) {
-  const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+}: AdminLayoutProps) {
+  return (
+    <div className="loop-admin-shell">
+      <AdminSidebar />
 
-  useEffect(() => {
-    if (!getAccessToken()) {
-      router.replace("/auth/login");
-      return;
-    }
+      <div className="loop-admin-main">
+        <AdminHeader />
 
-    setIsAuthenticated(true);
-    setIsCheckingAuth(false);
-  }, [router]);
-
-  if (isCheckingAuth || !isAuthenticated) {
-    return null;
-  }
-
-  return children;
+        <main className="loop-admin-content">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }

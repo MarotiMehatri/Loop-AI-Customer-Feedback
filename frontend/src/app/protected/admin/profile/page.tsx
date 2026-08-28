@@ -5,11 +5,14 @@ import { toast } from "sonner";
 
 import { apiClient } from "../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../lib/api/api-error";
-import { initials } from "../_components/AdminShell";
 import { useAuthStore } from "../../../../store";
 
-import { AdminShell } from "../_components/AdminShell";
 import ui from "../_components/admin.module.css";
+
+function initials(name?: string | null): string {
+  if (!name) return "LU";
+  return name.trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+}
 
 interface Profile {
   id: string;
@@ -106,7 +109,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <AdminShell title="Profile" subtitle="Your account details and preferences" active="dashboard">
+    
       <div className={ui.body}>
         <div className={ui.grid2}>
           <section className={ui.card}>
@@ -201,6 +204,6 @@ export default function ProfilePage() {
           </section>
         </div>
       </div>
-    </AdminShell>
+    
   );
 }

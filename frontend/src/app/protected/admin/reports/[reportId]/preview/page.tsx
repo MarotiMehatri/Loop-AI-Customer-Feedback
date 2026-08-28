@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { apiClient } from "../../../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../../../lib/api/api-error";
 
-import { AdminShell } from "../../../_components/AdminShell";
 import ui from "../../../_components/admin.module.css";
 
 interface ReportConfig {
@@ -63,7 +62,7 @@ export default function ReportPreviewPage() {
   const themeMax = Math.max(...(preview?.topThemes.map((theme) => theme.value) ?? [1]));
 
   return (
-    <AdminShell title="Report preview" subtitle="Live preview of the report data" active="reports">
+    
       <div className={ui.body}>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button className={ui.ghost} onClick={() => router.push(`/protected/admin/reports/${reportId}`)}>
@@ -159,6 +158,6 @@ export default function ReportPreviewPage() {
           </>
         )}
       </div>
-    </AdminShell>
+    
   );
 }

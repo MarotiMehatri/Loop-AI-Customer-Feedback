@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { apiClient } from "../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../lib/api/api-error";
 
-import { AdminShell } from "../_components/AdminShell";
 import ui from "../_components/admin.module.css";
 
 interface Settings {
@@ -95,7 +94,7 @@ export default function SettingsPage() {
   const current = settings?.[section] ?? {};
 
   return (
-    <AdminShell title="Settings" subtitle="Workspace settings and preferences" active="dashboard">
+    
       <div className={ui.body}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
           {SECTIONS.map(([key, label]) => (
@@ -163,6 +162,6 @@ export default function SettingsPage() {
           )}
         </section>
       </div>
-    </AdminShell>
+    
   );
 }

@@ -8,7 +8,6 @@ import { UploadCloud } from "lucide-react";
 import { apiClient } from "../../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../../lib/api/api-error";
 
-import { AdminShell } from "../../_components/AdminShell";
 import ui from "../../_components/admin.module.css";
 
 interface ImportRecord {
@@ -74,7 +73,7 @@ export default function FeedbackImportPage() {
   };
 
   return (
-    <AdminShell title="Import feedback" subtitle="Bulk import customer feedback from a CSV file" active="add-feedback">
+    
       <div className={ui.body}>
         <div className={ui.grid2}>
           <section className={ui.card}>
@@ -169,6 +168,6 @@ export default function FeedbackImportPage() {
           )}
         </section>
       </div>
-    </AdminShell>
+    
   );
 }

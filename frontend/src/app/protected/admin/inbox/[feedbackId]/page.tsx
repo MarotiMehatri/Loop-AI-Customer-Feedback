@@ -54,7 +54,8 @@ export default function FeedbackDetailPage({ params }: { params: Promise<{ feedb
     EMAIL: 'email', MANUAL: 'manual',
   };
 
-  return <main className={shell.page}>
+  return (
+     <main className={shell.page}>
     <aside className={shell.sidebar}>
       <div className={shell.logo}><span>∞</span> LOOP</div>
       <p className={shell.tagline}>AI Customer Feedback<br />Intelligence Platform</p>
@@ -109,5 +110,6 @@ export default function FeedbackDetailPage({ params }: { params: Promise<{ feedb
         </section>
       </div>
     </div>
-  </main>;
+  </main>
+  );
 }

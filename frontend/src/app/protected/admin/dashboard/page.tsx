@@ -10,7 +10,6 @@ import {
   Bot, FileText, MessageSquare, Plus, Star, Upload, Users,
 } from 'lucide-react';
 
-import { AdminShell } from '../_components/AdminShell';
 import { useAnalytics, useInboxList, useInboxStatusCount } from '../../../../Features/analytics/hooks/useAnalytics';
 import styles from './dashboard.module.css';
 
@@ -77,7 +76,7 @@ export default function DashboardPage() {
     [Users, 'Active Users', '24', '↑ 9.1%', 'blue'],
   ] as const;
 
-  return <AdminShell title="Dashboard 👋" subtitle="Welcome back! Here’s what’s happening with your feedback." active="dashboard">
+  return (
     <div className={styles.dashboard}>
       <section className={styles.metrics}>
         {cards.map(([Icon, label, value, change, tone]) => <article className={styles.metric} key={label}>
@@ -108,5 +107,5 @@ export default function DashboardPage() {
         <section className={styles.card}><header><h2>Quick Actions</h2></header><div className={styles.actions}><button onClick={() => router.push('/protected/admin/add-feedback')}><Plus />Add Feedback</button><button onClick={() => router.push('/protected/admin/add-feedback')}><Upload />Upload CSV</button><button onClick={() => router.push('/protected/admin/ask-loop')}><Bot />Ask LOOP AI</button><button onClick={() => router.push('/protected/admin/reports')}><FileText />View Reports</button></div></section>
       </section>
     </div>
-  </AdminShell>;
+  )
 }

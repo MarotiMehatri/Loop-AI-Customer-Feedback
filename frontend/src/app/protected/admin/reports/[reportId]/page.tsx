@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { apiClient } from "../../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../../lib/api/api-error";
 
-import { AdminShell } from "../../_components/AdminShell";
 import ui from "../../_components/admin.module.css";
 
 interface ReportDetail {
@@ -87,7 +86,7 @@ export default function ReportDetailPage() {
   };
 
   return (
-    <AdminShell title="Report" subtitle={report?.title ?? "Loading…"} active="reports">
+    
       <div className={ui.body}>
         <button className={ui.ghost} onClick={() => router.push("/protected/admin/reports")}>
           <ArrowLeft size={15} /> Back to reports
@@ -168,6 +167,6 @@ export default function ReportDetailPage() {
           </div>
         )}
       </div>
-    </AdminShell>
+    
   );
 }

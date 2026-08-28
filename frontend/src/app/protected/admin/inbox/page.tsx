@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckSquare, CircleAlert, Clock3, Frown, MoreHorizontal, Search, Smile, SlidersHorizontal } from 'lucide-react';
 
-import { AdminShell } from '../_components/AdminShell';
 import { useInboxList } from '../../../../Features/analytics/hooks/useAnalytics';
 import styles from './inbox.module.css';
 
@@ -44,7 +43,7 @@ export default function InboxPage() {
     [CircleAlert, 'Neutral', '1,018 (40%)', '', 'neutral'], [Frown, 'Negative', '484 (19%)', '', 'negative'], [Clock3, 'Unresolved', '312', '', 'unresolved'],
   ] as const;
 
-  return <AdminShell title="Feedback Inbox" subtitle="All customer feedback from different sources" active="inbox">
+  return(
     <div className={styles.page}>
       <section className={styles.filters}>
         <label className={styles.search}><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search feedback..." /></label>
@@ -62,5 +61,5 @@ export default function InboxPage() {
         <footer><span>Showing 1 to {filtered.length} of 2,543 results</span><nav><b>1</b><button>2</button><button>3</button><span>…</span><button>255</button><button>›</button></nav><label>Rows per page <select><option>10</option></select></label></footer>
       </section>
     </div>
-  </AdminShell>;
+  );
 }
