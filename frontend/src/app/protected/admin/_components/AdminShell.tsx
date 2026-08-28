@@ -50,7 +50,7 @@ interface AdminShellProps {
   children: React.ReactNode;
 }
 
-function initials(
+export function initials(
   name?: string | null,
 ): string {
   if (!name) {

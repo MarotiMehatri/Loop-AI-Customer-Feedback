@@ -8,10 +8,13 @@ import {
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { isAxiosError } from "axios";
 
 import styles from "./signup.module.css";
 
 import { signupUser } from "../../../lib/api/auth";
+import { getErrorMessage as getApiErrorMessage } from "../../../lib/api/api-error";
+import { saveAuthSession } from "../../../lib/auth/auth-storage";
 
 type SignupRole =
   | "ANALYST"
@@ -53,13 +56,13 @@ function getErrorMessage(
   error: unknown,
 ): string {
   if (
-    error instanceof Error &&
-    error.message
+    isAxiosError(error) &&
+    error.response?.status === 409
   ) {
-    return error.message;
+    return "An account with this email already exists. Please sign in instead.";
   }
 
-  return "Unable to create your account. Please try again.";
+  return getApiErrorMessage(error);
 }
 
 export default function SignupPage() {
@@ -69,6 +72,9 @@ export default function SignupPage() {
     useState<SignupRole>("ANALYST");
 
   const [name, setName] =
+    useState("");
+
+  const [workspaceName, setWorkspaceName] =
     useState("");
 
   const [email, setEmail] =
@@ -119,6 +125,9 @@ export default function SignupPage() {
     const normalizedName =
       name.trim();
 
+    const normalizedWorkspaceName =
+      workspaceName.trim();
+
     const normalizedEmail =
       email.trim().toLowerCase();
 
@@ -132,6 +141,20 @@ export default function SignupPage() {
     if (normalizedName.length < 2) {
       setError(
         "Your name must contain at least 2 characters.",
+      );
+      return;
+    }
+
+    if (!normalizedWorkspaceName) {
+      setError(
+        "Please enter your workspace name.",
+      );
+      return;
+    }
+
+    if (normalizedWorkspaceName.length < 2) {
+      setError(
+        "Your workspace name must contain at least 2 characters.",
       );
       return;
     }
@@ -182,6 +205,7 @@ export default function SignupPage() {
       const response =
         await signupUser({
           name: normalizedName,
+          workspaceName: normalizedWorkspaceName,
           email: normalizedEmail,
           password,
           role,
@@ -205,15 +229,16 @@ export default function SignupPage() {
         );
       }
 
-      /*
-       * Registration normally should NOT automatically
-       * create an authenticated session unless the
-       * backend explicitly returns an access token.
-       *
-       * Send the new user to login instead.
-       */
+      if (!response.accessToken) {
+        throw new Error(
+          "Account created, but no access token was returned. Please sign in.",
+        );
+      }
+
+      saveAuthSession(response, true);
+
       router.replace(
-        `/auth/login?role=${returnedRole.toLowerCase()}`,
+        getRoleRoute(returnedRole),
       );
     } catch (requestError) {
       setError(
@@ -463,6 +488,32 @@ export default function SignupPage() {
                   clearError();
                 }}
                 disabled={loading}
+              />
+            </label>
+
+            <label
+              className={
+                styles.inputGroup
+              }
+            >
+              <span>
+                Workspace name
+              </span>
+
+              <input
+                type="text"
+                name="workspaceName"
+                autoComplete="organization"
+                placeholder="Your company or team"
+                value={workspaceName}
+                onChange={(event) => {
+                  setWorkspaceName(
+                    event.target.value,
+                  );
+                  clearError();
+                }}
+                disabled={loading}
+                required
               />
             </label>
 

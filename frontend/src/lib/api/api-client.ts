@@ -3,6 +3,10 @@
 import axios from "axios";
 
 import { env } from "../../config/env";
+import {
+  clearAuthSession,
+  getAccessToken,
+} from "../auth/auth-storage";
 
 export const apiClient = axios.create({
   baseURL: env.apiUrl,
@@ -15,9 +19,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const token = window.localStorage.getItem(
-        env.auth.tokenKey,
-      );
+      const token = getAccessToken();
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -39,13 +41,7 @@ apiClient.interceptors.response.use(
       error?.response?.status === 401 &&
       typeof window !== "undefined"
     ) {
-      window.localStorage.removeItem(
-        env.auth.tokenKey,
-      );
-
-      window.localStorage.removeItem(
-        env.auth.userKey,
-      );
+      clearAuthSession();
     }
 
     return Promise.reject(error);

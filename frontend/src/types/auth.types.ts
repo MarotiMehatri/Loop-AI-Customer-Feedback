@@ -32,12 +32,15 @@ export interface LoginResponse {
 
 export interface SignupRequest {
   name: string;
+  workspaceName: string;
   email: string;
   password: string;
   role: "ANALYST" | "VIEWER";
 }
 
 export interface SignupResponse {
+  accessToken: string;
+  refreshToken?: string;
   user: AuthUser;
   message?: string;
 }
