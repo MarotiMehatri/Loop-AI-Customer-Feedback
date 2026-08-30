@@ -17,7 +17,7 @@ export const askLoopQuestionSchema = z.object({
         .min(2, "Question must contain at least 2 characters")
         .max(2000, "Question cannot exceed 2000 characters"),
 
-      conversationId: z.string().uuid().optional(),
+      conversationId: z.string().min(1).optional(),
 
       startDate: optionalDateSchema,
 
@@ -56,7 +56,7 @@ export const conversationListSchema = z.object({
 
 export const messageFeedbackSchema = z.object({
   params: z.object({
-    messageId: z.string().uuid(),
+    messageId: z.string().min(1),
   }),
 
   body: z.object({
