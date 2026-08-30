@@ -1,5 +1,11 @@
-import { redirect } from "next/navigation";
+export default function AnalystDashboardPage() {
+  return (
+    <section>
+      <h1>Dashboard</h1>
 
-export default function AnalystPage() {
-  redirect("/protected/admin/dashboard");
+      <p>
+        Welcome to your LOOP Analyst dashboard.
+      </p>
+    </section>
+  );
 }
