@@ -393,13 +393,9 @@ export default function AnalystReportsPage() {
       endDate: form.endDate
         ? new Date(`${form.endDate}T23:59:59`).toISOString()
         : undefined,
-      sources: form.source ? [form.source] : undefined,
-      status: form.schedule ? "SCHEDULED" : "GENERATING",
-      scheduledAt: form.schedule
-        ? new Date(form.scheduledAt).toISOString()
-        : undefined,
+      sources: form.source ? [form.source] : ["SUPPORT", "SURVEY", "EMAIL"],
       filters: {},
-      metrics: ["feedback", "sentiment", "themes"],
+      metrics: ["TOTAL_FEEDBACK", "SENTIMENT_DISTRIBUTION", "TOP_THEMES"],
       tags: [],
     };
 
