@@ -640,7 +640,7 @@ import {
 
 import type {
   AnalyticsInsight,
-} from "../../../../Features/analytics/analytics.types";
+} from "../../../../Features/analytics/types/analytics.types";
 
 import {
   apiClient,

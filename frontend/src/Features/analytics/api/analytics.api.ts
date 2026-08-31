@@ -1,68 +1,44 @@
 import { apiClient } from "../../../lib/api/api-client";
-import type { ApiResponse, PaginatedData } from "../../../lib/api/api-response";
-import type {
-  AnalyticsDashboard,
-  FeedbackStatus,
-  InboxFeedback,
-  InboxSummary,
-} from "../analytics.types";
+import type { AnalyticsDashboard } from "../analytics.types";
 
-export interface AnalyticsQueryParams {
+export interface AnalyticsQuery {
   days?: number;
-  groupBy?: "day" | "week" | "month";
-  sentiment?: string;
-  status?: string;
-  source?: string;
+  source?:
+    | "SUPPORT"
+    | "APP_STORE"
+    | "SURVEY"
+    | "SALES"
+    | "SOCIAL"
+    | "WEBSITE"
+    | "EMAIL"
+    | "MANUAL";
+  sentiment?: "POSITIVE" | "NEUTRAL" | "NEGATIVE";
   category?: string;
+  theme?: string;
 }
 
-export interface InboxQueryParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sentiment?: string;
-  status?: string;
-  source?: string;
+interface AnalyticsResponse {
+  success: boolean;
+  data: AnalyticsDashboard;
 }
 
 export async function getAnalytics(
-  params?: AnalyticsQueryParams,
+  query: AnalyticsQuery = {},
 ): Promise<AnalyticsDashboard> {
-  const { data } = await apiClient.get<ApiResponse<AnalyticsDashboard>>(
-    "/analytics",
-    { params },
-  );
-  return data.data;
+  const response = await apiClient.get<AnalyticsResponse>("/analytics", {
+    params: query,
+  });
+
+  return response.data.data;
 }
 
-export async function getInboxSummary(): Promise<InboxSummary> {
-  const { data } = await apiClient.get<ApiResponse<InboxSummary>>(
-    "/feedback-inbox/summary",
-  );
-  return data.data;
-}
+export async function exportAnalytics(
+  query: AnalyticsQuery = {},
+): Promise<Blob> {
+  const response = await apiClient.get<Blob>("/analytics/export", {
+    params: query,
+    responseType: "blob",
+  });
 
-export async function getInboxList(
-  params?: InboxQueryParams,
-): Promise<PaginatedData<InboxFeedback>> {
-  const { data } = await apiClient.get<ApiResponse<PaginatedData<InboxFeedback>>>(
-    "/feedback-inbox",
-    { params },
-  );
-  return data.data;
-}
-
-export async function getInboxStatusCount(
-  status: FeedbackStatus,
-): Promise<number> {
-  const result = await getInboxList({ status, page: 1, limit: 1 });
-  return result.pagination.total;
-}
-
-export async function getClassificationsCount(): Promise<number> {
-  const { data } = await apiClient.get<ApiResponse<PaginatedData<unknown>>>(
-    "/ai-classification",
-    { params: { page: 1, limit: 1 } },
-  );
-  return data.data.pagination.total;
+  return response.data;
 }

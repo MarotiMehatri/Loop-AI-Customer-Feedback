@@ -1,35 +1,14 @@
-export type Sentiment = "POSITIVE" | "NEUTRAL" | "NEGATIVE";
-export type FeedbackStatus = "NEW" | "REVIEWED" | "ACTIONED" | "ARCHIVED";
-export type FeedbackChannel =
-  | "SUPPORT"
-  | "APP_STORE"
-  | "SURVEY"
-  | "SALES"
-  | "SOCIAL"
-  | "WEBSITE"
-  | "EMAIL"
-  | "MANUAL";
+export type AnalyticsInsightType = "POSITIVE" | "WARNING" | "INFO";
 
-export interface OverviewMetric {
-  count: number;
-  percentage: number;
+export interface AnalyticsInsight {
+  id: string;
+  type: AnalyticsInsightType;
+  title: string;
+  description: string;
+  createdAt: string;
 }
 
-export interface AnalyticsOverview {
-  totalFeedback: number;
-  positive: OverviewMetric;
-  neutral: OverviewMetric;
-  negative: OverviewMetric;
-  unresolved: number;
-  topTheme: {
-    id: string;
-    name: string;
-    count: number;
-    percentage: number;
-  } | null;
-}
-
-export interface TrendDataPoint {
+export interface AnalyticsTrendPoint {
   period: string;
   total: number;
   positive: number;
@@ -37,70 +16,49 @@ export interface TrendDataPoint {
   negative: number;
 }
 
-export interface DistributionItem {
+export interface AnalyticsDistribution {
   key: string;
   label: string;
   count: number;
   percentage: number;
 }
 
-export interface ThemeAnalyticsItem {
+export interface AnalyticsTheme {
   id: string;
   name: string;
   count: number;
   percentage: number;
-}
-
-export interface AnalyticsInsight {
-  type: "POSITIVE" | "WARNING" | "INFO";
-  title: string;
-  description: string;
-  value?: number;
+  avgConfidence: number;
 }
 
 export interface AnalyticsDashboard {
-  range: {
-    startDate: string;
-    endDate: string;
-    groupBy: "day" | "week" | "month";
+  range: { startDate: string; endDate: string; days: number };
+  overview: {
+    totalFeedback: number;
+    newFeedback: number;
+    negativeFeedback: number;
+    positiveFeedback: number;
+    pendingReview: number;
+    aiClassified: number;
+    unresolved: number;
+    positive: { count: number; percentage: number };
+    neutral: { count: number; percentage: number };
+    negative: { count: number; percentage: number };
   };
-  overview: AnalyticsOverview;
-  feedbackTrend: TrendDataPoint[];
-  sentimentDistribution: DistributionItem[];
-  sourceDistribution: DistributionItem[];
-  categoryDistribution: DistributionItem[];
-  topThemes: ThemeAnalyticsItem[];
-  hourlyDistribution: {
-    hour: number;
-    label: string;
-    count: number;
-    percentage: number;
-  }[];
+  changes: {
+    total: number;
+    newFeedback: number;
+    negative: number;
+    positive: number;
+    pendingReview: number;
+    aiClassified: number;
+  };
+  feedbackTrend: AnalyticsTrendPoint[];
+  sourceDistribution: AnalyticsDistribution[];
+  categoryDistribution: AnalyticsDistribution[];
+  topThemes: AnalyticsTheme[];
+  themeTrend: Array<{ period: string; values: Record<string, number> }>;
+  statusDistribution: AnalyticsDistribution[];
   insights: AnalyticsInsight[];
-}
-
-export interface InboxFeedback {
-  id: string;
-  content: string;
-  source: FeedbackChannel;
-  sentiment: Sentiment;
-  status: FeedbackStatus;
-  customerName: string | null;
-  customerEmail: string | null;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: {
-    id: string;
-    name: string;
-    email: string;
-    avatarUrl: string | null;
-  } | null;
-}
-
-export interface InboxSummary {
-  totalFeedback: number;
-  positive: { count: number; percentage: number };
-  neutral: { count: number; percentage: number };
-  negative: { count: number; percentage: number };
-  unresolved: number;
+  workspaceName: string;
 }

@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '../../../../../lib/api/api-client';
 import type { ApiResponse } from '../../../../../lib/api/api-response';
-import type { InboxFeedback } from '../../../../../Features/analytics/analytics.types';
+import type { InboxFeedback } from '../../../../../Features/analytics/types/analytics.types';
 
 import shell from '../../analytics/analytics.module.css';
 import styles from '../inbox.module.css';
