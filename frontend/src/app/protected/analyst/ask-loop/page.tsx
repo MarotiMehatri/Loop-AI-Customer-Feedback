@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  FormEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { apiClient } from "../../../../lib/api/api-client";
 
@@ -16,11 +10,7 @@ import styles from "./ask-loop.module.css";
    TYPES
    ========================================================= */
 
-type ChartType =
-  | "bar"
-  | "line"
-  | "pie"
-  | "none";
+type ChartType = "bar" | "line" | "pie" | "none";
 
 type AskLoopChart = {
   type: ChartType;
@@ -40,10 +30,7 @@ type AskLoopCitation = {
 type AskLoopMessage = {
   id: string;
   conversationId: string;
-  role:
-    | "USER"
-    | "ASSISTANT"
-    | "SYSTEM";
+  role: "USER" | "ASSISTANT" | "SYSTEM";
   content: string;
   chart?: AskLoopChart;
   metadata?: Record<string, unknown>;
@@ -102,17 +89,13 @@ type ApiResponse<T> = {
 
 type AskResponse = ApiResponse<AskLoopAnswer>;
 
-type ConversationResponse =
-  ApiResponse<ConversationDetails>;
+type ConversationResponse = ApiResponse<ConversationDetails>;
 
-type ConversationListApiResponse =
-  ApiResponse<ConversationListResponse>;
+type ConversationListApiResponse = ApiResponse<ConversationListResponse>;
 
-type SavedQueriesResponse =
-  ApiResponse<SavedQuery[]>;
+type SavedQueriesResponse = ApiResponse<SavedQuery[]>;
 
-type SuggestionsResponse =
-  ApiResponse<string[]>;
+type SuggestionsResponse = ApiResponse<string[]>;
 
 /* =========================================================
    ICONS
@@ -335,9 +318,7 @@ function Icon({
    HELPERS
    ========================================================= */
 
-function getApiErrorMessage(
-  error: unknown,
-): string {
+function getApiErrorMessage(error: unknown): string {
   const candidate = error as {
     response?: {
       data?: {
@@ -356,9 +337,7 @@ function getApiErrorMessage(
   );
 }
 
-function formatTime(
-  value: string,
-): string {
+function formatTime(value: string): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
@@ -371,9 +350,7 @@ function formatTime(
   });
 }
 
-function formatDate(
-  value: string,
-): string {
+function formatDate(value: string): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
@@ -387,16 +364,10 @@ function formatDate(
   });
 }
 
-function toInputDate(
-  date: Date,
-): string {
+function toInputDate(date: Date): string {
   const year = date.getFullYear();
-  const month = String(
-    date.getMonth() + 1,
-  ).padStart(2, "0");
-  const day = String(
-    date.getDate(),
-  ).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
@@ -411,59 +382,35 @@ function getDefaultEndDate(): string {
   return toInputDate(new Date());
 }
 
-function formatSource(
-  source: string,
-): string {
+function formatSource(source: string): string {
   return source
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(/\b\w/g, (char) =>
-      char.toUpperCase(),
-    );
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function formatSentiment(
-  sentiment: string,
-): string {
+function formatSentiment(sentiment: string): string {
   return sentiment
     .replaceAll("_", " ")
     .toLowerCase()
-    .replace(/\b\w/g, (char) =>
-      char.toUpperCase(),
-    );
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function getChartTotal(
-  chart?: AskLoopChart,
-): number {
+function getChartTotal(chart?: AskLoopChart): number {
   if (!chart) return 0;
 
-  return chart.values.reduce(
-    (sum, value) => sum + value,
-    0,
-  );
+  return chart.values.reduce((sum, value) => sum + value, 0);
 }
 
 /* =========================================================
    DONUT CHART
    ========================================================= */
 
-function DonutChart({
-  chart,
-}: {
-  chart: AskLoopChart;
-}) {
+function DonutChart({ chart }: { chart: AskLoopChart }) {
   const total = getChartTotal(chart);
 
-  if (
-    total === 0 ||
-    chart.values.length === 0
-  ) {
-    return (
-      <div className={styles.emptyChart}>
-        No chart data returned.
-      </div>
-    );
+  if (total === 0 || chart.values.length === 0) {
+    return <div className={styles.emptyChart}>No chart data returned.</div>;
   }
 
   const colors = [
@@ -477,76 +424,52 @@ function DonutChart({
 
   let current = 0;
 
-  const gradientParts = chart.values.map(
-    (value, index) => {
-      const start = current;
-      const percentage =
-        (value / total) * 100;
+  const gradientParts = chart.values.map((value, index) => {
+    const start = current;
+    const percentage = (value / total) * 100;
 
-      current += percentage;
+    current += percentage;
 
-      return `${colors[index % colors.length]} ${start}% ${current}%`;
-    },
-  );
+    return `${colors[index % colors.length]} ${start}% ${current}%`;
+  });
 
   return (
     <div className={styles.chartArea}>
       <div
         className={styles.donut}
         style={{
-          background: `conic-gradient(${gradientParts.join(
-            ", ",
-          )})`,
+          background: `conic-gradient(${gradientParts.join(", ")})`,
         }}
       >
         <div className={styles.donutInner}>
-          <strong>
-            {total.toLocaleString()}
-          </strong>
+          <strong>{total.toLocaleString()}</strong>
           <span>Total</span>
         </div>
       </div>
 
       <div className={styles.chartLegend}>
-        {chart.labels.map(
-          (label, index) => {
-            const value =
-              chart.values[index] ?? 0;
+        {chart.labels.map((label, index) => {
+          const value = chart.values[index] ?? 0;
 
-            const percentage =
-              total > 0
-                ? Math.round(
-                    (value / total) * 100,
-                  )
-                : 0;
+          const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 
-            return (
-              <div
-                className={styles.legendRow}
-                key={`${label}-${index}`}
-              >
-                <span
-                  className={styles.legendDot}
-                  style={{
-                    background:
-                      colors[
-                        index %
-                          colors.length
-                      ],
-                  }}
-                />
+          return (
+            <div className={styles.legendRow} key={`${label}-${index}`}>
+              <span
+                className={styles.legendDot}
+                style={{
+                  background: colors[index % colors.length],
+                }}
+              />
 
-                <span className={styles.legendLabel}>
-                  {label}
-                </span>
+              <span className={styles.legendLabel}>{label}</span>
 
-                <strong>
-                  {percentage}% ({value})
-                </strong>
-              </div>
-            );
-          },
-        )}
+              <strong>
+                {percentage}% ({value})
+              </strong>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -556,58 +479,38 @@ function DonutChart({
    BAR / LINE CHART
    ========================================================= */
 
-function BarChart({
-  chart,
-}: {
-  chart: AskLoopChart;
-}) {
-  const max =
-    Math.max(...chart.values, 1);
+function BarChart({ chart }: { chart: AskLoopChart }) {
+  const max = Math.max(...chart.values, 1);
 
   return (
     <div className={styles.barChart}>
-      {chart.labels.map(
-        (label, index) => {
-          const value =
-            chart.values[index] ?? 0;
+      {chart.labels.map((label, index) => {
+        const value = chart.values[index] ?? 0;
 
-          const width =
-            (value / max) * 100;
+        const width = (value / max) * 100;
 
-          return (
-            <div
-              className={styles.barRow}
-              key={`${label}-${index}`}
-            >
-              <div className={styles.barLabel}>
-                {label}
-              </div>
+        return (
+          <div className={styles.barRow} key={`${label}-${index}`}>
+            <div className={styles.barLabel}>{label}</div>
 
-              <div className={styles.barTrack}>
-                <div
-                  className={styles.barFill}
-                  style={{
-                    width: `${width}%`,
-                  }}
-                />
-              </div>
-
-              <strong>
-                {value.toLocaleString()}
-              </strong>
+            <div className={styles.barTrack}>
+              <div
+                className={styles.barFill}
+                style={{
+                  width: `${width}%`,
+                }}
+              />
             </div>
-          );
-        },
-      )}
+
+            <strong>{value.toLocaleString()}</strong>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function AnswerChart({
-  chart,
-}: {
-  chart?: AskLoopChart;
-}) {
+function AnswerChart({ chart }: { chart?: AskLoopChart }) {
   if (!chart || chart.type === "none") {
     return null;
   }
@@ -622,10 +525,7 @@ function AnswerChart({
           className={styles.iconOnlyButton}
           title="Expand chart"
         >
-          <Icon
-            name="expand"
-            size={16}
-          />
+          <Icon name="expand" size={16} />
         </button>
       </div>
 
@@ -643,105 +543,79 @@ function AnswerChart({
    ========================================================= */
 
 export default function AskLoopPage() {
-  const [question, setQuestion] =
-    useState("");
+  const [question, setQuestion] = useState("");
 
-  const [conversationId, setConversationId] =
-    useState<string | undefined>();
+  const [conversationId, setConversationId] = useState<string | undefined>();
 
-  const [messages, setMessages] =
-    useState<AskLoopMessage[]>([]);
+  const [messages, setMessages] = useState<AskLoopMessage[]>([]);
 
-  const [conversations, setConversations] =
-    useState<ConversationSummary[]>([]);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
 
-  const [savedQueries, setSavedQueries] =
-    useState<SavedQuery[]>([]);
+  const [savedQueries, setSavedQueries] = useState<SavedQuery[]>([]);
 
-  const [suggestions, setSuggestions] =
-    useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  const [activeTab, setActiveTab] =
-    useState<
-      "chat" | "saved" | "suggestions"
-    >("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "saved" | "suggestions">(
+    "chat",
+  );
 
-  const [startDate, setStartDate] =
-    useState(getDefaultStartDate);
+  const [startDate, setStartDate] = useState(getDefaultStartDate);
 
-  const [endDate, setEndDate] =
-    useState(getDefaultEndDate);
+  const [endDate, setEndDate] = useState(getDefaultEndDate);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [initialLoading, setInitialLoading] =
-    useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const [feedbackState, setFeedbackState] =
-    useState<
-      Record<string, boolean | null>
-    >({});
+  const [feedbackState, setFeedbackState] = useState<
+    Record<string, boolean | null>
+  >({});
 
-  const [savingQuery, setSavingQuery] =
-    useState(false);
+  const [savingQuery, setSavingQuery] = useState(false);
 
   /* =======================================================
      LOAD CONVERSATIONS
      ======================================================= */
 
-  const loadConversations =
-    useCallback(async () => {
-      const response =
-        await apiClient.get<ConversationListApiResponse>(
-          "/ask-loop/conversations",
-          {
-            params: {
-              page: 1,
-              limit: 20,
-            },
-          },
-        );
+  const loadConversations = useCallback(async () => {
+    const response = await apiClient.get<ConversationListApiResponse>(
+      "/ask-loop/conversations",
+      {
+        params: {
+          page: 1,
+          limit: 20,
+        },
+      },
+    );
 
-      setConversations(
-        response.data.data.items,
-      );
-    }, []);
+    setConversations(response.data.data.items);
+  }, []);
 
   /* =======================================================
      LOAD SAVED QUERIES
      ======================================================= */
 
-  const loadSavedQueries =
-    useCallback(async () => {
-      const response =
-        await apiClient.get<SavedQueriesResponse>(
-          "/ask-loop/saved-queries",
-        );
+  const loadSavedQueries = useCallback(async () => {
+    const response = await apiClient.get<SavedQueriesResponse>(
+      "/ask-loop/saved-queries",
+    );
 
-      setSavedQueries(
-        response.data.data,
-      );
-    }, []);
+    setSavedQueries(response.data.data);
+  }, []);
 
   /* =======================================================
      LOAD SUGGESTIONS
      ======================================================= */
 
-  const loadSuggestions =
-    useCallback(async () => {
-      const response =
-        await apiClient.get<SuggestionsResponse>(
-          "/ask-loop/suggestions",
-        );
+  const loadSuggestions = useCallback(async () => {
+    const response = await apiClient.get<SuggestionsResponse>(
+      "/ask-loop/suggestions",
+    );
 
-      setSuggestions(
-        response.data.data,
-      );
-    }, []);
+    setSuggestions(response.data.data);
+  }, []);
 
   /* =======================================================
      INITIAL LOAD
@@ -761,11 +635,7 @@ export default function AskLoopPage() {
         ]);
       } catch (loadError) {
         if (mounted) {
-          setError(
-            getApiErrorMessage(
-              loadError,
-            ),
-          );
+          setError(getApiErrorMessage(loadError));
         }
       } finally {
         if (mounted) {
@@ -779,46 +649,30 @@ export default function AskLoopPage() {
     return () => {
       mounted = false;
     };
-  }, [
-    loadConversations,
-    loadSavedQueries,
-    loadSuggestions,
-  ]);
+  }, [loadConversations, loadSavedQueries, loadSuggestions]);
 
   /* =======================================================
      LOAD CONVERSATION
      ======================================================= */
 
-  async function openConversation(
-    id: string,
-  ) {
+  async function openConversation(id: string) {
     try {
       setError(null);
       setInitialLoading(true);
 
-      const response =
-        await apiClient.get<ConversationResponse>(
-          `/ask-loop/conversations/${id}`,
-        );
-
-      const conversation =
-        response.data.data;
-
-      setConversationId(
-        conversation.id,
+      const response = await apiClient.get<ConversationResponse>(
+        `/ask-loop/conversations/${id}`,
       );
 
-      setMessages(
-        conversation.messages,
-      );
+      const conversation = response.data.data;
+
+      setConversationId(conversation.id);
+
+      setMessages(conversation.messages);
 
       setActiveTab("chat");
     } catch (loadError) {
-      setError(
-        getApiErrorMessage(
-          loadError,
-        ),
-      );
+      setError(getApiErrorMessage(loadError));
     } finally {
       setInitialLoading(false);
     }
@@ -828,112 +682,75 @@ export default function AskLoopPage() {
      ASK LOOP
      ======================================================= */
 
-  async function handleSubmit(
-    event?: FormEvent,
-  ) {
+  async function handleSubmit(event?: FormEvent) {
     event?.preventDefault();
 
-    const cleanQuestion =
-      question.trim();
+    const cleanQuestion = question.trim();
 
-    if (
-      !cleanQuestion ||
-      loading
-    ) {
+    if (!cleanQuestion || loading) {
       return;
     }
 
     setError(null);
     setLoading(true);
 
-    const temporaryUserMessage: AskLoopMessage =
-      {
-        id: `temporary-user-${Date.now()}`,
-        conversationId:
-          conversationId ?? "temporary",
-        role: "USER",
-        content: cleanQuestion,
-        createdAt:
-          new Date().toISOString(),
-      };
+    const temporaryUserMessage: AskLoopMessage = {
+      id: `temporary-user-${Date.now()}`,
+      conversationId: conversationId ?? "temporary",
+      role: "USER",
+      content: cleanQuestion,
+      createdAt: new Date().toISOString(),
+    };
 
-    setMessages((current) => [
-      ...current,
-      temporaryUserMessage,
-    ]);
+    setMessages((current) => [...current, temporaryUserMessage]);
 
     setQuestion("");
 
     try {
-      const response =
-        await apiClient.post<AskResponse>(
-          "/ask-loop/ask",
-          {
-            question:
-              cleanQuestion,
+      const response = await apiClient.post<AskResponse>("/ask-loop/ask", {
+        question: cleanQuestion,
 
-            ...(conversationId
-              ? {
-                  conversationId,
-                }
-              : {}),
+        ...(conversationId
+          ? {
+              conversationId,
+            }
+          : {}),
 
-            ...(startDate
-              ? {
-                  startDate:
-                    new Date(
-                      `${startDate}T00:00:00`,
-                    ).toISOString(),
-                }
-              : {}),
+        ...(startDate
+          ? {
+              startDate: new Date(`${startDate}T00:00:00`).toISOString(),
+            }
+          : {}),
 
-            ...(endDate
-              ? {
-                  endDate:
-                    new Date(
-                      `${endDate}T23:59:59.999`,
-                    ).toISOString(),
-                }
-              : {}),
-          },
-        );
+        ...(endDate
+          ? {
+              endDate: new Date(`${endDate}T23:59:59.999`).toISOString(),
+            }
+          : {}),
+      });
 
-      const answer =
-        response.data.data;
+      const answer = response.data.data;
 
-      setConversationId(
-        answer.conversationId,
-      );
+      setConversationId(answer.conversationId);
 
-      const assistantMessage: AskLoopMessage =
-        {
-          id: answer.messageId,
-          conversationId:
-            answer.conversationId,
-          role: "ASSISTANT",
-          content: answer.answer,
-          chart: answer.chart,
-          metadata: {
-            summary:
-              answer.summary ??
-              null,
-            followUpQuestions:
-              answer.followUpQuestions,
-          },
-          createdAt:
-            answer.createdAt,
-        };
+      const assistantMessage: AskLoopMessage = {
+        id: answer.messageId,
+        conversationId: answer.conversationId,
+        role: "ASSISTANT",
+        content: answer.answer,
+        chart: answer.chart,
+        metadata: {
+          summary: answer.summary ?? null,
+          followUpQuestions: answer.followUpQuestions,
+        },
+        createdAt: answer.createdAt,
+      };
 
       setMessages((current) => [
-        ...current.filter(
-          (message) =>
-            message.id !==
-            temporaryUserMessage.id,
-        ),
+        ...current.filter((message) => message.id !== temporaryUserMessage.id),
         {
           ...temporaryUserMessage,
-          conversationId:
-            answer.conversationId,
+          conversationId: answer.conversationId,
         },
         assistantMessage,
       ]);
@@ -941,18 +758,10 @@ export default function AskLoopPage() {
       await loadConversations();
     } catch (askError) {
       setMessages((current) =>
-        current.filter(
-          (message) =>
-            message.id !==
-            temporaryUserMessage.id,
-        ),
+        current.filter((message) => message.id !== temporaryUserMessage.id),
       );
 
-      setError(
-        getApiErrorMessage(
-          askError,
-        ),
-      );
+      setError(getApiErrorMessage(askError));
     } finally {
       setLoading(false);
     }
@@ -962,9 +771,7 @@ export default function AskLoopPage() {
      QUICK QUESTION
      ======================================================= */
 
-  function askSuggestedQuestion(
-    value: string,
-  ) {
+  function askSuggestedQuestion(value: string) {
     setQuestion(value);
     setActiveTab("chat");
   }
@@ -985,33 +792,19 @@ export default function AskLoopPage() {
      DELETE CONVERSATION
      ======================================================= */
 
-  async function deleteConversation(
-    id: string,
-  ) {
+  async function deleteConversation(id: string) {
     try {
       setError(null);
 
-      await apiClient.delete(
-        `/ask-loop/conversations/${id}`,
-      );
+      await apiClient.delete(`/ask-loop/conversations/${id}`);
 
-      setConversations(
-        (current) =>
-          current.filter(
-            (item) =>
-              item.id !== id,
-          ),
-      );
+      setConversations((current) => current.filter((item) => item.id !== id));
 
       if (conversationId === id) {
         startNewConversation();
       }
     } catch (deleteError) {
-      setError(
-        getApiErrorMessage(
-          deleteError,
-        ),
-      );
+      setError(getApiErrorMessage(deleteError));
     }
   }
 
@@ -1020,8 +813,7 @@ export default function AskLoopPage() {
      ======================================================= */
 
   async function saveCurrentQuery() {
-    const cleanQuestion =
-      question.trim();
+    const cleanQuestion = question.trim();
 
     /*
      * If the input is empty, save the
@@ -1029,12 +821,8 @@ export default function AskLoopPage() {
      */
     const value =
       cleanQuestion ||
-      [...messages]
-        .reverse()
-        .find(
-          (message) =>
-            message.role === "USER",
-        )?.content ||
+      [...messages].reverse().find((message) => message.role === "USER")
+        ?.content ||
       "";
 
     if (!value || savingQuery) {
@@ -1045,28 +833,16 @@ export default function AskLoopPage() {
       setSavingQuery(true);
       setError(null);
 
-      const response =
-        await apiClient.post<
-          ApiResponse<SavedQuery>
-        >(
-          "/ask-loop/saved-queries",
-          {
-            question: value,
-          },
-        );
+      const response = await apiClient.post<ApiResponse<SavedQuery>>(
+        "/ask-loop/saved-queries",
+        {
+          question: value,
+        },
+      );
 
-      setSavedQueries(
-        (current) => [
-          response.data.data,
-          ...current,
-        ],
-      );
+      setSavedQueries((current) => [response.data.data, ...current]);
     } catch (saveError) {
-      setError(
-        getApiErrorMessage(
-          saveError,
-        ),
-      );
+      setError(getApiErrorMessage(saveError));
     } finally {
       setSavingQuery(false);
     }
@@ -1076,29 +852,15 @@ export default function AskLoopPage() {
      DELETE SAVED QUERY
      ======================================================= */
 
-  async function deleteSavedQuery(
-    id: string,
-  ) {
+  async function deleteSavedQuery(id: string) {
     try {
       setError(null);
 
-      await apiClient.delete(
-        `/ask-loop/saved-queries/${id}`,
-      );
+      await apiClient.delete(`/ask-loop/saved-queries/${id}`);
 
-      setSavedQueries(
-        (current) =>
-          current.filter(
-            (query) =>
-              query.id !== id,
-          ),
-      );
+      setSavedQueries((current) => current.filter((query) => query.id !== id));
     } catch (deleteError) {
-      setError(
-        getApiErrorMessage(
-          deleteError,
-        ),
-      );
+      setError(getApiErrorMessage(deleteError));
     }
   }
 
@@ -1106,37 +868,23 @@ export default function AskLoopPage() {
      MESSAGE FEEDBACK
      ======================================================= */
 
-  async function submitMessageFeedback(
-    messageId: string,
-    helpful: boolean,
-  ) {
+  async function submitMessageFeedback(messageId: string, helpful: boolean) {
     try {
-      setFeedbackState(
-        (current) => ({
-          ...current,
-          [messageId]: helpful,
-        }),
-      );
+      setFeedbackState((current) => ({
+        ...current,
+        [messageId]: helpful,
+      }));
 
-      await apiClient.post(
-        `/ask-loop/messages/${messageId}/feedback`,
-        {
-          helpful,
-        },
-      );
+      await apiClient.post(`/ask-loop/messages/${messageId}/feedback`, {
+        helpful,
+      });
     } catch (feedbackError) {
-      setFeedbackState(
-        (current) => ({
-          ...current,
-          [messageId]: null,
-        }),
-      );
+      setFeedbackState((current) => ({
+        ...current,
+        [messageId]: null,
+      }));
 
-      setError(
-        getApiErrorMessage(
-          feedbackError,
-        ),
-      );
+      setError(getApiErrorMessage(feedbackError));
     }
   }
 
@@ -1144,29 +892,19 @@ export default function AskLoopPage() {
      LATEST ASSISTANT MESSAGE
      ======================================================= */
 
-  const latestAssistant =
-    useMemo(
-      () =>
-        [...messages]
-          .reverse()
-          .find(
-            (message) =>
-              message.role ===
-              "ASSISTANT",
-          ),
-      [messages],
-    );
+  const latestAssistant = useMemo(
+    () =>
+      [...messages].reverse().find((message) => message.role === "ASSISTANT"),
+    [messages],
+  );
 
   /* =======================================================
      DATA CONTEXT
      ======================================================= */
 
-  const contextTotal =
-    latestAssistant?.chart
-      ? getChartTotal(
-          latestAssistant.chart,
-        )
-      : null;
+  const contextTotal = latestAssistant?.chart
+    ? getChartTotal(latestAssistant.chart)
+    : null;
 
   /* =======================================================
      RENDER
@@ -1185,64 +923,34 @@ export default function AskLoopPage() {
             className={styles.mobileMenu}
             aria-label="Open menu"
           >
-            <Icon
-              name="menu"
-              size={23}
-            />
+            <Icon name="menu" size={23} />
           </button>
 
           <div>
-            <div
-              className={
-                styles.titleWithIcon
-              }
-            >
+            <div className={styles.titleWithIcon}>
               <h1>Ask LOOP AI</h1>
 
-              <span
-                className={
-                  styles.titleSparkle
-                }
-              >
-                <Icon
-                  name="sparkles"
-                  size={20}
-                />
+              <span className={styles.titleSparkle}>
+                <Icon name="sparkles" size={20} />
               </span>
             </div>
 
             <p>
-              Ask questions about your
-              customer feedback and get
-              AI-powered insights
+              Ask questions about your customer feedback and get AI-powered
+              insights
             </p>
           </div>
         </div>
 
-        <div
-          className={
-            styles.headerActions
-          }
-        >
-          <div
-            className={
-              styles.dateRange
-            }
-          >
-            <Icon
-              name="calendar"
-              size={16}
-            />
+        <div className={styles.headerActions}>
+          <div className={styles.dateRange}>
+            <Icon name="calendar" size={16} />
 
             <input
               type="date"
               value={startDate}
               max={endDate}
-              onChange={(event) =>
-                setStartDate(
-                  event.target.value,
-                )
-              }
+              onChange={(event) => setStartDate(event.target.value)}
             />
 
             <span>–</span>
@@ -1251,75 +959,38 @@ export default function AskLoopPage() {
               type="date"
               value={endDate}
               min={startDate}
-              onChange={(event) =>
-                setEndDate(
-                  event.target.value,
-                )
-              }
+              onChange={(event) => setEndDate(event.target.value)}
             />
           </div>
 
           <button
             type="button"
-            className={
-              styles.headerIconButton
-            }
+            className={styles.headerIconButton}
             aria-label="Notifications"
           >
-            <Icon
-              name="bell"
-              size={20}
-            />
+            <Icon name="bell" size={20} />
 
-            <span
-              className={
-                styles.notificationBadge
-              }
-            >
-              3
-            </span>
+            <span className={styles.notificationBadge}>3</span>
           </button>
 
           <button
             type="button"
-            className={
-              styles.headerIconButton
-            }
+            className={styles.headerIconButton}
             aria-label="Help"
           >
-            <Icon
-              name="help"
-              size={20}
-            />
+            <Icon name="help" size={20} />
           </button>
 
-          <div
-            className={
-              styles.userHeader
-            }
-          >
-            <div
-              className={
-                styles.avatar
-              }
-            >
-              A
-            </div>
+          <div className={styles.userHeader}>
+            <div className={styles.avatar}>A</div>
 
             <div>
-              <strong>
-                Analyst
-              </strong>
+              <strong>Analyst</strong>
 
-              <span>
-                Analyst
-              </span>
+              <span>Analyst</span>
             </div>
 
-            <Icon
-              name="chevronDown"
-              size={15}
-            />
+            <Icon name="chevronDown" size={15} />
           </div>
         </div>
       </header>
@@ -1329,18 +1000,10 @@ export default function AskLoopPage() {
           ================================================= */}
 
       {error && (
-        <div
-          className={styles.errorBanner}
-          role="alert"
-        >
+        <div className={styles.errorBanner} role="alert">
           <span>{error}</span>
 
-          <button
-            type="button"
-            onClick={() =>
-              setError(null)
-            }
-          >
+          <button type="button" onClick={() => setError(null)}>
             ×
           </button>
         </div>
@@ -1355,44 +1018,20 @@ export default function AskLoopPage() {
             LEFT / MAIN
             =============================================== */}
 
-        <section
-          className={
-            styles.mainColumn
-          }
-        >
+        <section className={styles.mainColumn}>
           {/* =============================================
               ASK BOX
               ============================================= */}
 
-          <section
-            className={
-              styles.askCard
-            }
-          >
-            <div
-              className={
-                styles.askCardHeader
-              }
-            >
-              <h2>
-                Ask a question about
-                your feedback
-              </h2>
+          <section className={styles.askCard}>
+            <div className={styles.askCardHeader}>
+              <h2>Ask a question about your feedback</h2>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className={
-                styles.questionForm
-              }
-            >
+            <form onSubmit={handleSubmit} className={styles.questionForm}>
               <input
                 value={question}
-                onChange={(event) =>
-                  setQuestion(
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => setQuestion(event.target.value)}
                 placeholder="Ask anything about your customer feedback..."
                 maxLength={2000}
                 disabled={loading}
@@ -1400,63 +1039,31 @@ export default function AskLoopPage() {
 
               <button
                 type="submit"
-                disabled={
-                  loading ||
-                  !question.trim()
-                }
-                className={
-                  styles.sendButton
-                }
+                disabled={loading || !question.trim()}
+                className={styles.sendButton}
                 aria-label="Ask LOOP AI"
               >
                 {loading ? (
-                  <span
-                    className={
-                      styles.spinner
-                    }
-                  />
+                  <span className={styles.spinner} />
                 ) : (
-                  <Icon
-                    name="send"
-                    size={20}
-                  />
+                  <Icon name="send" size={20} />
                 )}
               </button>
             </form>
 
-            <div
-              className={
-                styles.examples
-              }
-            >
-              <span>
-                Try these examples:
-              </span>
+            <div className={styles.examples}>
+              <span>Try these examples:</span>
 
-              <div
-                className={
-                  styles.exampleList
-                }
-              >
-                {suggestions
-                  .slice(0, 4)
-                  .map(
-                    (suggestion) => (
-                      <button
-                        key={
-                          suggestion
-                        }
-                        type="button"
-                        onClick={() =>
-                          askSuggestedQuestion(
-                            suggestion,
-                          )
-                        }
-                      >
-                        {suggestion}
-                      </button>
-                    ),
-                  )}
+              <div className={styles.exampleList}>
+                {suggestions.slice(0, 4).map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => askSuggestedQuestion(suggestion)}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
               </div>
             </div>
           </section>
@@ -1465,52 +1072,27 @@ export default function AskLoopPage() {
               TABS
               ============================================= */}
 
-          <div
-            className={
-              styles.tabs
-            }
-          >
+          <div className={styles.tabs}>
             <button
               type="button"
-              className={
-                activeTab === "chat"
-                  ? styles.activeTab
-                  : ""
-              }
-              onClick={() =>
-                setActiveTab("chat")
-              }
+              className={activeTab === "chat" ? styles.activeTab : ""}
+              onClick={() => setActiveTab("chat")}
             >
               Chat
             </button>
 
             <button
               type="button"
-              className={
-                activeTab === "saved"
-                  ? styles.activeTab
-                  : ""
-              }
-              onClick={() =>
-                setActiveTab("saved")
-              }
+              className={activeTab === "saved" ? styles.activeTab : ""}
+              onClick={() => setActiveTab("saved")}
             >
               Saved Queries
             </button>
 
             <button
               type="button"
-              className={
-                activeTab ===
-                "suggestions"
-                  ? styles.activeTab
-                  : ""
-              }
-              onClick={() =>
-                setActiveTab(
-                  "suggestions",
-                )
-              }
+              className={activeTab === "suggestions" ? styles.activeTab : ""}
+              onClick={() => setActiveTab("suggestions")}
             >
               Smart Suggestions
             </button>
@@ -1521,127 +1103,56 @@ export default function AskLoopPage() {
               ============================================= */}
 
           {activeTab === "saved" && (
-            <section
-              className={
-                styles.tabPanel
-              }
-            >
-              <div
-                className={
-                  styles.tabPanelHeader
-                }
-              >
+            <section className={styles.tabPanel}>
+              <div className={styles.tabPanelHeader}>
                 <div>
-                  <h3>
-                    Saved Queries
-                  </h3>
+                  <h3>Saved Queries</h3>
 
-                  <p>
-                    Reuse questions
-                    you have saved.
-                  </p>
+                  <p>Reuse questions you have saved.</p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={
-                    startNewConversation
-                  }
-                  className={
-                    styles.newChatButton
-                  }
+                  onClick={startNewConversation}
+                  className={styles.newChatButton}
                 >
-                  <Icon
-                    name="plus"
-                    size={15}
-                  />
+                  <Icon name="plus" size={15} />
                   New Chat
                 </button>
               </div>
 
-              {savedQueries.length ===
-              0 ? (
-                <div
-                  className={
-                    styles.emptyState
-                  }
-                >
-                  <Icon
-                    name="bookmark"
-                    size={30}
-                  />
+              {savedQueries.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <Icon name="bookmark" size={30} />
 
-                  <strong>
-                    No saved queries
-                  </strong>
+                  <strong>No saved queries</strong>
 
-                  <span>
-                    Save useful
-                    questions from
-                    your chat.
-                  </span>
+                  <span>Save useful questions from your chat.</span>
                 </div>
               ) : (
-                <div
-                  className={
-                    styles.savedQueryList
-                  }
-                >
-                  {savedQueries.map(
-                    (saved) => (
-                      <div
-                        className={
-                          styles.savedQuery
-                        }
-                        key={
-                          saved.id
-                        }
+                <div className={styles.savedQueryList}>
+                  {savedQueries.map((saved) => (
+                    <div className={styles.savedQuery} key={saved.id}>
+                      <button
+                        type="button"
+                        onClick={() => askSuggestedQuestion(saved.question)}
+                        className={styles.savedQueryText}
                       >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            askSuggestedQuestion(
-                              saved.question,
-                            )
-                          }
-                          className={
-                            styles.savedQueryText
-                          }
-                        >
-                          <strong>
-                            {saved.label ||
-                              saved.question}
-                          </strong>
+                        <strong>{saved.label || saved.question}</strong>
 
-                          {saved.label && (
-                            <span>
-                              {
-                                saved.question
-                              }
-                            </span>
-                          )}
-                        </button>
+                        {saved.label && <span>{saved.question}</span>}
+                      </button>
 
-                        <button
-                          type="button"
-                          className={
-                            styles.deleteButton
-                          }
-                          onClick={() =>
-                            void deleteSavedQuery(
-                              saved.id,
-                            )
-                          }
-                          aria-label="Delete saved query"
-                        >
-                          <Icon
-                            name="trash"
-                            size={15}
-                          />
-                        </button>
-                      </div>
-                    ),
-                  )}
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => void deleteSavedQuery(saved.id)}
+                        aria-label="Delete saved query"
+                      >
+                        <Icon name="trash" size={15} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </section>
@@ -1651,65 +1162,30 @@ export default function AskLoopPage() {
               SMART SUGGESTIONS TAB
               ============================================= */}
 
-          {activeTab ===
-            "suggestions" && (
-            <section
-              className={
-                styles.tabPanel
-              }
-            >
-              <div
-                className={
-                  styles.tabPanelHeader
-                }
-              >
+          {activeTab === "suggestions" && (
+            <section className={styles.tabPanel}>
+              <div className={styles.tabPanelHeader}>
                 <div>
-                  <h3>
-                    Smart Suggestions
-                  </h3>
+                  <h3>Smart Suggestions</h3>
 
-                  <p>
-                    Questions designed
-                    for your feedback
-                    workspace.
-                  </p>
+                  <p>Questions designed for your feedback workspace.</p>
                 </div>
               </div>
 
-              <div
-                className={
-                  styles.suggestionGrid
-                }
-              >
-                {suggestions.map(
-                  (suggestion) => (
-                    <button
-                      type="button"
-                      key={
-                        suggestion
-                      }
-                      onClick={() =>
-                        askSuggestedQuestion(
-                          suggestion,
-                        )
-                      }
-                    >
-                      <Icon
-                        name="lightbulb"
-                        size={18}
-                      />
+              <div className={styles.suggestionGrid}>
+                {suggestions.map((suggestion) => (
+                  <button
+                    type="button"
+                    key={suggestion}
+                    onClick={() => askSuggestedQuestion(suggestion)}
+                  >
+                    <Icon name="lightbulb" size={18} />
 
-                      <span>
-                        {suggestion}
-                      </span>
+                    <span>{suggestion}</span>
 
-                      <Icon
-                        name="chevronRight"
-                        size={15}
-                      />
-                    </button>
-                  ),
-                )}
+                    <Icon name="chevronRight" size={15} />
+                  </button>
+                ))}
               </div>
             </section>
           )}
@@ -1720,441 +1196,214 @@ export default function AskLoopPage() {
 
           {activeTab === "chat" && (
             <>
-              {initialLoading &&
-              messages.length === 0 ? (
-                <div
-                  className={
-                    styles.loadingState
-                  }
-                >
-                  <span
-                    className={
-                      styles.spinnerLarge
-                    }
-                  />
-
+              {initialLoading && messages.length === 0 ? (
+                <div className={styles.loadingState}>
+                  <span className={styles.spinnerLarge} />
                   Loading Ask LOOP AI...
                 </div>
               ) : (
                 <>
-                  {messages.length ===
-                  0 ? (
-                    <section
-                      className={
-                        styles.welcomeCard
-                      }
-                    >
-                      <div
-                        className={
-                          styles.welcomeIcon
-                        }
-                      >
-                        <Icon
-                          name="sparkles"
-                          size={28}
-                        />
+                  {messages.length === 0 ? (
+                    <section className={styles.welcomeCard}>
+                      <div className={styles.welcomeIcon}>
+                        <Icon name="sparkles" size={28} />
                       </div>
 
-                      <h2>
-                        What would you
-                        like to know?
-                      </h2>
+                      <h2>What would you like to know?</h2>
 
                       <p>
-                        Ask LOOP AI can
-                        analyze the
-                        feedback stored
-                        in your current
-                        workspace.
+                        Ask LOOP AI can analyze the feedback stored in your
+                        current workspace.
                       </p>
 
-                      <div
-                        className={
-                          styles.welcomeSuggestions
-                        }
-                      >
-                        {suggestions
-                          .slice(
-                            0,
-                            6,
-                          )
-                          .map(
-                            (
-                              suggestion,
-                            ) => (
-                              <button
-                                type="button"
-                                key={
-                                  suggestion
-                                }
-                                onClick={() =>
-                                  askSuggestedQuestion(
-                                    suggestion,
-                                  )
-                                }
-                              >
-                                {
-                                  suggestion
-                                }
-                              </button>
-                            ),
-                          )}
+                      <div className={styles.welcomeSuggestions}>
+                        {suggestions.slice(0, 6).map((suggestion) => (
+                          <button
+                            type="button"
+                            key={suggestion}
+                            onClick={() => askSuggestedQuestion(suggestion)}
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
                       </div>
                     </section>
                   ) : (
-                    <div
-                      className={
-                        styles.chatArea
-                      }
-                    >
-                      {messages.map(
-                        (message) => {
-                          const isUser =
-                            message.role ===
-                            "USER";
+                    <div className={styles.chatArea}>
+                      {messages.map((message) => {
+                        const isUser = message.role === "USER";
 
-                          const isAssistant =
-                            message.role ===
-                            "ASSISTANT";
+                        const isAssistant = message.role === "ASSISTANT";
 
-                          return (
-                            <article
-                              className={
-                                isUser
-                                  ? styles.userMessage
-                                  : styles.assistantMessage
-                              }
-                              key={
-                                message.id
-                              }
-                            >
-                              {isUser ? (
-                                <div
-                                  className={
-                                    styles.userBubble
-                                  }
-                                >
-                                  <div
-                                    className={
-                                      styles.userMessageAvatar
-                                    }
-                                  >
-                                    A
+                        return (
+                          <article
+                            className={
+                              isUser
+                                ? styles.userMessage
+                                : styles.assistantMessage
+                            }
+                            key={message.id}
+                          >
+                            {isUser ? (
+                              <div className={styles.userBubble}>
+                                <div className={styles.userMessageAvatar}>
+                                  A
+                                </div>
+
+                                <div className={styles.userMessageBody}>
+                                  <p>{message.content}</p>
+
+                                  <span>
+                                    {formatDate(message.createdAt)} ·{" "}
+                                    {formatTime(message.createdAt)}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : isAssistant ? (
+                              <div className={styles.answerCard}>
+                                <div className={styles.answerHeader}>
+                                  <div className={styles.aiAvatar}>
+                                    <Icon name="sparkles" size={18} />
                                   </div>
 
-                                  <div
-                                    className={
-                                      styles.userMessageBody
-                                    }
-                                  >
-                                    <p>
-                                      {
-                                        message.content
-                                      }
-                                    </p>
+                                  <div>
+                                    <strong>LOOP AI</strong>
 
-                                    <span>
-                                      {formatDate(
-                                        message.createdAt,
-                                      )}{" "}
-                                      ·{" "}
-                                      {formatTime(
-                                        message.createdAt,
-                                      )}
-                                    </span>
+                                    <span>AI-powered feedback analysis</span>
                                   </div>
                                 </div>
-                              ) : isAssistant ? (
-                                <div
-                                  className={
-                                    styles.answerCard
-                                  }
-                                >
-                                  <div
-                                    className={
-                                      styles.answerHeader
-                                    }
-                                  >
-                                    <div
-                                      className={
-                                        styles.aiAvatar
-                                      }
-                                    >
-                                      <Icon
-                                        name="sparkles"
-                                        size={18}
-                                      />
-                                    </div>
 
-                                    <div>
-                                      <strong>
-                                        LOOP AI
-                                      </strong>
+                                <div className={styles.answerContent}>
+                                  <p>{message.content}</p>
 
-                                      <span>
-                                        AI-powered feedback analysis
-                                      </span>
-                                    </div>
-                                  </div>
+                                  {message.metadata?.summary &&
+                                    typeof message.metadata.summary ===
+                                      "string" && (
+                                      <div className={styles.summaryBox}>
+                                        <strong>Summary</strong>
 
-                                  <div
-                                    className={
-                                      styles.answerContent
-                                    }
-                                  >
-                                    <p>
-                                      {
-                                        message.content
-                                      }
-                                    </p>
+                                        <span>{message.metadata.summary}</span>
+                                      </div>
+                                    )}
 
-                                    {message.metadata
-                                      ?.summary &&
-                                      typeof message
-                                        .metadata
-                                        .summary ===
-                                        "string" && (
-                                        <div
-                                          className={
-                                            styles.summaryBox
-                                          }
-                                        >
-                                          <strong>
-                                            Summary
-                                          </strong>
+                                  <AnswerChart chart={message.chart} />
 
-                                          <span>
-                                            {
-                                              message
-                                                .metadata
-                                                .summary
-                                          }
-                                          </span>
-                                        </div>
-                                      )}
+                                  {message.chart &&
+                                    message.chart.labels.length > 0 && (
+                                      <div className={styles.chartDataTable}>
+                                        {message.chart.labels.map(
+                                          (label, index) => (
+                                            <div key={`${message.id}-${label}`}>
+                                              <span>{label}</span>
 
-                                    <AnswerChart
-                                      chart={
-                                        message.chart
-                                      }
-                                    />
+                                              <strong>
+                                                {message.chart?.values[index]}
+                                              </strong>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    )}
 
-                                    {message.chart &&
-                                      message.chart
-                                        .labels
-                                        .length >
-                                        0 && (
-                                        <div
-                                          className={
-                                            styles.chartDataTable
-                                          }
-                                        >
-                                          {message.chart.labels.map(
-                                            (
-                                              label,
-                                              index,
-                                            ) => (
-                                              <div
-                                                key={`${message.id}-${label}`}
+                                  {message.metadata?.followUpQuestions &&
+                                    Array.isArray(
+                                      message.metadata.followUpQuestions,
+                                    ) && (
+                                      <div className={styles.followUps}>
+                                        <strong>Continue the analysis</strong>
+
+                                        <div>
+                                          {message.metadata.followUpQuestions
+                                            .filter(
+                                              (item): item is string =>
+                                                typeof item === "string",
+                                            )
+                                            .map((followUp) => (
+                                              <button
+                                                type="button"
+                                                key={followUp}
+                                                onClick={() =>
+                                                  askSuggestedQuestion(followUp)
+                                                }
                                               >
-                                                <span>
-                                                  {
-                                                    label
-                                                  }
-                                                </span>
-
-                                                <strong>
-                                                  {
-                                                    message
-                                                      .chart
-                                                      ?.values[
-                                                      index
-                                                    ]
-                                                  }
-                                                </strong>
-                                              </div>
-                                            ),
-                                          )}
+                                                {followUp}
+                                              </button>
+                                            ))}
                                         </div>
-                                      )}
+                                      </div>
+                                    )}
 
-                                    {message
-                                      .metadata
-                                      ?.followUpQuestions &&
-                                      Array.isArray(
-                                        message
-                                          .metadata
-                                          .followUpQuestions,
-                                      ) && (
-                                        <div
-                                          className={
-                                            styles.followUps
-                                          }
-                                        >
-                                          <strong>
-                                            Continue
-                                            the
-                                            analysis
-                                          </strong>
-
-                                          <div>
-                                            {message
-                                              .metadata
-                                              .followUpQuestions
-                                              .filter(
-                                                (
-                                                  item,
-                                                ): item is string =>
-                                                  typeof item ===
-                                                  "string",
-                                              )
-                                              .map(
-                                                (
-                                                  followUp,
-                                                ) => (
-                                                  <button
-                                                    type="button"
-                                                    key={
-                                                      followUp
-                                                    }
-                                                    onClick={() =>
-                                                      askSuggestedQuestion(
-                                                        followUp,
-                                                      )
-                                                    }
-                                                  >
-                                                    {
-                                                      followUp
-                                                    }
-                                                  </button>
-                                                ),
-                                              )}
-                                          </div>
-                                        </div>
-                                      )}
-
-                                    {/* Citations */}
-                                    {message
-                                      .metadata &&
-                                      Array.isArray(
-                                        (
-                                          message.metadata as {
-                                            citations?: unknown;
-                                          }
-                                        ).citations,
-                                      ) && (
-                                        <div
-                                          className={
-                                            styles.citations
-                                          }
-                                        >
-                                          <strong>
-                                            Sources
-                                          </strong>
-                                        </div>
-                                      )}
-                                  </div>
-
-                                  <div
-                                    className={
-                                      styles.answerFooter
-                                    }
-                                  >
-                                    <div
-                                      className={
-                                        styles.answerActions
-                                      }
-                                    >
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          void submitMessageFeedback(
-                                            message.id,
-                                            true,
-                                          )
+                                  {/* Citations */}
+                                  {message.metadata &&
+                                    Array.isArray(
+                                      (
+                                        message.metadata as {
+                                          citations?: unknown;
                                         }
-                                        className={
-                                          feedbackState[
-                                            message.id
-                                          ] ===
-                                          true
-                                            ? styles.feedbackActive
-                                            : ""
-                                        }
-                                        title="Helpful"
-                                      >
-                                        <Icon
-                                          name="thumbUp"
-                                          size={16}
-                                        />
-                                      </button>
-
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          void submitMessageFeedback(
-                                            message.id,
-                                            false,
-                                          )
-                                        }
-                                        className={
-                                          feedbackState[
-                                            message.id
-                                          ] ===
-                                          false
-                                            ? styles.feedbackActive
-                                            : ""
-                                        }
-                                        title="Not helpful"
-                                      >
-                                        <Icon
-                                          name="thumbDown"
-                                          size={16}
-                                        />
-                                      </button>
-                                    </div>
-
-                                    <span>
-                                      {formatTime(
-                                        message.createdAt,
-                                      )}
-                                    </span>
-                                  </div>
+                                      ).citations,
+                                    ) && (
+                                      <div className={styles.citations}>
+                                        <strong>Sources</strong>
+                                      </div>
+                                    )}
                                 </div>
-                              ) : null}
-                            </article>
-                          );
-                        },
-                      )}
+
+                                <div className={styles.answerFooter}>
+                                  <div className={styles.answerActions}>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        void submitMessageFeedback(
+                                          message.id,
+                                          true,
+                                        )
+                                      }
+                                      className={
+                                        feedbackState[message.id] === true
+                                          ? styles.feedbackActive
+                                          : ""
+                                      }
+                                      title="Helpful"
+                                    >
+                                      <Icon name="thumbUp" size={16} />
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        void submitMessageFeedback(
+                                          message.id,
+                                          false,
+                                        )
+                                      }
+                                      className={
+                                        feedbackState[message.id] === false
+                                          ? styles.feedbackActive
+                                          : ""
+                                      }
+                                      title="Not helpful"
+                                    >
+                                      <Icon name="thumbDown" size={16} />
+                                    </button>
+                                  </div>
+
+                                  <span>{formatTime(message.createdAt)}</span>
+                                </div>
+                              </div>
+                            ) : null}
+                          </article>
+                        );
+                      })}
 
                       {loading && (
-                        <div
-                          className={
-                            styles.thinking
-                          }
-                        >
-                          <div
-                            className={
-                              styles.aiAvatar
-                            }
-                          >
-                            <Icon
-                              name="sparkles"
-                              size={18}
-                            />
+                        <div className={styles.thinking}>
+                          <div className={styles.aiAvatar}>
+                            <Icon name="sparkles" size={18} />
                           </div>
 
-                          <span>
-                            LOOP AI is
-                            analyzing your
-                            feedback...
-                          </span>
+                          <span>LOOP AI is analyzing your feedback...</span>
 
-                          <span
-                            className={
-                              styles.thinkingDots
-                            }
-                          >
+                          <span className={styles.thinkingDots}>
                             <i />
                             <i />
                             <i />
@@ -2170,26 +1419,11 @@ export default function AskLoopPage() {
                   FOLLOW-UP INPUT
                   ========================================= */}
 
-              <section
-                className={
-                  styles.followUpCard
-                }
-              >
-                <form
-                  onSubmit={
-                    handleSubmit
-                  }
-                  className={
-                    styles.followUpForm
-                  }
-                >
+              <section className={styles.followUpCard}>
+                <form onSubmit={handleSubmit} className={styles.followUpForm}>
                   <input
                     value={question}
-                    onChange={(event) =>
-                      setQuestion(
-                        event.target.value,
-                      )
-                    }
+                    onChange={(event) => setQuestion(event.target.value)}
                     placeholder="Ask a follow-up question..."
                     disabled={loading}
                     maxLength={2000}
@@ -2197,35 +1431,19 @@ export default function AskLoopPage() {
 
                   <button
                     type="submit"
-                    disabled={
-                      loading ||
-                      !question.trim()
-                    }
+                    disabled={loading || !question.trim()}
                     aria-label="Send follow-up"
                   >
                     {loading ? (
-                      <span
-                        className={
-                          styles.spinner
-                        }
-                      />
+                      <span className={styles.spinner} />
                     ) : (
-                      <Icon
-                        name="send"
-                        size={17}
-                      />
+                      <Icon name="send" size={17} />
                     )}
                   </button>
                 </form>
 
-                <p
-                  className={
-                    styles.disclaimer
-                  }
-                >
-                  LOOP AI can make
-                  mistakes. Always verify
-                  important insights.
+                <p className={styles.disclaimer}>
+                  LOOP AI can make mistakes. Always verify important insights.
                 </p>
               </section>
             </>
@@ -2236,129 +1454,61 @@ export default function AskLoopPage() {
             RIGHT SIDEBAR
             =============================================== */}
 
-        <aside
-          className={
-            styles.rightColumn
-          }
-        >
+        <aside className={styles.rightColumn}>
           {/* =============================================
               CONVERSATION HISTORY
               ============================================= */}
 
-          <section
-            className={
-              styles.sideCard
-            }
-          >
-            <div
-              className={
-                styles.sideCardHeader
-              }
-            >
-              <h3>
-                Conversation History
-              </h3>
+          <section className={styles.sideCard}>
+            <div className={styles.sideCardHeader}>
+              <h3>Conversation History</h3>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveTab("chat")
-                }
-              >
+              <button type="button" onClick={() => setActiveTab("chat")}>
                 View all
               </button>
             </div>
 
             <button
               type="button"
-              className={
-                styles.newConversation
-              }
-              onClick={
-                startNewConversation
-              }
+              className={styles.newConversation}
+              onClick={startNewConversation}
             >
-              <Icon
-                name="plus"
-                size={15}
-              />
-
+              <Icon name="plus" size={15} />
               New conversation
             </button>
 
-            <div
-              className={
-                styles.conversationList
-              }
-            >
-              {conversations.length ===
-              0 ? (
-                <div
-                  className={
-                    styles.sideEmpty
-                  }
-                >
-                  No conversations yet.
-                </div>
+            <div className={styles.conversationList}>
+              {conversations.length === 0 ? (
+                <div className={styles.sideEmpty}>No conversations yet.</div>
               ) : (
-                conversations
-                  .slice(0, 6)
-                  .map(
-                    (
-                      conversation,
-                    ) => (
-                      <div
-                        className={
-                          conversation.id ===
-                          conversationId
-                            ? styles.conversationItemActive
-                            : styles.conversationItem
-                        }
-                        key={
-                          conversation.id
-                        }
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            void openConversation(
-                              conversation.id,
-                            )
-                          }
-                        >
-                          <strong>
-                            {
-                              conversation.title
-                            }
-                          </strong>
+                conversations.slice(0, 6).map((conversation) => (
+                  <div
+                    className={
+                      conversation.id === conversationId
+                        ? styles.conversationItemActive
+                        : styles.conversationItem
+                    }
+                    key={conversation.id}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => void openConversation(conversation.id)}
+                    >
+                      <strong>{conversation.title}</strong>
 
-                          <span>
-                            {formatDate(
-                              conversation.updatedAt,
-                            )}
-                          </span>
-                        </button>
+                      <span>{formatDate(conversation.updatedAt)}</span>
+                    </button>
 
-                        <button
-                          type="button"
-                          className={
-                            styles.conversationDelete
-                          }
-                          onClick={() =>
-                            void deleteConversation(
-                              conversation.id,
-                            )
-                          }
-                          title="Delete conversation"
-                        >
-                          <Icon
-                            name="trash"
-                            size={13}
-                          />
-                        </button>
-                      </div>
-                    ),
-                  )
+                    <button
+                      type="button"
+                      className={styles.conversationDelete}
+                      onClick={() => void deleteConversation(conversation.id)}
+                      title="Delete conversation"
+                    >
+                      <Icon name="trash" size={13} />
+                    </button>
+                  </div>
+                ))
               )}
             </div>
           </section>
@@ -2367,106 +1517,47 @@ export default function AskLoopPage() {
               QUICK INSIGHTS
               ============================================= */}
 
-          <section
-            className={
-              styles.sideCard
-            }
-          >
-            <div
-              className={
-                styles.sideCardHeader
-              }
-            >
-              <h3>
-                Quick Insights
-              </h3>
+          <section className={styles.sideCard}>
+            <div className={styles.sideCardHeader}>
+              <h3>Quick Insights</h3>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveTab(
-                    "suggestions",
-                  )
-                }
-              >
+              <button type="button" onClick={() => setActiveTab("suggestions")}>
                 View all
               </button>
             </div>
 
             {latestAssistant ? (
-              <div
-                className={
-                  styles.insightList
-                }
-              >
-                <div
-                  className={
-                    styles.insightItem
-                  }
-                >
-                  <div
-                    className={
-                      styles.insightIcon
-                    }
-                  >
-                    <Icon
-                      name="lightbulb"
-                      size={17}
-                    />
+              <div className={styles.insightList}>
+                <div className={styles.insightItem}>
+                  <div className={styles.insightIcon}>
+                    <Icon name="lightbulb" size={17} />
                   </div>
 
                   <div>
-                    <strong>
-                      Latest analysis
-                    </strong>
+                    <strong>Latest analysis</strong>
 
                     <p>
-                      {latestAssistant
-                        .metadata
-                        ?.summary &&
-                      typeof latestAssistant
-                        .metadata
-                        .summary ===
-                        "string"
-                        ? latestAssistant
-                            .metadata
-                            .summary
+                      {latestAssistant.metadata?.summary &&
+                      typeof latestAssistant.metadata.summary === "string"
+                        ? latestAssistant.metadata.summary
                         : latestAssistant.content}
                     </p>
 
-                    <span>
-                      {formatTime(
-                        latestAssistant.createdAt,
-                      )}
-                    </span>
+                    <span>{formatTime(latestAssistant.createdAt)}</span>
                   </div>
                 </div>
 
                 {latestAssistant.chart && (
-                  <div
-                    className={
-                      styles.insightItem
-                    }
-                  >
-                    <div
-                      className={
-                        styles.insightIcon
-                      }
-                    >
-                      <Icon
-                        name="database"
-                        size={17}
-                      />
+                  <div className={styles.insightItem}>
+                    <div className={styles.insightIcon}>
+                      <Icon name="database" size={17} />
                     </div>
 
                     <div>
-                      <strong>
-                        Data analyzed
-                      </strong>
+                      <strong>Data analyzed</strong>
 
                       <p>
-                        {contextTotal !==
-                        null
+                        {contextTotal !== null
                           ? `${contextTotal.toLocaleString()} items represented in the returned chart.`
                           : "Workspace feedback data was used for this analysis."}
                       </p>
@@ -2475,13 +1566,8 @@ export default function AskLoopPage() {
                 )}
               </div>
             ) : (
-              <div
-                className={
-                  styles.sideEmpty
-                }
-              >
-                Ask LOOP AI a question
-                to generate insights.
+              <div className={styles.sideEmpty}>
+                Ask LOOP AI a question to generate insights.
               </div>
             )}
           </section>
@@ -2490,70 +1576,38 @@ export default function AskLoopPage() {
               DATA CONTEXT
               ============================================= */}
 
-          <section
-            className={
-              styles.sideCard
-            }
-          >
-            <div
-              className={
-                styles.sideCardHeader
-              }
-            >
-              <h3>
-                Data Context
-              </h3>
+          <section className={styles.sideCard}>
+            <div className={styles.sideCardHeader}>
+              <h3>Data Context</h3>
 
-              <Icon
-                name="database"
-                size={17}
-              />
+              <Icon name="database" size={17} />
             </div>
 
-            <div
-              className={
-                styles.contextList
-              }
-            >
+            <div className={styles.contextList}>
               <div>
-                <span>
-                  Date Range
-                </span>
+                <span>Date Range</span>
 
                 <strong>
-                  {startDate} –{" "}
-                  {endDate}
+                  {startDate} – {endDate}
                 </strong>
               </div>
 
               <div>
-                <span>
-                  Source
-                </span>
+                <span>Source</span>
 
-                <strong>
-                  Workspace feedback
-                </strong>
+                <strong>Workspace feedback</strong>
               </div>
 
               <div>
-                <span>
-                  Database
-                </span>
+                <span>Database</span>
 
-                <strong>
-                  PostgreSQL
-                </strong>
+                <strong>PostgreSQL</strong>
               </div>
 
               <div>
-                <span>
-                  AI Engine
-                </span>
+                <span>AI Engine</span>
 
-                <strong>
-                  LOOP AI / Gemini
-                </strong>
+                <strong>LOOP AI / Gemini</strong>
               </div>
             </div>
           </section>
@@ -2562,42 +1616,19 @@ export default function AskLoopPage() {
               CURRENT CHAT ACTIONS
               ============================================= */}
 
-          <section
-            className={
-              styles.sideActions
-            }
-          >
+          <section className={styles.sideActions}>
             <button
               type="button"
-              onClick={() =>
-                void saveCurrentQuery()
-              }
-              disabled={
-                savingQuery ||
-                messages.length === 0
-              }
+              onClick={() => void saveCurrentQuery()}
+              disabled={savingQuery || messages.length === 0}
             >
-              <Icon
-                name="bookmark"
-                size={16}
-              />
+              <Icon name="bookmark" size={16} />
 
-              {savingQuery
-                ? "Saving..."
-                : "Save this question"}
+              {savingQuery ? "Saving..." : "Save this question"}
             </button>
 
-            <button
-              type="button"
-              onClick={() =>
-                startNewConversation()
-              }
-            >
-              <Icon
-                name="plus"
-                size={16}
-              />
-
+            <button type="button" onClick={() => startNewConversation()}>
+              <Icon name="plus" size={16} />
               New conversation
             </button>
           </section>

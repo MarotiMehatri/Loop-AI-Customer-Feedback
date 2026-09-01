@@ -1,176 +1,246 @@
-import type { Request, Response } from "express";
+import type {
+  Request,
+  RequestHandler,
+} from "express";
 
 import { ApiError } from "../../utils/apiError.js";
 
 import {
-  createFeedback,
-  deleteFeedback,
-  getFeedback,
-  getFeedbackList,
-  updateFeedback,
-  updateFeedbackStatus,
+  FEEDBACK_MESSAGES,
+} from "./feedback.constants.js";
+
+import {
+  feedbackService,
 } from "./feedback.service.js";
 
 import type {
   CreateFeedbackInput,
+  FeedbackActorContext,
   FeedbackListFilters,
-  UpdateFeedbackInput,
-  UpdateFeedbackStatusInput,
 } from "./feedback.types.js";
 
-/**
- * Return the authenticated user added by authenticate.middleware.ts.
- */
-const getAuthenticatedUser = (request: Request) => {
-  if (!request.user) {
-    throw new ApiError(401, "Authentication is required");
+/* -------------------------------------------------------------------------- */
+/* Actor Context                                                             */
+/* -------------------------------------------------------------------------- */
+
+function getActorContext(
+  request: Request,
+): FeedbackActorContext {
+  const userId =
+    request.user?.userId;
+
+  const workspaceId =
+    request.workspaceId ??
+    request.user?.workspaceId;
+
+  const role =
+    request.user?.role;
+
+  if (!userId || !role) {
+    throw new ApiError(
+      401,
+      FEEDBACK_MESSAGES.authenticationRequired,
+    );
   }
 
-  return request.user;
-};
-
-/**
- * Safely read feedbackId from route parameters.
- */
-const getFeedbackId = (request: Request): string => {
-  const feedbackId = request.params.feedbackId;
-
-  if (typeof feedbackId !== "string" || feedbackId.trim().length === 0) {
-    throw new ApiError(400, "Feedback ID is required");
+  if (!workspaceId) {
+    throw new ApiError(
+      400,
+      FEEDBACK_MESSAGES.workspaceRequired,
+    );
   }
 
-  return feedbackId.trim();
-};
+  return {
+    userId,
+    workspaceId,
+    role,
+  };
+}
 
-/**
- * POST /api/v1/feedback
- */
-export const createFeedbackController = async (
+/* -------------------------------------------------------------------------- */
+/* Feedback ID                                                               */
+/* -------------------------------------------------------------------------- */
+
+function getFeedbackId(
   request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
+): string {
+  const feedbackId =
+    request.params.feedbackId;
 
-  const feedback = await createFeedback(
-    request.body as CreateFeedbackInput,
-    user.workspaceId,
-    user.userId,
-  );
+  if (!feedbackId) {
+    throw new ApiError(
+      400,
+      "Feedback ID is required.",
+    );
+  }
 
-  response.status(201).json({
-    success: true,
-    message: "Feedback added successfully",
-    data: {
-      feedback,
-    },
-  });
-};
+  return feedbackId;
+}
 
-/**
- * GET /api/v1/feedback
- */
-export const listFeedbackController = async (
-  request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
+/* -------------------------------------------------------------------------- */
+/* Controller                                                                */
+/* -------------------------------------------------------------------------- */
 
-  const filters = request.query as unknown as FeedbackListFilters;
+export const feedbackController: {
+  create: RequestHandler;
+  list: RequestHandler;
+  getById: RequestHandler;
+  remove: RequestHandler;
+} = {
+  /* ------------------------------------------------------------------------ */
+  /* CREATE FEEDBACK                                                         */
+  /* ------------------------------------------------------------------------ */
 
-  const result = await getFeedbackList(user.workspaceId, filters);
+  create: async (
+    request,
+    response,
+    next,
+  ) => {
+    try {
+      const context =
+        getActorContext(request);
 
-  response.status(200).json({
-    success: true,
-    message: "Feedback retrieved successfully",
-    data: result,
-  });
-};
+      const input =
+        request.body as CreateFeedbackInput;
 
-/**
- * GET /api/v1/feedback/:feedbackId
- */
-export const getFeedbackController = async (
-  request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
-  const feedbackId = getFeedbackId(request);
+      const result =
+        await feedbackService.create(
+          context,
+          input,
+        );
 
-  const feedback = await getFeedback(feedbackId, user.workspaceId);
+      return response
+        .status(201)
+        .json({
+          success: true,
+          message:
+            FEEDBACK_MESSAGES.created,
+          data: result,
+        });
+    } catch (error) {
+      return next(error);
+    }
+  },
 
-  response.status(200).json({
-    success: true,
-    message: "Feedback retrieved successfully",
-    data: {
-      feedback,
-    },
-  });
-};
+  /* ------------------------------------------------------------------------ */
+  /* LIST FEEDBACK                                                           */
+  /* ------------------------------------------------------------------------ */
 
-/**
- * PATCH /api/v1/feedback/:feedbackId
- */
-export const updateFeedbackController = async (
-  request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
-  const feedbackId = getFeedbackId(request);
+  list: async (
+    request,
+    response,
+    next,
+  ) => {
+    try {
+      const context =
+        getActorContext(request);
 
-  const feedback = await updateFeedback(
-    feedbackId,
-    user.workspaceId,
-    request.body as UpdateFeedbackInput,
-  );
+      const filters =
+        request.query as unknown as FeedbackListFilters;
 
-  response.status(200).json({
-    success: true,
-    message: "Feedback updated successfully",
-    data: {
-      feedback,
-    },
-  });
-};
+      console.log(
+        "[FEEDBACK CONTROLLER] LIST",
+        {
+          userId: context.userId,
+          workspaceId:
+            context.workspaceId,
+          role: context.role,
+          filters,
+        },
+      );
 
-/**
- * PATCH /api/v1/feedback/:feedbackId/status
- */
-export const updateFeedbackStatusController = async (
-  request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
-  const feedbackId = getFeedbackId(request);
+      const result =
+        await feedbackService.list(
+          context,
+          filters,
+        );
 
-  const feedback = await updateFeedbackStatus(
-    feedbackId,
-    user.workspaceId,
-    request.body as UpdateFeedbackStatusInput,
-  );
+      console.log(
+        "[FEEDBACK CONTROLLER] RESULT",
+        {
+          total: result.total,
+          items: result.items.length,
+          page: result.page,
+          limit: result.limit,
+          totalPages:
+            result.totalPages,
+        },
+      );
 
-  response.status(200).json({
-    success: true,
-    message: "Feedback status updated successfully",
-    data: {
-      feedback,
-    },
-  });
-};
+      return response
+        .status(200)
+        .json({
+          success: true,
+          message:
+            FEEDBACK_MESSAGES.listed,
+          data: result,
+        });
+    } catch (error) {
+      return next(error);
+    }
+  },
 
-/**
- * DELETE /api/v1/feedback/:feedbackId
- */
-export const deleteFeedbackController = async (
-  request: Request,
-  response: Response,
-): Promise<void> => {
-  const user = getAuthenticatedUser(request);
-  const feedbackId = getFeedbackId(request);
+  /* ------------------------------------------------------------------------ */
+  /* GET FEEDBACK BY ID                                                      */
+  /* ------------------------------------------------------------------------ */
 
-  await deleteFeedback(feedbackId, user.workspaceId);
+  getById: async (
+    request,
+    response,
+    next,
+  ) => {
+    try {
+      const context =
+        getActorContext(request);
 
-  response.status(200).json({
-    success: true,
-    message: "Feedback deleted successfully",
-  });
+      const result =
+        await feedbackService.getById(
+          context,
+          getFeedbackId(request),
+        );
+
+      return response
+        .status(200)
+        .json({
+          success: true,
+          message:
+            FEEDBACK_MESSAGES.retrieved,
+          data: result,
+        });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
+  /* ------------------------------------------------------------------------ */
+  /* DELETE FEEDBACK                                                         */
+  /* ------------------------------------------------------------------------ */
+
+  remove: async (
+    request,
+    response,
+    next,
+  ) => {
+    try {
+      const context =
+        getActorContext(request);
+
+      const result =
+        await feedbackService.remove(
+          context,
+          getFeedbackId(request),
+        );
+
+      return response
+        .status(200)
+        .json({
+          success: true,
+          message:
+            FEEDBACK_MESSAGES.deleted,
+          data: result,
+        });
+    } catch (error) {
+      return next(error);
+    }
+  },
 };

@@ -145,7 +145,7 @@ function normalizePageResponse(payload: unknown): PageResponse {
     failedImports?: unknown;
   };
 
-  const summary : Partial<Summary> = value.summary ?? {};
+  const summary: Partial<Summary> = value.summary ?? {};
 
   return {
     dataSources: Array.isArray(value.dataSources)
@@ -174,7 +174,10 @@ function formatNumber(value: number) {
 function formatSync(value: string | null) {
   if (!value) return "Never synced";
   const date = new Date(value);
-  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  const minutes = Math.max(
+    0,
+    Math.floor((Date.now() - date.getTime()) / 60000),
+  );
   if (minutes < 1) return "Just now";
   if (minutes < 60) return `${minutes} min ago`;
   if (minutes < 1440) return `${Math.floor(minutes / 60)} hr ago`;
@@ -291,11 +294,7 @@ export default function AnalystDataSourcesPage() {
       const updated = unwrap<DataSource>(response.data);
       await loadSources();
       setMenuId(null);
-      toast.success(
-        updated?.isActive
-          ? "Source connected."
-          : "Source paused.",
-      );
+      toast.success(updated?.isActive ? "Source connected." : "Source paused.");
     } catch (error) {
       console.error(error);
       toast.error("Unable to update source.");
@@ -309,7 +308,9 @@ export default function AnalystDataSourcesPage() {
       await apiClient.delete(`/data-sources/${source.id}`);
       setData((current) => ({
         ...current,
-        dataSources: current.dataSources.filter((item) => item.id !== source.id),
+        dataSources: current.dataSources.filter(
+          (item) => item.id !== source.id,
+        ),
         summary: {
           ...current.summary,
           totalSources: Math.max(0, current.summary.totalSources - 1),
@@ -345,7 +346,11 @@ export default function AnalystDataSourcesPage() {
             May 11 – May 17, 2024
             <span>▣</span>
           </button>
-          <button className={styles.iconButton} type="button" aria-label="Notifications">
+          <button
+            className={styles.iconButton}
+            type="button"
+            aria-label="Notifications"
+          >
             <span className={styles.notificationDot}>3</span>
             <Activity size={20} />
           </button>
@@ -364,12 +369,48 @@ export default function AnalystDataSourcesPage() {
       </header>
 
       <section className={styles.metrics}>
-        <Metric icon={<Database size={19} />} label="Total Sources" value={formatNumber(data.summary.totalSources)} note="All configured sources" tone="purple" />
-        <Metric icon={<Cloud size={19} />} label="Connected Sources" value={formatNumber(data.summary.connectedSources)} note={`${data.summary.totalSources ? Math.round((data.summary.connectedSources / data.summary.totalSources) * 100) : 0}% of total`} tone="green" />
-        <Metric icon={<UploadCloud size={19} />} label="Total Feedback" value={formatNumber(data.summary.totalFeedback)} note="Across all sources" tone="orange" />
-        <Metric icon={<RefreshCw size={19} />} label="Last Synced" value={data.summary.connectedSources ? "Live" : "—"} note="All sources healthy" tone="blue" />
-        <Metric icon={<FileSpreadsheet size={19} />} label="Auto Imports" value={formatNumber(data.summary.autoImports)} note="Completed imports" tone="purple" />
-        <Metric icon={<CheckCircle2 size={19} />} label="Success Rate" value={`${data.summary.successRate.toFixed(1)}%`} note="Import reliability" tone="teal" />
+        <Metric
+          icon={<Database size={19} />}
+          label="Total Sources"
+          value={formatNumber(data.summary.totalSources)}
+          note="All configured sources"
+          tone="purple"
+        />
+        <Metric
+          icon={<Cloud size={19} />}
+          label="Connected Sources"
+          value={formatNumber(data.summary.connectedSources)}
+          note={`${data.summary.totalSources ? Math.round((data.summary.connectedSources / data.summary.totalSources) * 100) : 0}% of total`}
+          tone="green"
+        />
+        <Metric
+          icon={<UploadCloud size={19} />}
+          label="Total Feedback"
+          value={formatNumber(data.summary.totalFeedback)}
+          note="Across all sources"
+          tone="orange"
+        />
+        <Metric
+          icon={<RefreshCw size={19} />}
+          label="Last Synced"
+          value={data.summary.connectedSources ? "Live" : "—"}
+          note="All sources healthy"
+          tone="blue"
+        />
+        <Metric
+          icon={<FileSpreadsheet size={19} />}
+          label="Auto Imports"
+          value={formatNumber(data.summary.autoImports)}
+          note="Completed imports"
+          tone="purple"
+        />
+        <Metric
+          icon={<CheckCircle2 size={19} />}
+          label="Success Rate"
+          value={`${data.summary.successRate.toFixed(1)}%`}
+          note="Import reliability"
+          tone="teal"
+        />
       </section>
 
       <div className={styles.contentGrid}>
@@ -431,7 +472,9 @@ export default function AnalystDataSourcesPage() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={9} className={styles.empty}>Loading data sources…</td>
+                      <td colSpan={9} className={styles.empty}>
+                        Loading data sources…
+                      </td>
                     </tr>
                   ) : filteredSources.length === 0 ? (
                     <tr>
@@ -448,17 +491,28 @@ export default function AnalystDataSourcesPage() {
                         <tr key={source.id}>
                           <td>
                             <div className={styles.sourceName}>
-                              <span className={styles.sourceIcon}><Icon size={18} /></span>
+                              <span className={styles.sourceIcon}>
+                                <Icon size={18} />
+                              </span>
                               <span>
                                 <strong>{source.name}</strong>
-                                <small>{source.description || TYPE_LABEL[source.type]}</small>
+                                <small>
+                                  {source.description ||
+                                    TYPE_LABEL[source.type]}
+                                </small>
                               </span>
                             </div>
                           </td>
-                          <td><span className={styles.typeBadge}>{TYPE_LABEL[source.type]}</span></td>
+                          <td>
+                            <span className={styles.typeBadge}>
+                              {TYPE_LABEL[source.type]}
+                            </span>
+                          </td>
                           <td>{TYPE_CHANNEL[source.type]}</td>
                           <td>
-                            <span className={`${styles.status} ${styles[source.status.toLowerCase()]}`}>
+                            <span
+                              className={`${styles.status} ${styles[source.status.toLowerCase()]}`}
+                            >
                               <i />
                               {statusLabel(source.status)}
                             </span>
@@ -467,7 +521,9 @@ export default function AnalystDataSourcesPage() {
                             <strong>{formatSync(source.lastSyncAt)}</strong>
                             {source.lastSyncAt && (
                               <small className={styles.subline}>
-                                {new Date(source.lastSyncAt).toLocaleString("en-IN")}
+                                {new Date(source.lastSyncAt).toLocaleString(
+                                  "en-IN",
+                                )}
                               </small>
                             )}
                           </td>
@@ -476,25 +532,45 @@ export default function AnalystDataSourcesPage() {
                             <strong>{formatNumber(source.newThisWeek)}</strong>
                             <small className={styles.growth}>This week</small>
                           </td>
-                          <td>{source.successRate == null ? "—" : `${source.successRate.toFixed(1)}%`}</td>
+                          <td>
+                            {source.successRate == null
+                              ? "—"
+                              : `${source.successRate.toFixed(1)}%`}
+                          </td>
                           <td className={styles.actionCell}>
                             <button
                               className={styles.moreButton}
                               type="button"
-                              onClick={() => setMenuId(menuId === source.id ? null : source.id)}
+                              onClick={() =>
+                                setMenuId(
+                                  menuId === source.id ? null : source.id,
+                                )
+                              }
                               aria-label={`Actions for ${source.name}`}
                             >
                               <MoreHorizontal size={18} />
                             </button>
                             {menuId === source.id && (
                               <div className={styles.menu}>
-                                <button type="button" onClick={() => void syncSource(source)}>
+                                <button
+                                  type="button"
+                                  onClick={() => void syncSource(source)}
+                                >
                                   <RefreshCw size={15} /> Sync now
                                 </button>
-                                <button type="button" onClick={() => void toggleSource(source)}>
-                                  {source.isActive ? "Pause source" : "Connect source"}
+                                <button
+                                  type="button"
+                                  onClick={() => void toggleSource(source)}
+                                >
+                                  {source.isActive
+                                    ? "Pause source"
+                                    : "Connect source"}
                                 </button>
-                                <button className={styles.danger} type="button" onClick={() => void deleteSource(source)}>
+                                <button
+                                  className={styles.danger}
+                                  type="button"
+                                  onClick={() => void deleteSource(source)}
+                                >
                                   Delete
                                 </button>
                               </div>
@@ -509,14 +585,18 @@ export default function AnalystDataSourcesPage() {
             </div>
 
             <div className={styles.tableFooter}>
-              Showing {filteredSources.length} of {data.dataSources.length} sources
+              Showing {filteredSources.length} of {data.dataSources.length}{" "}
+              sources
             </div>
           </div>
 
           <div className={styles.bottomGrid}>
             <section className={styles.card}>
               <div className={styles.cardTitle}>
-                <div><h3>Source Types</h3><span>Distribution by source type</span></div>
+                <div>
+                  <h3>Source Types</h3>
+                  <span>Distribution by source type</span>
+                </div>
               </div>
               <div className={styles.donutRow}>
                 <div
@@ -525,27 +605,63 @@ export default function AnalystDataSourcesPage() {
                     background: `conic-gradient(#5b2cf0 0 ${Math.min(100, data.summary.totalSources ? (data.summary.connectedSources / data.summary.totalSources) * 100 : 0)}%, #dbe4ff 0 100%)`,
                   }}
                 >
-                  <div><strong>{data.summary.totalSources}</strong><small>Total</small></div>
+                  <div>
+                    <strong>{data.summary.totalSources}</strong>
+                    <small>Total</small>
+                  </div>
                 </div>
                 <div className={styles.legend}>
-                  <p><i className={styles.purpleDot} />API Integrations <b>{data.dataSources.filter((x) => x.type === "API").length}</b></p>
-                  <p><i className={styles.blueDot} />Email / IMAP <b>{data.dataSources.filter((x) => x.type === "EMAIL").length}</b></p>
-                  <p><i className={styles.greenDot} />Manual Upload <b>{data.dataSources.filter((x) => x.type === "CSV").length}</b></p>
+                  <p>
+                    <i className={styles.purpleDot} />
+                    API Integrations{" "}
+                    <b>
+                      {data.dataSources.filter((x) => x.type === "API").length}
+                    </b>
+                  </p>
+                  <p>
+                    <i className={styles.blueDot} />
+                    Email / IMAP{" "}
+                    <b>
+                      {
+                        data.dataSources.filter((x) => x.type === "EMAIL")
+                          .length
+                      }
+                    </b>
+                  </p>
+                  <p>
+                    <i className={styles.greenDot} />
+                    Manual Upload{" "}
+                    <b>
+                      {data.dataSources.filter((x) => x.type === "CSV").length}
+                    </b>
+                  </p>
                 </div>
               </div>
             </section>
 
             <section className={styles.card}>
               <div className={styles.cardTitle}>
-                <div><h3>Top Sources by Feedback Volume</h3><span>This workspace</span></div>
+                <div>
+                  <h3>Top Sources by Feedback Volume</h3>
+                  <span>This workspace</span>
+                </div>
               </div>
               <div className={styles.bars}>
                 {data.dataSources.slice(0, 5).map((source) => {
-                  const max = Math.max(...data.dataSources.map((x) => x.feedbackImported), 1);
+                  const max = Math.max(
+                    ...data.dataSources.map((x) => x.feedbackImported),
+                    1,
+                  );
                   return (
                     <div className={styles.barRow} key={source.id}>
                       <span>{source.name}</span>
-                      <div><i style={{ width: `${(source.feedbackImported / max) * 100}%` }} /></div>
+                      <div>
+                        <i
+                          style={{
+                            width: `${(source.feedbackImported / max) * 100}%`,
+                          }}
+                        />
+                      </div>
                       <b>{formatNumber(source.feedbackImported)}</b>
                     </div>
                   );
@@ -555,14 +671,22 @@ export default function AnalystDataSourcesPage() {
 
             <section className={styles.card}>
               <div className={styles.cardTitle}>
-                <div><h3>Failed Imports</h3><span>This week</span></div>
+                <div>
+                  <h3>Failed Imports</h3>
+                  <span>This week</span>
+                </div>
               </div>
               <div className={styles.failedList}>
                 {data.failedImports.length === 0 ? (
-                  <div className={styles.noFailures}><CheckCircle2 size={18} /> No failed imports</div>
+                  <div className={styles.noFailures}>
+                    <CheckCircle2 size={18} /> No failed imports
+                  </div>
                 ) : (
                   data.failedImports.map((item) => (
-                    <div key={`${item.source}-${item.status}`} className={styles.failedRow}>
+                    <div
+                      key={`${item.source}-${item.status}`}
+                      className={styles.failedRow}
+                    >
                       <strong>{item.source}</strong>
                       <span>{item.errors} errors</span>
                       <small>{item.status}</small>
@@ -576,7 +700,10 @@ export default function AnalystDataSourcesPage() {
 
         <aside className={styles.rightColumn}>
           <section className={styles.card}>
-            <div className={styles.sideTitle}><h3>Source Health</h3><span>View all</span></div>
+            <div className={styles.sideTitle}>
+              <h3>Source Health</h3>
+              <span>View all</span>
+            </div>
             <div className={styles.health}>
               <div className={styles.healthDonut}>
                 <div>
@@ -585,30 +712,67 @@ export default function AnalystDataSourcesPage() {
                 </div>
               </div>
               <div className={styles.healthLegend}>
-                <p><i className={styles.greenDot} />Healthy <b>{data.summary.healthySources}</b></p>
-                <p><i className={styles.orangeDot} />Warning <b>{data.summary.warningSources}</b></p>
-                <p><i className={styles.redDot} />Error <b>{data.summary.errorSources}</b></p>
+                <p>
+                  <i className={styles.greenDot} />
+                  Healthy <b>{data.summary.healthySources}</b>
+                </p>
+                <p>
+                  <i className={styles.orangeDot} />
+                  Warning <b>{data.summary.warningSources}</b>
+                </p>
+                <p>
+                  <i className={styles.redDot} />
+                  Error <b>{data.summary.errorSources}</b>
+                </p>
               </div>
             </div>
           </section>
 
           <section className={styles.card}>
-            <div className={styles.sideTitle}><h3>Data Ingestion Overview</h3><span>This Week</span></div>
+            <div className={styles.sideTitle}>
+              <h3>Data Ingestion Overview</h3>
+              <span>This Week</span>
+            </div>
             <div className={styles.ingestion}>
-              <p>Total Feedback Ingested <b>{formatNumber(data.summary.totalFeedback)}</b></p>
-              <p>Auto Imports <b>{formatNumber(data.summary.autoImports)}</b></p>
-              <p>Manual Uploads <b>{formatNumber(Math.max(0, data.summary.totalFeedback - data.summary.autoImports))}</b></p>
-              <p>Processing Errors <b>{formatNumber(data.summary.errorSources)}</b></p>
+              <p>
+                Total Feedback Ingested{" "}
+                <b>{formatNumber(data.summary.totalFeedback)}</b>
+              </p>
+              <p>
+                Auto Imports <b>{formatNumber(data.summary.autoImports)}</b>
+              </p>
+              <p>
+                Manual Uploads{" "}
+                <b>
+                  {formatNumber(
+                    Math.max(
+                      0,
+                      data.summary.totalFeedback - data.summary.autoImports,
+                    ),
+                  )}
+                </b>
+              </p>
+              <p>
+                Processing Errors{" "}
+                <b>{formatNumber(data.summary.errorSources)}</b>
+              </p>
             </div>
           </section>
 
           <section className={styles.card}>
-            <div className={styles.sideTitle}><h3>Recent Activity</h3><span>View all</span></div>
+            <div className={styles.sideTitle}>
+              <h3>Recent Activity</h3>
+              <span>View all</span>
+            </div>
             <div className={styles.activity}>
               {data.dataSources.slice(0, 4).map((source) => (
                 <div key={source.id}>
                   <i />
-                  <p><strong>{source.name}</strong><span>{source.feedbackImported} feedback imported</span><small>{formatSync(source.lastSyncAt)}</small></p>
+                  <p>
+                    <strong>{source.name}</strong>
+                    <span>{source.feedbackImported} feedback imported</span>
+                    <small>{formatSync(source.lastSyncAt)}</small>
+                  </p>
                 </div>
               ))}
             </div>
@@ -617,20 +781,83 @@ export default function AnalystDataSourcesPage() {
       </div>
 
       {showModal && (
-        <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => setShowModal(false)}>
-          <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="add-source-title" onMouseDown={(event) => event.stopPropagation()}>
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => setShowModal(false)}
+        >
+          <section
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-source-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
-              <div><h2 id="add-source-title">Add New Data Source</h2><p>Create a workspace data connection.</p></div>
-              <button type="button" onClick={() => setShowModal(false)} aria-label="Close"><X size={18} /></button>
+              <div>
+                <h2 id="add-source-title">Add New Data Source</h2>
+                <p>Create a workspace data connection.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <label>Source name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Support Tickets" /></label>
-            <label>Source type<select value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as SourceType })}>
-              <option value="API">API</option><option value="WEBHOOK">Webhook</option><option value="CSV">CSV / Manual</option><option value="DATABASE">Database</option><option value="EMAIL">Email / IMAP</option><option value="SOCIAL_MEDIA">Social Media</option><option value="CUSTOM">Custom</option>
-            </select></label>
-            <label>Description<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder="Optional description" /></label>
+            <label>
+              Source name
+              <input
+                value={form.name}
+                onChange={(event) =>
+                  setForm({ ...form, name: event.target.value })
+                }
+                placeholder="Support Tickets"
+              />
+            </label>
+            <label>
+              Source type
+              <select
+                value={form.type}
+                onChange={(event) =>
+                  setForm({ ...form, type: event.target.value as SourceType })
+                }
+              >
+                <option value="API">API</option>
+                <option value="WEBHOOK">Webhook</option>
+                <option value="CSV">CSV / Manual</option>
+                <option value="DATABASE">Database</option>
+                <option value="EMAIL">Email / IMAP</option>
+                <option value="SOCIAL_MEDIA">Social Media</option>
+                <option value="CUSTOM">Custom</option>
+              </select>
+            </label>
+            <label>
+              Description
+              <textarea
+                value={form.description}
+                onChange={(event) =>
+                  setForm({ ...form, description: event.target.value })
+                }
+                placeholder="Optional description"
+              />
+            </label>
             <div className={styles.modalActions}>
-              <button className={styles.secondaryButton} type="button" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className={styles.primaryButton} type="button" onClick={() => void createSource()}>Create Source</button>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={() => void createSource()}
+              >
+                Create Source
+              </button>
             </div>
           </section>
         </div>
@@ -655,7 +882,11 @@ function Metric({
   return (
     <article className={styles.metric}>
       <span className={`${styles.metricIcon} ${styles[tone]}`}>{icon}</span>
-      <div><p>{label}</p><strong>{value}</strong><small>{note}</small></div>
+      <div>
+        <p>{label}</p>
+        <strong>{value}</strong>
+        <small>{note}</small>
+      </div>
     </article>
   );
 }

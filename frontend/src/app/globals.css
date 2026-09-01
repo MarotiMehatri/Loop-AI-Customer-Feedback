@@ -1,4 +1,231 @@
-* { box-sizing: border-box; }
-html, body { min-height: 100%; margin: 0; overflow-x: hidden; }
-button, input, select { font: inherit; }
-button { cursor: pointer; }
+/* =========================================================
+   LOOP GLOBAL STYLES
+   ========================================================= */
+
+:root {
+  --loop-primary: #5b2cf0;
+  --loop-primary-dark: #4720cf;
+  --loop-primary-light: #f1edff;
+
+  --loop-text: #171725;
+  --loop-text-secondary: #667085;
+  --loop-text-muted: #98a2b3;
+
+  --loop-border: #e7e7ee;
+  --loop-border-light: #f0f0f5;
+
+  --loop-background: #f7f7fb;
+  --loop-surface: #ffffff;
+
+  --loop-success: #16a34a;
+  --loop-warning: #f59e0b;
+  --loop-danger: #ef2b36;
+  --loop-info: #2563eb;
+
+  --loop-radius-sm: 8px;
+  --loop-radius-md: 12px;
+  --loop-radius-lg: 16px;
+  --loop-radius-xl: 20px;
+
+  --loop-shadow-sm:
+    0 1px 2px rgba(16, 24, 40, 0.04);
+
+  --loop-shadow-md:
+    0 4px 16px rgba(16, 24, 40, 0.06);
+
+  --loop-shadow-lg:
+    0 12px 32px rgba(16, 24, 40, 0.08);
+
+  --loop-sidebar-width: 264px;
+
+  --loop-transition:
+    180ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --loop-font:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--loop-background);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(91, 44, 240, 0.035),
+      transparent 30%
+    ),
+    var(--loop-background);
+
+  color: var(--loop-text);
+  font-family: var(--loop-font);
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =========================================================
+   APP ROOT
+   ========================================================= */
+
+#app-root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-top: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================================================
+   FORM ELEMENTS
+   ========================================================= */
+
+button,
+a,
+select,
+input,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+input,
+textarea,
+select {
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--loop-text-muted);
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4df transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #d4d4df;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #b8b8c8;
+}
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
+
+::selection {
+  background: rgba(91, 44, 240, 0.16);
+  color: var(--loop-text);
+}
+
+/* =========================================================
+   FOCUS ACCESSIBILITY
+   ========================================================= */
+
+:focus-visible {
+  outline: 3px solid rgba(91, 44, 240, 0.22);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

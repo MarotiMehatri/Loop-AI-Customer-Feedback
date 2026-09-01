@@ -12,40 +12,90 @@ import type {
   ExportListFilters,
 } from "./export.types.js";
 
-function getActorContext(request: Request): ExportActorContext {
+/* -------------------------------------------------------------------------- */
+/* Actor Context                                                              */
+/* -------------------------------------------------------------------------- */
+
+function getActorContext(
+  request: Request,
+): ExportActorContext {
   const userId = request.user?.userId;
-  const workspaceId = request.workspaceId ?? request.user?.workspaceId;
+
+  const workspaceId =
+    request.workspaceId ??
+    request.user?.workspaceId;
+
   const role = request.user?.role;
 
   if (!userId || !role) {
-    throw new ApiError(401, EXPORT_MESSAGES.authenticationRequired);
+    throw new ApiError(
+      401,
+      EXPORT_MESSAGES.authenticationRequired,
+    );
   }
 
   if (!workspaceId) {
-    throw new ApiError(400, EXPORT_MESSAGES.workspaceRequired);
+    throw new ApiError(
+      400,
+      EXPORT_MESSAGES.workspaceRequired,
+    );
   }
 
-  return { userId, workspaceId, role };
+  return {
+    userId,
+    workspaceId,
+    role,
+  };
 }
 
-function getExportId(request: Request): string {
-  return request.params.exportId as string;
+/* -------------------------------------------------------------------------- */
+/* Export ID                                                                  */
+/* -------------------------------------------------------------------------- */
+
+function getExportId(
+  request: Request,
+): string {
+  const exportId = request.params.exportId;
+
+  if (!exportId) {
+    throw new ApiError(
+      400,
+      "Export ID is required.",
+    );
+  }
+
+  return exportId;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Controller                                                                 */
+/* -------------------------------------------------------------------------- */
 
 export const exportController: {
   create: RequestHandler;
   list: RequestHandler;
   getById: RequestHandler;
   download: RequestHandler;
+  remove: RequestHandler;
 } = {
-  create: async (request, response, next) => {
-    try {
-      const context = getActorContext(request);
+  /* ------------------------------------------------------------------------ */
+  /* CREATE                                                                   */
+  /* ------------------------------------------------------------------------ */
 
-      const result = await exportService.create(
-        context,
-        request.body as CreateExportInput,
-      );
+  create: async (
+    request,
+    response,
+    next,
+  ) => {
+    try {
+      const context =
+        getActorContext(request);
+
+      const result =
+        await exportService.create(
+          context,
+          request.body as CreateExportInput,
+        );
 
       response.status(201).json({
         success: true,
@@ -57,14 +107,24 @@ export const exportController: {
     }
   },
 
-  list: async (request, response, next) => {
-    try {
-      const context = getActorContext(request);
+  /* ------------------------------------------------------------------------ */
+  /* LIST                                                                     */
+  /* ------------------------------------------------------------------------ */
 
-      const result = await exportService.list(
-        context,
-        request.query as unknown as ExportListFilters,
-      );
+  list: async (
+    request,
+    response,
+    next,
+  ) => {
+    try {
+      const context =
+        getActorContext(request);
+
+      const result =
+        await exportService.list(
+          context,
+          request.query as unknown as ExportListFilters,
+        );
 
       response.status(200).json({
         success: true,
@@ -76,14 +136,27 @@ export const exportController: {
     }
   },
 
-  getById: async (request, response, next) => {
-    try {
-      const context = getActorContext(request);
+  /* ------------------------------------------------------------------------ */
+  /* GET BY ID                                                                */
+  /* ------------------------------------------------------------------------ */
 
-      const result = await exportService.getById(
-        context,
-        getExportId(request),
-      );
+  getById: async (
+    request,
+    response,
+    next,
+  ) => {
+    try {
+      const context =
+        getActorContext(request);
+
+      const exportId =
+        getExportId(request);
+
+      const result =
+        await exportService.getById(
+          context,
+          exportId,
+        );
 
       response.status(200).json({
         success: true,
@@ -95,18 +168,68 @@ export const exportController: {
     }
   },
 
-  download: async (request, response, next) => {
+  /* ------------------------------------------------------------------------ */
+  /* DOWNLOAD                                                                 */
+  /* ------------------------------------------------------------------------ */
+
+  download: async (
+    request,
+    response,
+    next,
+  ) => {
     try {
-      const context = getActorContext(request);
+      const context =
+        getActorContext(request);
 
-      const download = await exportService.getDownload(
-        context,
-        getExportId(request),
+      const exportId =
+        getExportId(request);
+
+      const download =
+        await exportService.getDownload(
+          context,
+          exportId,
+        );
+
+      response.download(
+        download.filePath,
+        download.fileName,
       );
-
-      response.download(download.filePath, download.fileName);
     } catch (error) {
       next(error);
     }
   },
+
+  /* ------------------------------------------------------------------------ */
+  /* DELETE                                                                   */
+  /* ------------------------------------------------------------------------ */
+
+  remove: async (
+  request,
+  response,
+  next,
+) => {
+  try {
+    const context =
+      getActorContext(request);
+
+    const exportId =
+      getExportId(request);
+
+    const result =
+      await exportService.remove(
+        context,
+        exportId,
+      );
+
+    response.status(200).json({
+      success: true,
+      message:
+        EXPORT_MESSAGES.deleted ??
+        "Export deleted successfully.",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+},
 };

@@ -205,7 +205,8 @@ export default function AnalystAnalyticsPage() {
   const [sentiment, setSentiment] = useState<AnalyticsQuery["sentiment"]>();
   const [theme, setTheme] = useState<string>();
   const [draftSource, setDraftSource] = useState<AnalyticsQuery["source"]>();
-  const [draftSentiment, setDraftSentiment] = useState<AnalyticsQuery["sentiment"]>();
+  const [draftSentiment, setDraftSentiment] =
+    useState<AnalyticsQuery["sentiment"]>();
   const [draftTheme, setDraftTheme] = useState<string>();
 
   const query = useAnalytics({
@@ -233,32 +234,51 @@ export default function AnalystAnalyticsPage() {
 
   const sentimentData = useMemo(
     () => [
-      { name: "Positive", value: positive.count ?? 0, color: SENTIMENT_COLORS.positive },
-      { name: "Neutral", value: neutral.count ?? 0, color: SENTIMENT_COLORS.neutral },
-      { name: "Negative", value: negative.count ?? 0, color: SENTIMENT_COLORS.negative },
+      {
+        name: "Positive",
+        value: positive.count ?? 0,
+        color: SENTIMENT_COLORS.positive,
+      },
+      {
+        name: "Neutral",
+        value: neutral.count ?? 0,
+        color: SENTIMENT_COLORS.neutral,
+      },
+      {
+        name: "Negative",
+        value: negative.count ?? 0,
+        color: SENTIMENT_COLORS.negative,
+      },
     ],
     [overview],
   );
 
   const sentimentTrend = useMemo(
-    () => trend.map((item) => ({
-      date: dateLabel(item.period),
-      Positive: item.positive,
-      Neutral: item.neutral,
-      Negative: item.negative,
-    })),
+    () =>
+      trend.map((item) => ({
+        date: dateLabel(item.period),
+        Positive: item.positive,
+        Neutral: item.neutral,
+        Negative: item.negative,
+      })),
     [trend],
   );
 
   const feedbackTrend = useMemo(
-    () => trend.map((item) => ({ date: dateLabel(item.period), total: item.total })),
+    () =>
+      trend.map((item) => ({
+        date: dateLabel(item.period),
+        total: item.total,
+      })),
     [trend],
   );
 
   const themeTrend = useMemo(() => {
     const topThemes = themes.slice(0, 5);
     return (dashboard?.themeTrend ?? []).map((point) => {
-      const row: Record<string, string | number> = { date: dateLabel(point.period) };
+      const row: Record<string, string | number> = {
+        date: dateLabel(point.period),
+      };
       topThemes.forEach((theme) => {
         row[theme.id] = Number(point.values?.[theme.id] ?? 0);
       });
@@ -305,7 +325,9 @@ export default function AnalystAnalyticsPage() {
       URL.revokeObjectURL(url);
       toast.success("Analytics CSV exported successfully.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to export analytics.");
+      toast.error(
+        error instanceof Error ? error.message : "Unable to export analytics.",
+      );
     }
   };
 
@@ -313,9 +335,13 @@ export default function AnalystAnalyticsPage() {
     <main className={styles.page}>
       <header className={styles.topbar}>
         <div className={styles.titleBlock}>
-          <div className={styles.menuPlaceholder} aria-hidden="true">☰</div>
+          <div className={styles.menuPlaceholder} aria-hidden="true">
+            ☰
+          </div>
           <div>
-            <h1>Analytics <BarChart3 size={20} /></h1>
+            <h1>
+              Analytics <BarChart3 size={20} />
+            </h1>
             <p>Deep insights from your customer feedback</p>
           </div>
         </div>
@@ -325,7 +351,11 @@ export default function AnalystAnalyticsPage() {
             {dateRange}
             <CalendarDays size={16} />
           </button>
-          <button className={styles.iconButton} type="button" aria-label="Notifications">
+          <button
+            className={styles.iconButton}
+            type="button"
+            aria-label="Notifications"
+          >
             <Bell size={21} />
             {(overview?.unresolved ?? 0) > 0 && <i>{overview?.unresolved}</i>}
           </button>
@@ -404,58 +434,150 @@ export default function AnalystAnalyticsPage() {
 
           {query.isError && (
             <div className={styles.errorBanner}>
-              Unable to load analytics. {query.error instanceof Error ? query.error.message : "Please try again."}
-              <button type="button" onClick={() => query.refetch()}>Retry</button>
+              Unable to load analytics.{" "}
+              {query.error instanceof Error
+                ? query.error.message
+                : "Please try again."}
+              <button type="button" onClick={() => query.refetch()}>
+                Retry
+              </button>
             </div>
           )}
 
           {query.isLoading ? (
             <div className={styles.loadingGrid}>
-              {Array.from({ length: 8 }).map((_, index) => <div className={styles.skeleton} key={index} />)}
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div className={styles.skeleton} key={index} />
+              ))}
             </div>
           ) : (
             <>
               <section className={styles.gridTop}>
-                <Card title="Feedback Over Time" action={<span className={styles.period}>{days} Days <ChevronDown size={14} /></span>}>
-                  {isEmpty ? <EmptyState label="No feedback trend yet" /> : (
+                <Card
+                  title="Feedback Over Time"
+                  action={
+                    <span className={styles.period}>
+                      {days} Days <ChevronDown size={14} />
+                    </span>
+                  }
+                >
+                  {isEmpty ? (
+                    <EmptyState label="No feedback trend yet" />
+                  ) : (
                     <div className={styles.chart}>
                       <ResponsiveContainer width="100%" height={245}>
                         <AreaChart data={feedbackTrend}>
                           <defs>
-                            <linearGradient id="analystFeedbackFill" x1="0" x2="0" y1="0" y2="1">
-                              <stop offset="0%" stopColor="#5427e8" stopOpacity={0.30} />
-                              <stop offset="100%" stopColor="#5427e8" stopOpacity={0.03} />
+                            <linearGradient
+                              id="analystFeedbackFill"
+                              x1="0"
+                              x2="0"
+                              y1="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="0%"
+                                stopColor="#5427e8"
+                                stopOpacity={0.3}
+                              />
+                              <stop
+                                offset="100%"
+                                stopColor="#5427e8"
+                                stopOpacity={0.03}
+                              />
                             </linearGradient>
                           </defs>
                           <CartesianGrid vertical={false} stroke="#ececf2" />
-                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#667085" }} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#667085" }} />
+                          <XAxis
+                            dataKey="date"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 11, fill: "#667085" }}
+                          />
+                          <YAxis
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 11, fill: "#667085" }}
+                          />
                           <Tooltip content={<CustomTooltip />} />
-                          <Area type="monotone" dataKey="total" name="Total Feedback" stroke="#5427e8" strokeWidth={2.5} fill="url(#analystFeedbackFill)" dot={{ r: 3, fill: "#5427e8" }} />
+                          <Area
+                            type="monotone"
+                            dataKey="total"
+                            name="Total Feedback"
+                            stroke="#5427e8"
+                            strokeWidth={2.5}
+                            fill="url(#analystFeedbackFill)"
+                            dot={{ r: 3, fill: "#5427e8" }}
+                          />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   )}
                 </Card>
 
-                <Card title="Sentiment Over Time" action={<span className={styles.period}>{days} Days <ChevronDown size={14} /></span>}>
-                  {isEmpty ? <EmptyState label="No sentiment trend yet" /> : (
+                <Card
+                  title="Sentiment Over Time"
+                  action={
+                    <span className={styles.period}>
+                      {days} Days <ChevronDown size={14} />
+                    </span>
+                  }
+                >
+                  {isEmpty ? (
+                    <EmptyState label="No sentiment trend yet" />
+                  ) : (
                     <>
                       <div className={styles.legendTop}>
-                        <span><i className={styles.positiveDot} />Positive</span>
-                        <span><i className={styles.neutralDot} />Neutral</span>
-                        <span><i className={styles.negativeDot} />Negative</span>
+                        <span>
+                          <i className={styles.positiveDot} />
+                          Positive
+                        </span>
+                        <span>
+                          <i className={styles.neutralDot} />
+                          Neutral
+                        </span>
+                        <span>
+                          <i className={styles.negativeDot} />
+                          Negative
+                        </span>
                       </div>
                       <div className={styles.chart}>
                         <ResponsiveContainer width="100%" height={220}>
                           <LineChart data={sentimentTrend}>
                             <CartesianGrid vertical={false} stroke="#ececf2" />
-                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#667085" }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#667085" }} />
+                            <XAxis
+                              dataKey="date"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 11, fill: "#667085" }}
+                            />
+                            <YAxis
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fontSize: 11, fill: "#667085" }}
+                            />
                             <Tooltip content={<CustomTooltip />} />
-                            <Line type="monotone" dataKey="Positive" stroke={SENTIMENT_COLORS.positive} strokeWidth={2.2} dot={false} />
-                            <Line type="monotone" dataKey="Neutral" stroke={SENTIMENT_COLORS.neutral} strokeWidth={2.2} dot={false} />
-                            <Line type="monotone" dataKey="Negative" stroke={SENTIMENT_COLORS.negative} strokeWidth={2.2} dot={false} />
+                            <Line
+                              type="monotone"
+                              dataKey="Positive"
+                              stroke={SENTIMENT_COLORS.positive}
+                              strokeWidth={2.2}
+                              dot={false}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="Neutral"
+                              stroke={SENTIMENT_COLORS.neutral}
+                              strokeWidth={2.2}
+                              dot={false}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="Negative"
+                              stroke={SENTIMENT_COLORS.negative}
+                              strokeWidth={2.2}
+                              dot={false}
+                            />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
@@ -466,14 +588,30 @@ export default function AnalystAnalyticsPage() {
 
               <section className={styles.gridMiddle}>
                 <Card title="Feedback by Source">
-                  {isEmpty ? <EmptyState label="No source data yet" /> : (
+                  {isEmpty ? (
+                    <EmptyState label="No source data yet" />
+                  ) : (
                     <div className={styles.donutLayout}>
                       <div className={styles.donutWrap}>
                         <ResponsiveContainer width="100%" height={210}>
                           <PieChart>
-                            <Pie data={sourceDistribution} dataKey="count" nameKey="label" innerRadius={55} outerRadius={82} paddingAngle={1}>
+                            <Pie
+                              data={sourceDistribution}
+                              dataKey="count"
+                              nameKey="label"
+                              innerRadius={55}
+                              outerRadius={82}
+                              paddingAngle={1}
+                            >
                               {sourceDistribution.map((item, index) => (
-                                <Cell key={`${item.key ?? item.label ?? "source"}-${index}`} fill={SOURCE_COLORS[item.key] ?? SOURCE_COLORS.MANUAL ?? THEME_COLORS[index % THEME_COLORS.length]} />
+                                <Cell
+                                  key={`${item.key ?? item.label ?? "source"}-${index}`}
+                                  fill={
+                                    SOURCE_COLORS[item.key] ??
+                                    SOURCE_COLORS.MANUAL ??
+                                    THEME_COLORS[index % THEME_COLORS.length]
+                                  }
+                                />
                               ))}
                             </Pie>
                           </PieChart>
@@ -481,9 +619,23 @@ export default function AnalystAnalyticsPage() {
                       </div>
                       <div className={styles.sourceLegend}>
                         {sourceDistribution.map((item, index) => (
-                          <div key={`${item.key ?? item.label ?? "source"}-${index}`}>
-                            <span><i style={{ background: SOURCE_COLORS[item.key] ?? THEME_COLORS[index % THEME_COLORS.length] }} />{item.label}</span>
-                            <b>{percent(item.percentage)} <em>({number(item.count)})</em></b>
+                          <div
+                            key={`${item.key ?? item.label ?? "source"}-${index}`}
+                          >
+                            <span>
+                              <i
+                                style={{
+                                  background:
+                                    SOURCE_COLORS[item.key] ??
+                                    THEME_COLORS[index % THEME_COLORS.length],
+                                }}
+                              />
+                              {item.label}
+                            </span>
+                            <b>
+                              {percent(item.percentage)}{" "}
+                              <em>({number(item.count)})</em>
+                            </b>
                           </div>
                         ))}
                       </div>
@@ -491,15 +643,45 @@ export default function AnalystAnalyticsPage() {
                   )}
                 </Card>
 
-                <Card title="Top Themes" action={<button className={styles.textButton} type="button">View all</button>}>
-                  {themes.length === 0 ? <EmptyState label="No themes discovered yet" /> : (
+                <Card
+                  title="Top Themes"
+                  action={
+                    <button className={styles.textButton} type="button">
+                      View all
+                    </button>
+                  }
+                >
+                  {themes.length === 0 ? (
+                    <EmptyState label="No themes discovered yet" />
+                  ) : (
                     <div className={styles.themeList}>
-                      <div className={styles.themeHeader}><span>Theme</span><span>Feedback</span><span>%</span></div>
+                      <div className={styles.themeHeader}>
+                        <span>Theme</span>
+                        <span>Feedback</span>
+                        <span>%</span>
+                      </div>
                       {themes.slice(0, 6).map((theme, index) => (
-                        <div className={styles.themeRow} key={`${theme.id ?? theme.name ?? "theme"}-${index}`}>
-                          <span className={styles.themeName}><i style={{ background: THEME_COLORS[index % THEME_COLORS.length] }} />{theme.name}</span>
+                        <div
+                          className={styles.themeRow}
+                          key={`${theme.id ?? theme.name ?? "theme"}-${index}`}
+                        >
+                          <span className={styles.themeName}>
+                            <i
+                              style={{
+                                background:
+                                  THEME_COLORS[index % THEME_COLORS.length],
+                              }}
+                            />
+                            {theme.name}
+                          </span>
                           <b>{number(theme.count)}</b>
-                          <div className={styles.themeBar}><i style={{ width: `${Math.min(theme.percentage, 100)}%` }} /></div>
+                          <div className={styles.themeBar}>
+                            <i
+                              style={{
+                                width: `${Math.min(theme.percentage, 100)}%`,
+                              }}
+                            />
+                          </div>
                           <strong>{percent(theme.percentage)}</strong>
                         </div>
                       ))}
@@ -507,17 +689,43 @@ export default function AnalystAnalyticsPage() {
                   )}
                 </Card>
 
-                <Card title="Theme Trend (Top 5)" action={<span className={styles.period}>{days} Days <ChevronDown size={14} /></span>}>
-                  {themeTrend.length === 0 ? <EmptyState label="No theme trend yet" /> : (
+                <Card
+                  title="Theme Trend (Top 5)"
+                  action={
+                    <span className={styles.period}>
+                      {days} Days <ChevronDown size={14} />
+                    </span>
+                  }
+                >
+                  {themeTrend.length === 0 ? (
+                    <EmptyState label="No theme trend yet" />
+                  ) : (
                     <div className={styles.chart}>
                       <ResponsiveContainer width="100%" height={235}>
                         <LineChart data={themeTrend}>
                           <CartesianGrid vertical={false} stroke="#ececf2" />
-                          <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#667085" }} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#667085" }} />
+                          <XAxis
+                            dataKey="date"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 10, fill: "#667085" }}
+                          />
+                          <YAxis
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 10, fill: "#667085" }}
+                          />
                           <Tooltip content={<CustomTooltip />} />
                           {themes.slice(0, 5).map((theme, index) => (
-                            <Line key={`${theme.id ?? theme.name ?? "theme-line"}-${index}`} type="monotone" dataKey={theme.id ?? theme.name} name={theme.name} stroke={THEME_COLORS[index]} strokeWidth={2} dot={false} />
+                            <Line
+                              key={`${theme.id ?? theme.name ?? "theme-line"}-${index}`}
+                              type="monotone"
+                              dataKey={theme.id ?? theme.name}
+                              name={theme.name}
+                              stroke={THEME_COLORS[index]}
+                              strokeWidth={2}
+                              dot={false}
+                            />
                           ))}
                         </LineChart>
                       </ResponsiveContainer>
@@ -528,12 +736,26 @@ export default function AnalystAnalyticsPage() {
 
               <section className={styles.gridBottom}>
                 <Card title="Feedback by Channel">
-                  {isEmpty ? <EmptyState label="No channel data yet" /> : (
+                  {isEmpty ? (
+                    <EmptyState label="No channel data yet" />
+                  ) : (
                     <div className={styles.channelList}>
                       {sourceDistribution.slice(0, 5).map((item, index) => (
-                        <div className={styles.channelRow} key={`${item.key ?? item.label ?? "channel"}-${index}`}>
+                        <div
+                          className={styles.channelRow}
+                          key={`${item.key ?? item.label ?? "channel"}-${index}`}
+                        >
                           <span>{item.label}</span>
-                          <div><i style={{ width: `${Math.min(item.percentage, 100)}%`, background: SOURCE_COLORS[item.key] ?? THEME_COLORS[index % THEME_COLORS.length] }} /></div>
+                          <div>
+                            <i
+                              style={{
+                                width: `${Math.min(item.percentage, 100)}%`,
+                                background:
+                                  SOURCE_COLORS[item.key] ??
+                                  THEME_COLORS[index % THEME_COLORS.length],
+                              }}
+                            />
+                          </div>
                           <b>{percent(item.percentage)}</b>
                         </div>
                       ))}
@@ -543,63 +765,180 @@ export default function AnalystAnalyticsPage() {
 
                 <Card title="Customer Engagement Impact">
                   <div className={styles.impactGrid}>
-                    <div><span>Positive share</span><strong className={styles.greenText}>↑ {percent(positive.percentage)}</strong><small>of total feedback</small></div>
-                    <div><span>Neutral share</span><strong className={styles.orangeText}>↑ {percent(neutral.percentage)}</strong><small>of total feedback</small></div>
-                    <div><span>Negative share</span><strong className={styles.redText}>↓ {percent(negative.percentage)}</strong><small>of total feedback</small></div>
+                    <div>
+                      <span>Positive share</span>
+                      <strong className={styles.greenText}>
+                        ↑ {percent(positive.percentage)}
+                      </strong>
+                      <small>of total feedback</small>
+                    </div>
+                    <div>
+                      <span>Neutral share</span>
+                      <strong className={styles.orangeText}>
+                        ↑ {percent(neutral.percentage)}
+                      </strong>
+                      <small>of total feedback</small>
+                    </div>
+                    <div>
+                      <span>Negative share</span>
+                      <strong className={styles.redText}>
+                        ↓ {percent(negative.percentage)}
+                      </strong>
+                      <small>of total feedback</small>
+                    </div>
                   </div>
                   <h3>Feedback Status Breakdown</h3>
                   <div className={styles.statusBar}>
-                    {statusDistribution.map((status, index) => <i key={`${status.key ?? status.label ?? "status"}-${index}`} style={{ width: `${Math.max(status.percentage, 0.5)}%`, background: THEME_COLORS[index % THEME_COLORS.length] }} />)}
+                    {statusDistribution.map((status, index) => (
+                      <i
+                        key={`${status.key ?? status.label ?? "status"}-${index}`}
+                        style={{
+                          width: `${Math.max(status.percentage, 0.5)}%`,
+                          background: THEME_COLORS[index % THEME_COLORS.length],
+                        }}
+                      />
+                    ))}
                   </div>
                   <div className={styles.statusLabels}>
-                    {statusDistribution.slice(0, 4).map((status, index) => <span key={`${status.key ?? status.label ?? "status"}-${index}`}>{status.label} <b>{number(status.count)}</b></span>)}
+                    {statusDistribution.slice(0, 4).map((status, index) => (
+                      <span
+                        key={`${status.key ?? status.label ?? "status"}-${index}`}
+                      >
+                        {status.label} <b>{number(status.count)}</b>
+                      </span>
+                    ))}
                   </div>
                 </Card>
 
                 <Card title="AI Classification Overview">
                   <div className={styles.aiOverview}>
-                    <div className={styles.aiRing} style={{ "--coverage": `${total ? Math.round(((overview?.aiClassified ?? 0) / total) * 100) : 0}%` } as CSSProperties}>
-                      <b>{total ? Math.round(((overview?.aiClassified ?? 0) / total) * 100) : 0}%</b>
+                    <div
+                      className={styles.aiRing}
+                      style={
+                        {
+                          "--coverage": `${total ? Math.round(((overview?.aiClassified ?? 0) / total) * 100) : 0}%`,
+                        } as CSSProperties
+                      }
+                    >
+                      <b>
+                        {total
+                          ? Math.round(
+                              ((overview?.aiClassified ?? 0) / total) * 100,
+                            )
+                          : 0}
+                        %
+                      </b>
                       <span>Coverage</span>
                     </div>
                     <div className={styles.aiStats}>
-                      <p>Total Processed <b>{number(total)}</b></p>
-                      <p>Auto Classified <b>{number(overview?.aiClassified)}</b></p>
-                      <p>Needs Review <b>{number(Math.max(total - (overview?.aiClassified ?? 0), 0))}</b></p>
+                      <p>
+                        Total Processed <b>{number(total)}</b>
+                      </p>
+                      <p>
+                        Auto Classified <b>{number(overview?.aiClassified)}</b>
+                      </p>
+                      <p>
+                        Needs Review{" "}
+                        <b>
+                          {number(
+                            Math.max(total - (overview?.aiClassified ?? 0), 0),
+                          )}
+                        </b>
+                      </p>
                     </div>
                   </div>
                   <h3>Most Confident Themes</h3>
                   <div className={styles.confidenceList}>
-                    {themes.slice(0, 3).map((theme, index) => <span key={`${theme.id ?? theme.name ?? "confidence-theme"}-${index}`}>{theme.name} <b>{Math.round(theme.avgConfidence * 100)}%</b></span>)}
+                    {themes.slice(0, 3).map((theme, index) => (
+                      <span
+                        key={`${theme.id ?? theme.name ?? "confidence-theme"}-${index}`}
+                      >
+                        {theme.name}{" "}
+                        <b>{Math.round(theme.avgConfidence * 100)}%</b>
+                      </span>
+                    ))}
                   </div>
                 </Card>
               </section>
 
               <section className={styles.bottomCards}>
-                <Card title="Feedback by Category" action={<button className={styles.textButton} type="button">View all</button>}>
-                  {categories.length === 0 ? <EmptyState label="No category data yet" /> : (
+                <Card
+                  title="Feedback by Category"
+                  action={
+                    <button className={styles.textButton} type="button">
+                      View all
+                    </button>
+                  }
+                >
+                  {categories.length === 0 ? (
+                    <EmptyState label="No category data yet" />
+                  ) : (
                     <div className={styles.categoryList}>
-                      {categories.slice(0, 6).map((item, index) => <div key={`${item.key ?? item.label ?? "category"}-${index}`}><span>{item.label}</span><div><i style={{ width: `${Math.min(item.percentage, 100)}%` }} /></div><b>{percent(item.percentage)}</b></div>)}
+                      {categories.slice(0, 6).map((item, index) => (
+                        <div
+                          key={`${item.key ?? item.label ?? "category"}-${index}`}
+                        >
+                          <span>{item.label}</span>
+                          <div>
+                            <i
+                              style={{
+                                width: `${Math.min(item.percentage, 100)}%`,
+                              }}
+                            />
+                          </div>
+                          <b>{percent(item.percentage)}</b>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </Card>
 
-                <Card title="AI Insights" action={<button className={styles.textButton} type="button">View all</button>}>
+                <Card
+                  title="AI Insights"
+                  action={
+                    <button className={styles.textButton} type="button">
+                      View all
+                    </button>
+                  }
+                >
                   <div className={styles.insightList}>
-                    {(dashboard?.insights ?? []).slice(0, 4).map((insight, index) => {
-                      const meta = insightMeta(insight.type);
-                      const Icon = meta.icon;
-                      return <div className={styles.insight} key={`${insight.id ?? insight.title ?? insight.type ?? "insight"}-${index}`}><span className={styles[meta.className]}><Icon size={17} /></span><p><strong>{insight.title}</strong><small>{insight.description}</small></p></div>;
-                    })}
-                    {!dashboard?.insights?.length && <EmptyState label="No AI insights yet" />}
+                    {(dashboard?.insights ?? [])
+                      .slice(0, 4)
+                      .map((insight, index) => {
+                        const meta = insightMeta(insight.type);
+                        const Icon = meta.icon;
+                        return (
+                          <div
+                            className={styles.insight}
+                            key={`${insight.id ?? insight.title ?? insight.type ?? "insight"}-${index}`}
+                          >
+                            <span className={styles[meta.className]}>
+                              <Icon size={17} />
+                            </span>
+                            <p>
+                              <strong>{insight.title}</strong>
+                              <small>{insight.description}</small>
+                            </p>
+                          </div>
+                        );
+                      })}
+                    {!dashboard?.insights?.length && (
+                      <EmptyState label="No AI insights yet" />
+                    )}
                   </div>
                 </Card>
 
                 <Card title="Analyst Quick Actions">
                   <div className={styles.quickActions}>
-                    <button type="button" onClick={handleExport}><Download size={17} /> Export analytics CSV</button>
-                    <button type="button" onClick={() => setFilterOpen(true)}><Filter size={17} /> Refine analysis</button>
-                    <button type="button"><Sparkles size={17} /> Ask LOOP AI</button>
+                    <button type="button" onClick={handleExport}>
+                      <Download size={17} /> Export analytics CSV
+                    </button>
+                    <button type="button" onClick={() => setFilterOpen(true)}>
+                      <Filter size={17} /> Refine analysis
+                    </button>
+                    <button type="button">
+                      <Sparkles size={17} /> Ask LOOP AI
+                    </button>
                   </div>
                 </Card>
               </section>
@@ -607,28 +946,129 @@ export default function AnalystAnalyticsPage() {
           )}
         </div>
 
-        <aside className={`${styles.filterRail} ${filterOpen ? styles.filterRailOpen : ""}`}>
-          <div className={styles.filterTitle}><h2>Filters</h2><button type="button" onClick={handleClearFilters}>Clear all</button></div>
-          <label>Workspace<select disabled><option>{dashboard?.workspaceName ?? "Current workspace"}</option></select></label>
-          <label>Date Range<select value={days} onChange={(event) => setDays(Number(event.target.value))}><option value={7}>Last 7 days</option><option value={14}>Last 14 days</option><option value={30}>Last 30 days</option><option value={90}>Last 90 days</option></select></label>
-          <label>Source<select value={draftSource ?? ""} onChange={(event) => setDraftSource((event.target.value || undefined) as AnalyticsQuery["source"])}><option value="">All Sources</option>{SOURCE_OPTIONS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Sentiment<select value={draftSentiment ?? ""} onChange={(event) => setDraftSentiment((event.target.value || undefined) as AnalyticsQuery["sentiment"])}><option value="">All Sentiments</option>{SENTIMENT_OPTIONS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-          <label>Theme<select value={draftTheme ?? ""} onChange={(event) => setDraftTheme(event.target.value || undefined)}><option value="">All Themes</option>{themes.map((theme, index) => <option key={`${theme.id ?? theme.name ?? "theme"}-${index}`} value={theme.name}>{theme.name}</option>)}</select></label>
-          <button className={styles.applyButton} type="button" onClick={handleApplyFilters} disabled={query.isFetching}>{query.isFetching ? "Applying…" : "Apply Filters"}</button>
+        <aside
+          className={`${styles.filterRail} ${filterOpen ? styles.filterRailOpen : ""}`}
+        >
+          <div className={styles.filterTitle}>
+            <h2>Filters</h2>
+            <button type="button" onClick={handleClearFilters}>
+              Clear all
+            </button>
+          </div>
+          <label>
+            Workspace
+            <select disabled>
+              <option>{dashboard?.workspaceName ?? "Current workspace"}</option>
+            </select>
+          </label>
+          <label>
+            Date Range
+            <select
+              value={days}
+              onChange={(event) => setDays(Number(event.target.value))}
+            >
+              <option value={7}>Last 7 days</option>
+              <option value={14}>Last 14 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 90 days</option>
+            </select>
+          </label>
+          <label>
+            Source
+            <select
+              value={draftSource ?? ""}
+              onChange={(event) =>
+                setDraftSource(
+                  (event.target.value || undefined) as AnalyticsQuery["source"],
+                )
+              }
+            >
+              <option value="">All Sources</option>
+              {SOURCE_OPTIONS.map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Sentiment
+            <select
+              value={draftSentiment ?? ""}
+              onChange={(event) =>
+                setDraftSentiment(
+                  (event.target.value ||
+                    undefined) as AnalyticsQuery["sentiment"],
+                )
+              }
+            >
+              <option value="">All Sentiments</option>
+              {SENTIMENT_OPTIONS.map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Theme
+            <select
+              value={draftTheme ?? ""}
+              onChange={(event) =>
+                setDraftTheme(event.target.value || undefined)
+              }
+            >
+              <option value="">All Themes</option>
+              {themes.map((theme, index) => (
+                <option
+                  key={`${theme.id ?? theme.name ?? "theme"}-${index}`}
+                  value={theme.name}
+                >
+                  {theme.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            className={styles.applyButton}
+            type="button"
+            onClick={handleApplyFilters}
+            disabled={query.isFetching}
+          >
+            {query.isFetching ? "Applying…" : "Apply Filters"}
+          </button>
 
           <section className={styles.sideInsights}>
-            <header><h2>AI Insights</h2><button type="button">View all</button></header>
+            <header>
+              <h2>AI Insights</h2>
+              <button type="button">View all</button>
+            </header>
             {(dashboard?.insights ?? []).slice(0, 3).map((insight, index) => {
               const meta = insightMeta(insight.type);
               const Icon = meta.icon;
-              return <div className={styles.sideInsight} key={`${insight.id ?? insight.title ?? insight.type ?? "insight"}-${index}`}><span className={styles[meta.className]}><Icon size={17} /></span><p>{insight.title}<small>{insight.description}</small></p></div>;
+              return (
+                <div
+                  className={styles.sideInsight}
+                  key={`${insight.id ?? insight.title ?? insight.type ?? "insight"}-${index}`}
+                >
+                  <span className={styles[meta.className]}>
+                    <Icon size={17} />
+                  </span>
+                  <p>
+                    {insight.title}
+                    <small>{insight.description}</small>
+                  </p>
+                </div>
+              );
             })}
           </section>
 
           <section className={styles.exportCard}>
             <h2>Export Analytics</h2>
             <p>Download your analytics report</p>
-            <button type="button" onClick={handleExport}><Download size={16} /> Export CSV</button>
+            <button type="button" onClick={handleExport}>
+              <Download size={16} /> Export CSV
+            </button>
           </section>
         </aside>
       </div>

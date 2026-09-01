@@ -13,11 +13,8 @@ interface AnalystLayoutProps {
   children: ReactNode;
 }
 
-export default function AnalystLayout({
-  children,
-}: AnalystLayoutProps) {
-  const [mobileSidebarOpen, setMobileSidebarOpen] =
-    useState(false);
+export default function AnalystLayout({ children }: AnalystLayoutProps) {
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
     <div className={styles.layout}>
@@ -27,13 +24,15 @@ export default function AnalystLayout({
       />
 
       <div className={styles.mainArea}>
-        <header className={styles.mobileHeader}>
-          <AnalystSidebarTrigger
-            onClick={() => setMobileSidebarOpen(true)}
-          />
+        <header
+          className={styles.mobileHeader}
+          aria-label="Analyst mobile navigation"
+        >
+          <AnalystSidebarTrigger onClick={() => setMobileSidebarOpen(true)} />
 
           <div className={styles.mobileLogo}>
             <span className={styles.mobileLogoIcon}>∞</span>
+
             <span>LOOP</span>
           </div>
         </header>

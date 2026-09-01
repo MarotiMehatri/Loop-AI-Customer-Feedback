@@ -1,170 +1,147 @@
+import { prisma } from "../../config/database.js";
+
 import { ApiError } from "../../utils/apiError.js";
 
-import {
-  createFeedbackRecord,
-  deleteFeedbackRecord,
-  findFeedbackById,
-  findFeedbackList,
-  updateFeedbackRecord,
-  updateFeedbackStatusRecord,
-} from "./feedback.repository.js";
+import { FEEDBACK_MESSAGES } from "./feedback.constants.js";
 
-import { mapFeedbackResponse } from "./feedback.mapper.js";
+import { FeedbackRepository } from "./feedback.repository.js";
 
 import type {
   CreateFeedbackInput,
+  FeedbackActorContext,
   FeedbackListFilters,
-  PaginationMetadata,
-  UpdateFeedbackInput,
-  UpdateFeedbackStatusInput,
 } from "./feedback.types.js";
 
-const normalizeTags = (tags: string[] | undefined): string[] => {
-  if (!tags) {
-    return [];
-  }
 
-  return [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))];
-};
 
-export const createFeedback = async (
-  input: CreateFeedbackInput,
-  workspaceId: string,
-  userId: string,
-) => {
-  const feedback = await createFeedbackRecord({
-    ...input,
+const feedbackRepository = new FeedbackRepository(prisma);
 
-    customerName: input.customerName?.trim() || undefined,
-
-    customerEmail: input.customerEmail?.trim().toLowerCase() || undefined,
-
-    content: input.content.trim(),
-
-    category: input.category?.trim() || undefined,
-
-    tags: normalizeTags(input.tags),
-
-    workspaceId,
-    createdById: userId,
-  });
-
-  return mapFeedbackResponse(feedback);
-};
-
-export const getFeedback = async (feedbackId: string, workspaceId: string) => {
-  const feedback = await findFeedbackById(feedbackId, workspaceId);
-
-  if (!feedback) {
-    throw new ApiError(404, "Feedback record was not found");
-  }
-
-  return mapFeedbackResponse(feedback);
-};
-
-export const getFeedbackList = async (
-  workspaceId: string,
-  filters: FeedbackListFilters,
-) => {
-  if (
-    filters.createdFrom &&
-    filters.createdTo &&
-    filters.createdFrom > filters.createdTo
+export const feedbackService = {
+  async create(
+    context: FeedbackActorContext,
+    input: CreateFeedbackInput,
   ) {
-    throw new ApiError(400, "createdFrom cannot be later than createdTo");
-  }
+    const content = input.content.trim();
 
-  const result = await findFeedbackList(workspaceId, filters);
+    if (!content) {
+      throw new ApiError(
+        400,
+        FEEDBACK_MESSAGES.contentRequired,
+      );
+    }
 
-  const totalPages = Math.ceil(result.totalItems / filters.limit);
+    if (!input.source) {
+      throw new ApiError(
+        400,
+        FEEDBACK_MESSAGES.sourceRequired,
+      );
+    }
 
-  const pagination: PaginationMetadata = {
-    page: filters.page,
-    limit: filters.limit,
-    totalItems: result.totalItems,
-    totalPages,
-    hasNextPage: filters.page < totalPages,
-    hasPreviousPage: filters.page > 1,
-  };
+    let feedbackDate: Date | undefined;
 
-  return {
-    feedbacks: result.feedbacks.map(mapFeedbackResponse),
+    if (input.feedbackDate) {
+      feedbackDate = new Date(input.feedbackDate);
 
-    pagination,
-  };
-};
+      if (Number.isNaN(feedbackDate.getTime())) {
+        throw new ApiError(
+          400,
+          "Invalid feedback date.",
+        );
+      }
+    }
 
-export const updateFeedback = async (
-  feedbackId: string,
-  workspaceId: string,
-  input: UpdateFeedbackInput,
-) => {
-  await getFeedback(feedbackId, workspaceId);
+    const feedback = await feedbackRepository.create({
+      content,
 
-  const normalizedInput: UpdateFeedbackInput = {
-    ...input,
+      customerName:
+        input.customerName?.trim() || undefined,
 
-    ...(input.customerName !== undefined
-      ? {
-          customerName: input.customerName?.trim() || null,
-        }
-      : {}),
+      source: input.source,
 
-    ...(input.customerEmail !== undefined
-      ? {
-          customerEmail: input.customerEmail?.trim().toLowerCase() || null,
-        }
-      : {}),
+      category:
+        input.category?.trim() || undefined,
 
-    ...(input.content !== undefined
-      ? {
-          content: input.content.trim(),
-        }
-      : {}),
+      feedbackDate,
 
-    ...(input.category !== undefined
-      ? {
-          category: input.category?.trim() || null,
-        }
-      : {}),
+      workspace: {
+        connect: {
+          id: context.workspaceId,
+        },
+      },
 
-    ...(input.tags !== undefined
-      ? {
-          tags: normalizeTags(input.tags),
-        }
-      : {}),
-  };
+      createdBy: {
+        connect: {
+          id: context.userId,
+        },
+      },
+    });
 
-  const feedback = await updateFeedbackRecord(
-    feedbackId,
-    workspaceId,
-    normalizedInput,
-  );
+    return feedback;
+  },
 
-  return mapFeedbackResponse(feedback);
-};
+  async list(
+    context: FeedbackActorContext,
+    filters: FeedbackListFilters,
+  ) {
+    return feedbackRepository.list(
+      context.workspaceId,
+      {
+        page: Number(filters.page ?? 1),
+        limit: Number(filters.limit ?? 20),
+        search: filters.search,
+        source: filters.source,
+        status: filters.status,
+        sentiment: filters.sentiment,
+        category: filters.category,
+      },
+    );
+  },
 
-export const updateFeedbackStatus = async (
-  feedbackId: string,
-  workspaceId: string,
-  input: UpdateFeedbackStatusInput,
-) => {
-  await getFeedback(feedbackId, workspaceId);
+  async getById(
+    context: FeedbackActorContext,
+    id: string,
+  ) {
+    const feedback =
+      await feedbackRepository.findById(
+        id,
+        context.workspaceId,
+      );
 
-  const feedback = await updateFeedbackStatusRecord(
-    feedbackId,
-    workspaceId,
-    input.status,
-  );
+    if (!feedback) {
+      throw new ApiError(
+        404,
+        FEEDBACK_MESSAGES.notFound,
+      );
+    }
 
-  return mapFeedbackResponse(feedback);
-};
+    return feedback;
+  },
 
-export const deleteFeedback = async (
-  feedbackId: string,
-  workspaceId: string,
-) => {
-  await getFeedback(feedbackId, workspaceId);
+  async remove(
+    context: FeedbackActorContext,
+    id: string,
+  ) {
+    const existing =
+      await feedbackRepository.findById(
+        id,
+        context.workspaceId,
+      );
 
-  await deleteFeedbackRecord(feedbackId, workspaceId);
+    if (!existing) {
+      throw new ApiError(
+        404,
+        FEEDBACK_MESSAGES.notFound,
+      );
+    }
+
+    await feedbackRepository.delete(
+      id,
+      context.workspaceId,
+    );
+
+    return {
+      id,
+      deleted: true,
+    };
+  },
 };

@@ -96,7 +96,11 @@ function enrichTheme(
     mentions: Number(theme.feedbackCount ?? 0),
     percentage:
       totalMentions > 0
-        ? Number(((Number(theme.feedbackCount ?? 0) / totalMentions) * 100).toFixed(1))
+        ? Number(
+            ((Number(theme.feedbackCount ?? 0) / totalMentions) * 100).toFixed(
+              1,
+            ),
+          )
         : 0,
     color: theme.color ?? COLORS[index % COLORS.length],
     firstSeen: theme.createdAt,
@@ -106,17 +110,15 @@ function enrichTheme(
   };
 }
 
-function Donut({
-  values,
-  total,
-}: {
-  values: number[];
-  total: number;
-}) {
+function Donut({ values, total }: { values: number[]; total: number }) {
   const safeTotal = values.reduce((sum, value) => sum + Math.max(0, value), 0);
 
   if (!safeTotal) {
-    return <div className={styles.donutEmpty}>0<span>Total</span></div>;
+    return (
+      <div className={styles.donutEmpty}>
+        0<span>Total</span>
+      </div>
+    );
   }
 
   let cursor = 0;
@@ -156,8 +158,18 @@ function Sparkline({ values }: { values: number[] }) {
     .join(" ");
 
   return (
-    <svg className={styles.sparkline} viewBox="0 0 100 30" role="img" aria-label="Theme trend">
-      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" />
+    <svg
+      className={styles.sparkline}
+      viewBox="0 0 100 30"
+      role="img"
+      aria-label="Theme trend"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
     </svg>
   );
 }
@@ -230,9 +242,11 @@ export default function AnalystThemesPage() {
       ]);
 
       const activeThemes =
-        summaryResult.byStatus.find((item) => item.status === "ACTIVE")?.count ?? 0;
+        summaryResult.byStatus.find((item) => item.status === "ACTIVE")
+          ?.count ?? 0;
       const archivedThemes =
-        summaryResult.byStatus.find((item) => item.status === "ARCHIVED")?.count ?? 0;
+        summaryResult.byStatus.find((item) => item.status === "ARCHIVED")
+          ?.count ?? 0;
 
       setSummary({
         totalThemes: Number(summaryResult.totalThemes ?? 0),
@@ -246,7 +260,9 @@ export default function AnalystThemesPage() {
       const list = listResult.items ?? [];
       setThemes(list);
       setTotal(Number(listResult.pagination?.total ?? list.length));
-      setTotalPages(Math.max(1, Number(listResult.pagination?.totalPages ?? 1)));
+      setTotalPages(
+        Math.max(1, Number(listResult.pagination?.totalPages ?? 1)),
+      );
 
       const analyticsResults = await Promise.allSettled(
         list.slice(0, 10).map((theme) => getThemeAnalytics(theme.id)),
@@ -274,12 +290,16 @@ export default function AnalystThemesPage() {
   }, [load]);
 
   const totalMentions = useMemo(
-    () => themes.reduce((sum, theme) => sum + Number(theme.feedbackCount ?? 0), 0),
+    () =>
+      themes.reduce((sum, theme) => sum + Number(theme.feedbackCount ?? 0), 0),
     [themes],
   );
 
   const enrichedThemes = useMemo(
-    () => themes.map((theme, index) => enrichTheme(theme, analytics[theme.id], index, totalMentions)),
+    () =>
+      themes.map((theme, index) =>
+        enrichTheme(theme, analytics[theme.id], index, totalMentions),
+      ),
     [themes, analytics, totalMentions],
   );
 
@@ -297,7 +317,9 @@ export default function AnalystThemesPage() {
       name: theme.name,
       mentions: Number(theme.mentions ?? 0),
       percentage: totalMentions
-        ? Number(((Number(theme.mentions ?? 0) / totalMentions) * 100).toFixed(1))
+        ? Number(
+            ((Number(theme.mentions ?? 0) / totalMentions) * 100).toFixed(1),
+          )
         : 0,
       color: theme.color ?? COLORS[index % COLORS.length],
     }));
@@ -307,9 +329,15 @@ export default function AnalystThemesPage() {
     return enrichedThemes.slice(0, 5).map((theme) => {
       const data = analytics[theme.id];
       const values = {
-        positive: data?.sentiment.find((item) => item.sentiment === "POSITIVE")?.percentage ?? 0,
-        neutral: data?.sentiment.find((item) => item.sentiment === "NEUTRAL")?.percentage ?? 0,
-        negative: data?.sentiment.find((item) => item.sentiment === "NEGATIVE")?.percentage ?? 0,
+        positive:
+          data?.sentiment.find((item) => item.sentiment === "POSITIVE")
+            ?.percentage ?? 0,
+        neutral:
+          data?.sentiment.find((item) => item.sentiment === "NEUTRAL")
+            ?.percentage ?? 0,
+        negative:
+          data?.sentiment.find((item) => item.sentiment === "NEGATIVE")
+            ?.percentage ?? 0,
       };
       return { name: theme.name, ...values };
     });
@@ -406,10 +434,20 @@ export default function AnalystThemesPage() {
     ]);
 
     const csv = [
-      ["Theme", "Description", "Mentions", "% of Total", "Sentiment", "Status", "First Seen"],
+      [
+        "Theme",
+        "Description",
+        "Mentions",
+        "% of Total",
+        "Sentiment",
+        "Status",
+        "First Seen",
+      ],
       ...rows,
     ]
-      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+      .map((row) =>
+        row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","),
+      )
       .join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -422,7 +460,12 @@ export default function AnalystThemesPage() {
   }
 
   const coverage = summary.totalThemes
-    ? Math.min(100, Math.round((summary.activeAssignments / Math.max(summary.totalThemes, 1)) * 100))
+    ? Math.min(
+        100,
+        Math.round(
+          (summary.activeAssignments / Math.max(summary.totalThemes, 1)) * 100,
+        ),
+      )
     : 0;
 
   return (
@@ -441,10 +484,16 @@ export default function AnalystThemesPage() {
             <span>{rangeText()}</span>
             <CalendarDays size={16} />
           </button>
-          <button className={styles.iconButton} type="button" aria-label="Notifications">
+          <button
+            className={styles.iconButton}
+            type="button"
+            aria-label="Notifications"
+          >
             ♧<sup>3</sup>
           </button>
-          <button className={styles.iconButton} type="button" aria-label="Help">?</button>
+          <button className={styles.iconButton} type="button" aria-label="Help">
+            ?
+          </button>
           <div className={styles.profile}>
             <div className={styles.avatar}>AT</div>
             <div className={styles.profileText}>
@@ -456,14 +505,48 @@ export default function AnalystThemesPage() {
         </div>
       </header>
 
-      {loading && <div className={styles.loadingBar}><span /></div>}
+      {loading && (
+        <div className={styles.loadingBar}>
+          <span />
+        </div>
+      )}
 
       <section className={styles.metrics}>
-        <MetricCard icon={<Folder size={19} />} label="Total Themes" value={number(summary.totalThemes)} note="Workspace themes" tone={styles.purple} />
-        <MetricCard icon={<Tag size={19} />} label="Active Themes" value={number(summary.activeThemes)} note="Currently active" tone={styles.blue} />
-        <MetricCard icon={<TrendingUp size={19} />} label="AI Generated" value={number(summary.aiGeneratedThemes)} note="AI-created themes" tone={styles.orange} />
-        <MetricCard icon={<CheckCircle2 size={19} />} label="Archived Themes" value={number(summary.archivedThemes)} note="Archived themes" tone={styles.green} />
-        <MetricCard icon={<BarChart3 size={19} />} label="Coverage" value={`${coverage}%`} note={`${number(summary.activeAssignments)} feedback assignments`} tone={styles.pink} />
+        <MetricCard
+          icon={<Folder size={19} />}
+          label="Total Themes"
+          value={number(summary.totalThemes)}
+          note="Workspace themes"
+          tone={styles.purple}
+        />
+        <MetricCard
+          icon={<Tag size={19} />}
+          label="Active Themes"
+          value={number(summary.activeThemes)}
+          note="Currently active"
+          tone={styles.blue}
+        />
+        <MetricCard
+          icon={<TrendingUp size={19} />}
+          label="AI Generated"
+          value={number(summary.aiGeneratedThemes)}
+          note="AI-created themes"
+          tone={styles.orange}
+        />
+        <MetricCard
+          icon={<CheckCircle2 size={19} />}
+          label="Archived Themes"
+          value={number(summary.archivedThemes)}
+          note="Archived themes"
+          tone={styles.green}
+        />
+        <MetricCard
+          icon={<BarChart3 size={19} />}
+          label="Coverage"
+          value={`${coverage}%`}
+          note={`${number(summary.activeAssignments)} feedback assignments`}
+          tone={styles.pink}
+        />
       </section>
 
       <section className={styles.chartGrid}>
@@ -482,45 +565,83 @@ export default function AnalystThemesPage() {
                 </div>
               </div>
             ))}
-            {!enrichedThemes.length && <div className={styles.emptyChart}>No theme data yet.</div>}
+            {!enrichedThemes.length && (
+              <div className={styles.emptyChart}>No theme data yet.</div>
+            )}
           </div>
         </article>
 
         <article className={styles.card}>
-          <div className={styles.cardHeader}><h2>Theme Distribution</h2></div>
+          <div className={styles.cardHeader}>
+            <h2>Theme Distribution</h2>
+          </div>
           <div className={styles.distribution}>
-            <Donut values={distribution.map((item) => item.mentions)} total={totalMentions} />
+            <Donut
+              values={distribution.map((item) => item.mentions)}
+              total={totalMentions}
+            />
             <div className={styles.legendList}>
               {distribution.map((item) => (
                 <div key={item.name}>
-                  <span><i style={{ background: item.color }} />{item.name}</span>
-                  <b>{item.percentage}% ({number(item.mentions)})</b>
+                  <span>
+                    <i style={{ background: item.color }} />
+                    {item.name}
+                  </span>
+                  <b>
+                    {item.percentage}% ({number(item.mentions)})
+                  </b>
                 </div>
               ))}
-              {!distribution.length && <p className={styles.emptyText}>No distribution data.</p>}
+              {!distribution.length && (
+                <p className={styles.emptyText}>No distribution data.</p>
+              )}
             </div>
           </div>
         </article>
 
         <article className={styles.card}>
-          <div className={styles.cardHeader}><h2>Top Themes by Sentiment</h2></div>
+          <div className={styles.cardHeader}>
+            <h2>Top Themes by Sentiment</h2>
+          </div>
           <div className={styles.sentimentChart}>
             {sentimentRows.map((row) => (
               <div className={styles.sentimentRow} key={row.name}>
                 <span>{row.name}</span>
                 <div className={styles.stackedBar}>
-                  <i className={styles.positiveBar} style={{ width: `${row.positive}%` }} />
-                  <i className={styles.neutralBar} style={{ width: `${row.neutral}%` }} />
-                  <i className={styles.negativeBar} style={{ width: `${row.negative}%` }} />
+                  <i
+                    className={styles.positiveBar}
+                    style={{ width: `${row.positive}%` }}
+                  />
+                  <i
+                    className={styles.neutralBar}
+                    style={{ width: `${row.neutral}%` }}
+                  />
+                  <i
+                    className={styles.negativeBar}
+                    style={{ width: `${row.negative}%` }}
+                  />
                 </div>
               </div>
             ))}
-            {!sentimentRows.length && <div className={styles.emptyChart}>Sentiment is not available yet.</div>}
+            {!sentimentRows.length && (
+              <div className={styles.emptyChart}>
+                Sentiment is not available yet.
+              </div>
+            )}
           </div>
           <div className={styles.sentimentLegend}>
-            <span><i className={styles.positiveDot} />Positive</span>
-            <span><i className={styles.neutralDot} />Neutral</span>
-            <span><i className={styles.negativeDot} />Negative</span>
+            <span>
+              <i className={styles.positiveDot} />
+              Positive
+            </span>
+            <span>
+              <i className={styles.neutralDot} />
+              Neutral
+            </span>
+            <span>
+              <i className={styles.negativeDot} />
+              Negative
+            </span>
           </div>
         </article>
       </section>
@@ -530,8 +651,12 @@ export default function AnalystThemesPage() {
           <article className={`${styles.card} ${styles.tableCard}`}>
             <div className={styles.tableToolbar}>
               <div>
-                <h2>All Themes <em>({number(total)})</em></h2>
-                <span className={styles.toolbarHint}>Data from the current workspace</span>
+                <h2>
+                  All Themes <em>({number(total)})</em>
+                </h2>
+                <span className={styles.toolbarHint}>
+                  Data from the current workspace
+                </span>
               </div>
               <div className={styles.toolbarActions}>
                 <label className={styles.searchBox}>
@@ -545,11 +670,21 @@ export default function AnalystThemesPage() {
                     placeholder="Search themes..."
                   />
                 </label>
-                <button className={styles.secondaryButton} type="button" onClick={exportCsv}>
-                  <Download size={15} />Export CSV
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  onClick={exportCsv}
+                >
+                  <Download size={15} />
+                  Export CSV
                 </button>
-                <button className={styles.primaryButton} type="button" onClick={openCreate}>
-                  <Plus size={16} />Create Theme
+                <button
+                  className={styles.primaryButton}
+                  type="button"
+                  onClick={openCreate}
+                >
+                  <Plus size={16} />
+                  Create Theme
                 </button>
               </div>
             </div>
@@ -574,38 +709,92 @@ export default function AnalystThemesPage() {
                     <tr key={theme.id}>
                       <td>
                         <div className={styles.themeName}>
-                          <span style={{ background: theme.color ?? COLORS[index % COLORS.length] }}><Tag size={14} /></span>
+                          <span
+                            style={{
+                              background:
+                                theme.color ?? COLORS[index % COLORS.length],
+                            }}
+                          >
+                            <Tag size={14} />
+                          </span>
                           <strong>{theme.name}</strong>
                         </div>
                       </td>
-                      <td className={styles.description}>{theme.description || "—"}</td>
-                      <td><strong>{number(theme.mentions ?? 0)}</strong></td>
+                      <td className={styles.description}>
+                        {theme.description || "—"}
+                      </td>
+                      <td>
+                        <strong>{number(theme.mentions ?? 0)}</strong>
+                      </td>
                       <td>{theme.percentage ?? 0}%</td>
                       <td>
-                        <span className={`${styles.badge} ${sentimentClass(theme.sentiment)}`}>
+                        <span
+                          className={`${styles.badge} ${sentimentClass(theme.sentiment)}`}
+                        >
                           {sentimentLabel(theme.sentiment)}
-                          {theme.sentimentPercentage ? ` (${Math.round(theme.sentimentPercentage)}%)` : ""}
+                          {theme.sentimentPercentage
+                            ? ` (${Math.round(theme.sentimentPercentage)}%)`
+                            : ""}
                         </span>
                       </td>
-                      <td><Sparkline values={theme.trend ?? []} /></td>
                       <td>
-                        <span className={`${styles.badge} ${theme.status === "ACTIVE" ? styles.activeBadge : styles.archivedBadge}`}>
+                        <Sparkline values={theme.trend ?? []} />
+                      </td>
+                      <td>
+                        <span
+                          className={`${styles.badge} ${theme.status === "ACTIVE" ? styles.activeBadge : styles.archivedBadge}`}
+                        >
                           {theme.status === "ACTIVE" ? "Active" : "Archived"}
                         </span>
                       </td>
                       <td>{dateText(theme.firstSeen)}</td>
                       <td>
                         <div className={styles.actionsCell}>
-                          <button type="button" aria-label={`View ${theme.name}`} onClick={() => openView(theme)}><Eye size={15} /></button>
-                          <button type="button" aria-label={`Edit ${theme.name}`} onClick={() => openEdit(theme)}><Edit3 size={15} /></button>
+                          <button
+                            type="button"
+                            aria-label={`View ${theme.name}`}
+                            onClick={() => openView(theme)}
+                          >
+                            <Eye size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Edit ${theme.name}`}
+                            onClick={() => openEdit(theme)}
+                          >
+                            <Edit3 size={15} />
+                          </button>
                           <div className={styles.menuWrap}>
-                            <button type="button" aria-label="More actions" onClick={() => setMenuId(menuId === theme.id ? null : theme.id)}><MoreHorizontal size={16} /></button>
+                            <button
+                              type="button"
+                              aria-label="More actions"
+                              onClick={() =>
+                                setMenuId(menuId === theme.id ? null : theme.id)
+                              }
+                            >
+                              <MoreHorizontal size={16} />
+                            </button>
                             {menuId === theme.id && (
                               <div className={styles.actionMenu}>
-                                <button type="button" onClick={() => openView(theme)}>View details</button>
-                                <button type="button" onClick={() => openEdit(theme)}>Edit theme</button>
-                                <button type="button" onClick={() => void toggleArchive(theme)}>
-                                  {theme.status === "ACTIVE" ? "Archive" : "Restore"}
+                                <button
+                                  type="button"
+                                  onClick={() => openView(theme)}
+                                >
+                                  View details
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => openEdit(theme)}
+                                >
+                                  Edit theme
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void toggleArchive(theme)}
+                                >
+                                  {theme.status === "ACTIVE"
+                                    ? "Archive"
+                                    : "Restore"}
                                 </button>
                               </div>
                             )}
@@ -631,13 +820,33 @@ export default function AnalystThemesPage() {
             </div>
 
             <footer className={styles.tableFooter}>
-              <span>Showing {filteredThemes.length} of {number(total)} themes</span>
+              <span>
+                Showing {filteredThemes.length} of {number(total)} themes
+              </span>
               <div className={styles.pagination}>
-                <button type="button" disabled={page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>‹</button>
-                <button type="button" className={styles.currentPage}>{page}</button>
-                <button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>›</button>
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((value) => Math.max(1, value - 1))}
+                >
+                  ‹
+                </button>
+                <button type="button" className={styles.currentPage}>
+                  {page}
+                </button>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() =>
+                    setPage((value) => Math.min(totalPages, value + 1))
+                  }
+                >
+                  ›
+                </button>
               </div>
-              <span className={styles.pageCount}>{totalPages} page{totalPages === 1 ? "" : "s"}</span>
+              <span className={styles.pageCount}>
+                {totalPages} page{totalPages === 1 ? "" : "s"}
+              </span>
             </footer>
           </article>
         </div>
@@ -646,84 +855,254 @@ export default function AnalystThemesPage() {
           <article className={styles.card}>
             <div className={styles.railHeader}>
               <h2>Filters</h2>
-              <button type="button" onClick={() => { setSearch(""); setStatus("ALL"); setSentiment("ALL"); setPage(1); }}>Clear all</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setStatus("ALL");
+                  setSentiment("ALL");
+                  setPage(1);
+                }}
+              >
+                Clear all
+              </button>
             </div>
 
-            <label>Workspace<input value="Current Workspace" readOnly /></label>
-            <label>Date Range<div className={styles.inputLike}>{rangeText()} <CalendarDays size={14} /></div></label>
-            <label>Status
-              <select value={status} onChange={(event) => { setPage(1); setStatus(event.target.value as "ALL" | ThemeStatus); }}>
+            <label>
+              Workspace
+              <input value="Current Workspace" readOnly />
+            </label>
+            <label>
+              Date Range
+              <div className={styles.inputLike}>
+                {rangeText()} <CalendarDays size={14} />
+              </div>
+            </label>
+            <label>
+              Status
+              <select
+                value={status}
+                onChange={(event) => {
+                  setPage(1);
+                  setStatus(event.target.value as "ALL" | ThemeStatus);
+                }}
+              >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
                 <option value="ARCHIVED">Archived</option>
               </select>
             </label>
-            <label>Sentiment
-              <select value={sentiment} onChange={(event) => setSentiment(event.target.value as "ALL" | ThemeSentiment)}>
+            <label>
+              Sentiment
+              <select
+                value={sentiment}
+                onChange={(event) =>
+                  setSentiment(event.target.value as "ALL" | ThemeSentiment)
+                }
+              >
                 <option value="ALL">All Sentiments</option>
                 <option value="POSITIVE">Positive</option>
                 <option value="NEUTRAL">Neutral</option>
                 <option value="NEGATIVE">Negative</option>
               </select>
             </label>
-            <button className={styles.applyButton} type="button" onClick={() => void load()}>Apply Filters</button>
+            <button
+              className={styles.applyButton}
+              type="button"
+              onClick={() => void load()}
+            >
+              Apply Filters
+            </button>
           </article>
 
           <article className={styles.card}>
-            <div className={styles.railHeader}><h2>AI Theme Insights</h2><Sparkles size={15} /></div>
-            <div className={styles.insight}>
-              <div className={styles.insightIcon}><TrendingUp size={15} /></div>
-              <div><strong>{number(summary.aiGeneratedThemes)} AI-generated themes</strong><p>AI-generated themes currently exist in this workspace.</p></div>
+            <div className={styles.railHeader}>
+              <h2>AI Theme Insights</h2>
+              <Sparkles size={15} />
             </div>
             <div className={styles.insight}>
-              <div className={styles.insightIcon}><CheckCircle2 size={15} /></div>
-              <div><strong>{number(summary.activeThemes)} active themes</strong><p>These themes are available for current feedback classification.</p></div>
+              <div className={styles.insightIcon}>
+                <TrendingUp size={15} />
+              </div>
+              <div>
+                <strong>
+                  {number(summary.aiGeneratedThemes)} AI-generated themes
+                </strong>
+                <p>AI-generated themes currently exist in this workspace.</p>
+              </div>
             </div>
             <div className={styles.insight}>
-              <div className={styles.insightIcon}><BarChart3 size={15} /></div>
-              <div><strong>{number(summary.activeAssignments)} assignments</strong><p>Feedback-to-theme assignments recorded by the backend.</p></div>
+              <div className={styles.insightIcon}>
+                <CheckCircle2 size={15} />
+              </div>
+              <div>
+                <strong>{number(summary.activeThemes)} active themes</strong>
+                <p>
+                  These themes are available for current feedback
+                  classification.
+                </p>
+              </div>
+            </div>
+            <div className={styles.insight}>
+              <div className={styles.insightIcon}>
+                <BarChart3 size={15} />
+              </div>
+              <div>
+                <strong>{number(summary.activeAssignments)} assignments</strong>
+                <p>Feedback-to-theme assignments recorded by the backend.</p>
+              </div>
             </div>
           </article>
 
           <article className={styles.card}>
-            <div className={styles.railHeader}><h2>Quick Actions</h2></div>
-            <button className={styles.quickAction} type="button" onClick={openCreate}><Plus size={16} />Create Theme</button>
-            <button className={styles.quickAction} type="button" onClick={exportCsv}><Download size={16} />Export Current Themes</button>
+            <div className={styles.railHeader}>
+              <h2>Quick Actions</h2>
+            </div>
+            <button
+              className={styles.quickAction}
+              type="button"
+              onClick={openCreate}
+            >
+              <Plus size={16} />
+              Create Theme
+            </button>
+            <button
+              className={styles.quickAction}
+              type="button"
+              onClick={exportCsv}
+            >
+              <Download size={16} />
+              Export Current Themes
+            </button>
           </article>
         </aside>
       </section>
 
       {modal && (
-        <div className={styles.modalBackdrop} role="presentation" onMouseDown={() => !saving && setModal(null)}>
-          <div className={styles.modal} role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onMouseDown={() => !saving && setModal(null)}
+        >
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
               <div>
-                <h2>{modal === "create" ? "Create Theme" : modal === "edit" ? "Edit Theme" : "Theme Details"}</h2>
-                <p>{modal === "view" ? "Theme information from the current workspace." : "Changes are saved to the LOOP backend."}</p>
+                <h2>
+                  {modal === "create"
+                    ? "Create Theme"
+                    : modal === "edit"
+                      ? "Edit Theme"
+                      : "Theme Details"}
+                </h2>
+                <p>
+                  {modal === "view"
+                    ? "Theme information from the current workspace."
+                    : "Changes are saved to the LOOP backend."}
+                </p>
               </div>
-              <button type="button" onClick={() => setModal(null)} aria-label="Close"><X size={18} /></button>
+              <button
+                type="button"
+                onClick={() => setModal(null)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             {modal === "view" && selected ? (
               <div className={styles.details}>
-                <div className={styles.detailIcon} style={{ background: selected.color ?? COLORS[0] }}><Tag size={22} /></div>
+                <div
+                  className={styles.detailIcon}
+                  style={{ background: selected.color ?? COLORS[0] }}
+                >
+                  <Tag size={22} />
+                </div>
                 <h3>{selected.name}</h3>
                 <p>{selected.description || "No description"}</p>
                 <div className={styles.detailGrid}>
-                  <span>Mentions<strong>{number(selected.feedbackCount)}</strong></span>
-                  <span>Status<strong>{selected.status}</strong></span>
-                  <span>AI Generated<strong>{selected.isAiGenerated ? "Yes" : "No"}</strong></span>
-                  <span>Created<strong>{dateText(selected.createdAt)}</strong></span>
+                  <span>
+                    Mentions<strong>{number(selected.feedbackCount)}</strong>
+                  </span>
+                  <span>
+                    Status<strong>{selected.status}</strong>
+                  </span>
+                  <span>
+                    AI Generated
+                    <strong>{selected.isAiGenerated ? "Yes" : "No"}</strong>
+                  </span>
+                  <span>
+                    Created<strong>{dateText(selected.createdAt)}</strong>
+                  </span>
                 </div>
               </div>
             ) : (
               <form className={styles.form} onSubmit={handleSubmit}>
-                <label>Theme Name<input value={form.name} onChange={(event) => setForm((value) => ({ ...value, name: event.target.value }))} maxLength={100} required /></label>
-                <label>Description<textarea value={form.description ?? ""} onChange={(event) => setForm((value) => ({ ...value, description: event.target.value }))} rows={4} maxLength={500} /></label>
-                <label>Color<input type="color" value={form.color ?? COLORS[0]} onChange={(event) => setForm((value) => ({ ...value, color: event.target.value }))} /></label>
+                <label>
+                  Theme Name
+                  <input
+                    value={form.name}
+                    onChange={(event) =>
+                      setForm((value) => ({
+                        ...value,
+                        name: event.target.value,
+                      }))
+                    }
+                    maxLength={100}
+                    required
+                  />
+                </label>
+                <label>
+                  Description
+                  <textarea
+                    value={form.description ?? ""}
+                    onChange={(event) =>
+                      setForm((value) => ({
+                        ...value,
+                        description: event.target.value,
+                      }))
+                    }
+                    rows={4}
+                    maxLength={500}
+                  />
+                </label>
+                <label>
+                  Color
+                  <input
+                    type="color"
+                    value={form.color ?? COLORS[0]}
+                    onChange={(event) =>
+                      setForm((value) => ({
+                        ...value,
+                        color: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
                 <div className={styles.modalActions}>
-                  <button type="button" className={styles.secondaryButton} onClick={() => setModal(null)} disabled={saving}>Cancel</button>
-                  <button type="submit" className={styles.primaryButton} disabled={saving}>{saving ? "Saving..." : modal === "create" ? "Create Theme" : "Save Changes"}</button>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => setModal(null)}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className={styles.primaryButton}
+                    disabled={saving}
+                  >
+                    {saving
+                      ? "Saving..."
+                      : modal === "create"
+                        ? "Create Theme"
+                        : "Save Changes"}
+                  </button>
                 </div>
               </form>
             )}

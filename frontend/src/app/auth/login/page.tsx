@@ -48,7 +48,7 @@ function getRoleRoute(role: AuthRole): string {
       return "/protected/admin/dashboard";
 
     case "ANALYST":
-      return "/protected/analyst";
+      return "/protected/analyst/dashboard";
 
     case "VIEWER":
       return "/protected/viewer";

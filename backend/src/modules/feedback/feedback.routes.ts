@@ -1,81 +1,133 @@
-import { Router } from "express";
+// import { Router } from "express";
 
-import { authenticate } from "../../middleware/authenticate.middleware.js";
-import { authorize } from "../../middleware/authorize.middleware.js";
-import { validate } from "../../middleware/validate.middleware.js";
-import { asyncHandler } from "../../utils/asyncHandler.js";
+// import { authenticate } from "../../middleware/authenticate.middleware.js";
+// import { authorize } from "../../middleware/authorize.middleware.js";
+// import { validate } from "../../middleware/validate.middleware.js";
+// import { asyncHandler } from "../../utils/asyncHandler.js";
 
-import {
-  createFeedbackController,
-  deleteFeedbackController,
-  getFeedbackController,
-  listFeedbackController,
-  updateFeedbackController,
-  updateFeedbackStatusController,
-} from "./feedback.controller.js";
+// import {
+//   createFeedbackController,
+//   deleteFeedbackController,
+//   getFeedbackController,
+//   listFeedbackController,
+//   updateFeedbackController,
+//   updateFeedbackStatusController,
+// } from "./feedback.controller.js";
+
+// import {
+//   createFeedbackSchema,
+//   feedbackIdSchema,
+//   listFeedbackSchema,
+//   updateFeedbackSchema,
+//   updateFeedbackStatusSchema,
+// } from "./feedback.validator.js";
+
+// export const feedbackRouter = Router();
+
+// feedbackRouter.use(authenticate);
+
+// /*
+//  * All authenticated roles can read feedback.
+//  */
+// feedbackRouter.get(
+//   "/",
+//   authorize("ADMIN", "ANALYST", "VIEWER"),
+//   validate(listFeedbackSchema),
+//   asyncHandler(listFeedbackController),
+// );
+
+// feedbackRouter.get(
+//   "/:feedbackId",
+//   authorize("ADMIN", "ANALYST", "VIEWER"),
+//   validate(feedbackIdSchema),
+//   asyncHandler(getFeedbackController),
+// );
+
+// /*
+//  * Admin and Analyst can create feedback.
+//  */
+// feedbackRouter.post(
+//   "/",
+//   authorize("ADMIN", "ANALYST"),
+//   validate(createFeedbackSchema),
+//   asyncHandler(createFeedbackController),
+// );
+
+// /*
+//  * Admin and Analyst can update feedback.
+//  */
+// feedbackRouter.patch(
+//   "/:feedbackId",
+//   authorize("ADMIN", "ANALYST"),
+//   validate(updateFeedbackSchema),
+//   asyncHandler(updateFeedbackController),
+// );
+
+// feedbackRouter.patch(
+//   "/:feedbackId/status",
+//   authorize("ADMIN", "ANALYST"),
+//   validate(updateFeedbackStatusSchema),
+//   asyncHandler(updateFeedbackStatusController),
+// );
+
+// /*
+//  * Only Admin can permanently delete feedback.
+//  */
+// feedbackRouter.delete(
+//   "/:feedbackId",
+//   authorize("ADMIN"),
+//   validate(feedbackIdSchema),
+//   asyncHandler(deleteFeedbackController),
+// );
+
+import { Router } from 'express';
+
+import { authenticate } from '../../middleware/authenticate.middleware.js';
+
+import { authorize } from '../../middleware/authorize.middleware.js';
+
+import { validate } from '../../middleware/validate.middleware.js';
+
+import { asyncHandler } from '../../utils/asyncHandler.js';
+
+import { feedbackController } from './feedback.controller.js';
 
 import {
   createFeedbackSchema,
   feedbackIdSchema,
   listFeedbackSchema,
-  updateFeedbackSchema,
-  updateFeedbackStatusSchema,
-} from "./feedback.validator.js";
+} from './feedback.validator.js';
 
-export const feedbackRouter = Router();
+const feedbackRouter = Router();
 
 feedbackRouter.use(authenticate);
 
-/*
- * All authenticated roles can read feedback.
- */
 feedbackRouter.get(
-  "/",
-  authorize("ADMIN", "ANALYST", "VIEWER"),
+  '/',
+  authorize('ADMIN', 'ANALYST', 'VIEWER'),
   validate(listFeedbackSchema),
-  asyncHandler(listFeedbackController),
+  asyncHandler(feedbackController.list),
 );
 
 feedbackRouter.get(
-  "/:feedbackId",
-  authorize("ADMIN", "ANALYST", "VIEWER"),
+  '/:feedbackId',
+  authorize('ADMIN', 'ANALYST', 'VIEWER'),
   validate(feedbackIdSchema),
-  asyncHandler(getFeedbackController),
+  asyncHandler(feedbackController.getById),
 );
 
-/*
- * Admin and Analyst can create feedback.
- */
 feedbackRouter.post(
-  "/",
-  authorize("ADMIN", "ANALYST"),
+  '/',
+  authorize('ADMIN', 'ANALYST'),
   validate(createFeedbackSchema),
-  asyncHandler(createFeedbackController),
+  asyncHandler(feedbackController.create),
 );
 
-/*
- * Admin and Analyst can update feedback.
- */
-feedbackRouter.patch(
-  "/:feedbackId",
-  authorize("ADMIN", "ANALYST"),
-  validate(updateFeedbackSchema),
-  asyncHandler(updateFeedbackController),
-);
-
-feedbackRouter.patch(
-  "/:feedbackId/status",
-  authorize("ADMIN", "ANALYST"),
-  validate(updateFeedbackStatusSchema),
-  asyncHandler(updateFeedbackStatusController),
-);
-
-/*
- * Only Admin can permanently delete feedback.
- */
 feedbackRouter.delete(
-  "/:feedbackId",
-  authorize("ADMIN"),
+  '/:feedbackId',
+  authorize('ADMIN', 'ANALYST'),
   validate(feedbackIdSchema),
-  asyncHandler(deleteFeedbackController),
+  asyncHandler(feedbackController.remove),
 );
+
+export default feedbackRouter;

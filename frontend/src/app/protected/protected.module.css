@@ -1,0 +1,389 @@
+/* =========================================================
+   PROTECTED LAYOUT
+   Modern LOOP application shell
+========================================================= */
+
+.shell {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(91, 44, 240, 0.045),
+      transparent 30%
+    ),
+    #f7f8fc;
+  color: #101828;
+  overflow-x: hidden;
+}
+
+.content {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* =========================================================
+   OPTIONAL PAGE CONTAINER
+========================================================= */
+
+.container {
+  width: min(100% - 48px, 1480px);
+  margin: 0 auto;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 0;
+}
+
+.pageHeader h1 {
+  margin: 0;
+  font-size: clamp(24px, 2vw, 32px);
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  color: #101828;
+}
+
+.pageHeader p {
+  margin: 7px 0 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   COMMON CARD
+========================================================= */
+
+.card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #eaecf0;
+  border-radius: 18px;
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.025),
+    0 8px 30px rgba(16, 24, 40, 0.035);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.card:hover {
+  border-color: #ded7ff;
+  box-shadow:
+    0 2px 4px rgba(16, 24, 40, 0.04),
+    0 14px 36px rgba(91, 44, 240, 0.07);
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 0 17px;
+
+  border: 1px solid #5b2cf0;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    135deg,
+    #6d43f5,
+    #5b2cf0
+  );
+
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 14px rgba(91, 44, 240, 0.18);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow:
+    0 8px 20px rgba(91, 44, 240, 0.25);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 42px;
+  padding: 0 17px;
+
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: #344054;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.secondaryButton:hover {
+  background: #f9fafb;
+  border-color: #b9c0ca;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   INPUTS / SELECTS
+========================================================= */
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #101828;
+
+  font: inherit;
+  font-size: 14px;
+
+  outline: none;
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.input,
+.select {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+.textarea {
+  min-height: 110px;
+  padding: 11px 12px;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: #7a5af8;
+  box-shadow:
+    0 0 0 3px rgba(91, 44, 240, 0.1);
+}
+
+/* =========================================================
+   BADGES
+========================================================= */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  min-height: 26px;
+  padding: 0 9px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.badgePurple {
+  background: #f0ebff;
+  color: #5b2cf0;
+}
+
+.badgeGreen {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.badgeRed {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.badgeOrange {
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.badgeBlue {
+  background: #eff8ff;
+  color: #175cd3;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 260px;
+  padding: 32px;
+
+  text-align: center;
+  color: #667085;
+}
+
+.emptyIcon {
+  display: grid;
+  place-items: center;
+
+  width: 54px;
+  height: 54px;
+  margin-bottom: 15px;
+
+  border-radius: 15px;
+
+  background: #f1edff;
+  color: #5b2cf0;
+}
+
+.emptyState strong {
+  color: #344054;
+  font-size: 15px;
+}
+
+.emptyState span {
+  max-width: 420px;
+  margin-top: 6px;
+
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+
+  background: #eaecf0;
+  border-radius: 8px;
+}
+
+.skeleton::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  transform: translateX(-100%);
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+  .container {
+    width: min(100% - 36px, 1480px);
+  }
+
+  .pageHeader {
+    padding: 24px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: min(100% - 28px, 1480px);
+  }
+
+  .pageHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .pageHeader h1 {
+    font-size: 25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    width: min(100% - 20px, 1480px);
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    min-height: 40px;
+    padding: 0 13px;
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .primaryButton,
+  .secondaryButton {
+    transition: none;
+  }
+
+  .skeleton::after {
+    animation: none;
+  }
+}

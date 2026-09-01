@@ -77,13 +77,7 @@ const SOURCE_COLORS: Record<string, string> = {
   MANUAL: "#98a2b3",
 };
 
-const THEME_COLORS = [
-  "#5b2cf0",
-  "#2563eb",
-  "#22a66d",
-  "#f59e0b",
-  "#e45bb9",
-];
+const THEME_COLORS = ["#5b2cf0", "#2563eb", "#22a66d", "#f59e0b", "#e45bb9"];
 
 function number(value: unknown): number {
   const parsed = Number(value ?? 0);
@@ -173,9 +167,7 @@ function MetricCard({
 
         <strong className={styles.metricValue}>{value}</strong>
 
-        <span
-          className={`${styles.metricChange} ${styles[`change_${tone}`]}`}
-        >
+        <span className={`${styles.metricChange} ${styles[`change_${tone}`]}`}>
           {tone === "down" ? "↓" : tone === "up" ? "↑" : "→"} {change}
           <em> vs last week</em>
         </span>
@@ -286,8 +278,7 @@ function ChartTooltip({
 export default function AnalystTrendsPage() {
   const user = useAuthStore((state) => state.user);
 
-  const [filters, setFilters] =
-    useState<FilterState>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
   const [draftFilters, setDraftFilters] =
     useState<FilterState>(DEFAULT_FILTERS);
@@ -316,14 +307,12 @@ export default function AnalystTrendsPage() {
   }, [dashboard]);
 
   const topThemes = useMemo(() => {
-    return (dashboard?.topThemes ?? [])
-      .slice(0, 5)
-      .map((theme, index) => ({
-        name: theme.name,
-        count: number(theme.count),
-        percentage: number(theme.percentage),
-        color: THEME_COLORS[index % THEME_COLORS.length],
-      }));
+    return (dashboard?.topThemes ?? []).slice(0, 5).map((theme, index) => ({
+      name: theme.name,
+      count: number(theme.count),
+      percentage: number(theme.percentage),
+      color: THEME_COLORS[index % THEME_COLORS.length],
+    }));
   }, [dashboard]);
 
   const sourceDistribution = useMemo(() => {
@@ -331,9 +320,7 @@ export default function AnalystTrendsPage() {
       key: source.key,
       label: source.label,
       percentage: number(source.percentage),
-      color:
-        SOURCE_COLORS[source.key] ??
-        "#98a2b3",
+      color: SOURCE_COLORS[source.key] ?? "#98a2b3",
     }));
   }, [dashboard]);
 
@@ -347,13 +334,9 @@ export default function AnalystTrendsPage() {
         date: point.date,
       };
 
-      sourceDistribution
-        .slice(0, 6)
-        .forEach((source) => {
-          row[source.key] = Math.round(
-            (point.total * source.percentage) / 100,
-          );
-        });
+      sourceDistribution.slice(0, 6).forEach((source) => {
+        row[source.key] = Math.round((point.total * source.percentage) / 100);
+      });
 
       return row;
     });
@@ -384,9 +367,7 @@ export default function AnalystTrendsPage() {
       themes.forEach((theme, index) => {
         const key = `theme_${index}`;
 
-        row[key] = Math.round(
-          (theme.count / totalThemeMentions) * point.total,
-        );
+        row[key] = Math.round((theme.count / totalThemeMentions) * point.total);
       });
 
       return row;
@@ -410,41 +391,28 @@ export default function AnalystTrendsPage() {
       return 0;
     }
 
-    const positivePercentage =
-      (positiveTotal / totalFeedback) * 100;
+    const positivePercentage = (positiveTotal / totalFeedback) * 100;
 
-    const negativePercentage =
-      (negativeTotal / totalFeedback) * 100;
+    const negativePercentage = (negativeTotal / totalFeedback) * 100;
 
     return Math.max(
       0,
       Math.min(
         100,
-        Math.round(
-          (positivePercentage -
-            negativePercentage +
-            100) /
-            2,
-        ),
+        Math.round((positivePercentage - negativePercentage + 100) / 2),
       ),
     );
   }, [negativeTotal, positiveTotal, totalFeedback]);
 
-  const classifiedCount = number(
-    dashboard?.overview?.totalFeedback,
-  );
+  const classifiedCount = number(dashboard?.overview?.totalFeedback);
 
   const aiClassified = Math.min(
     classifiedCount,
-    number(
-      dashboard?.overview?.totalFeedback,
-    ),
+    number(dashboard?.overview?.totalFeedback),
   );
 
   const aiClassificationPercentage =
-    totalFeedback > 0
-      ? Math.round((aiClassified / totalFeedback) * 100)
-      : 0;
+    totalFeedback > 0 ? Math.round((aiClassified / totalFeedback) * 100) : 0;
 
   const previousTotal =
     feedbackTrend.length > 1
@@ -460,25 +428,16 @@ export default function AnalystTrendsPage() {
           .reduce((sum, point) => sum + point.total, 0)
       : totalFeedback;
 
-  const totalChange = getChange(
-    currentTotal,
-    previousTotal,
-  );
+  const totalChange = getChange(currentTotal, previousTotal);
 
   const newFeedback =
     feedbackTrend.length > 0
       ? feedbackTrend[feedbackTrend.length - 1].total
       : 0;
 
-  const firstFeedback =
-    feedbackTrend.length > 0
-      ? feedbackTrend[0].total
-      : 0;
+  const firstFeedback = feedbackTrend.length > 0 ? feedbackTrend[0].total : 0;
 
-  const newFeedbackChange = getChange(
-    newFeedback,
-    firstFeedback,
-  );
+  const newFeedbackChange = getChange(newFeedback, firstFeedback);
 
   const negativeChange = getChange(
     negativeTotal,
@@ -492,10 +451,7 @@ export default function AnalystTrendsPage() {
 
   const dateRange = fullDateRange(filters.days);
 
-  const updateDraft = (
-    key: keyof FilterState,
-    value: string | number,
-  ) => {
+  const updateDraft = (key: keyof FilterState, value: string | number) => {
     setDraftFilters((current) => ({
       ...current,
       [key]: value,
@@ -523,9 +479,7 @@ export default function AnalystTrendsPage() {
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Export failed with status ${response.status}`,
-        );
+        throw new Error(`Export failed with status ${response.status}`);
       }
 
       const blob = await response.blob();
@@ -543,9 +497,7 @@ export default function AnalystTrendsPage() {
 
       toast.success("Trend report exported");
     } catch {
-      toast.error(
-        "Unable to export the trend report.",
-      );
+      toast.error("Unable to export the trend report.");
     }
   };
 
@@ -567,10 +519,7 @@ export default function AnalystTrendsPage() {
               <h1>Trends</h1>
             </div>
 
-            <p>
-              Track patterns and changes in customer
-              feedback over time
-            </p>
+            <p>Track patterns and changes in customer feedback over time</p>
           </div>
 
           <div className={styles.headerActions}>
@@ -584,9 +533,7 @@ export default function AnalystTrendsPage() {
               className={styles.iconButton}
               aria-label="Notifications"
             >
-              <span className={styles.notificationDot}>
-                3
-              </span>
+              <span className={styles.notificationDot}>3</span>
 
               <Activity size={20} />
             </button>
@@ -601,10 +548,7 @@ export default function AnalystTrendsPage() {
 
             <div className={styles.userHeader}>
               <div className={styles.avatar}>
-                {(
-                  user?.name ??
-                  "Analyst"
-                )
+                {(user?.name ?? "Analyst")
                   .split(" ")
                   .map((part) => part[0])
                   .join("")
@@ -613,9 +557,7 @@ export default function AnalystTrendsPage() {
               </div>
 
               <div>
-                <strong>
-                  {user?.name ?? "Analyst"}
-                </strong>
+                <strong>{user?.name ?? "Analyst"}</strong>
 
                 <span>Analyst</span>
               </div>
@@ -703,17 +645,12 @@ export default function AnalystTrendsPage() {
               }
             >
               {isLoading ? (
-                <div className={styles.loading}>
-                  Loading feedback trends...
-                </div>
+                <div className={styles.loading}>Loading feedback trends...</div>
               ) : !hasData ? (
                 <EmptyChart />
               ) : (
                 <div className={styles.largeChart}>
-                  <ResponsiveContainer
-                    width="100%"
-                    height={250}
-                  >
+                  <ResponsiveContainer width="100%" height={250}>
                     <AreaChart
                       data={feedbackTrend}
                       margin={{
@@ -745,10 +682,7 @@ export default function AnalystTrendsPage() {
                         </linearGradient>
                       </defs>
 
-                      <CartesianGrid
-                        vertical={false}
-                        stroke="#edf0f5"
-                      />
+                      <CartesianGrid vertical={false} stroke="#edf0f5" />
 
                       <XAxis
                         dataKey="date"
@@ -769,9 +703,7 @@ export default function AnalystTrendsPage() {
                         }}
                       />
 
-                      <Tooltip
-                        content={<ChartTooltip />}
-                      />
+                      <Tooltip content={<ChartTooltip />} />
 
                       <Area
                         type="monotone"
@@ -821,10 +753,7 @@ export default function AnalystTrendsPage() {
                 <div className={styles.sentimentChart}>
                   <div className={styles.chartWithSideValues}>
                     <div className={styles.largeChart}>
-                      <ResponsiveContainer
-                        width="100%"
-                        height={250}
-                      >
+                      <ResponsiveContainer width="100%" height={250}>
                         <LineChart
                           data={feedbackTrend}
                           margin={{
@@ -834,10 +763,7 @@ export default function AnalystTrendsPage() {
                             bottom: 0,
                           }}
                         >
-                          <CartesianGrid
-                            vertical={false}
-                            stroke="#edf0f5"
-                          />
+                          <CartesianGrid vertical={false} stroke="#edf0f5" />
 
                           <XAxis
                             dataKey="date"
@@ -858,9 +784,7 @@ export default function AnalystTrendsPage() {
                             }}
                           />
 
-                          <Tooltip
-                            content={<ChartTooltip />}
-                          />
+                          <Tooltip content={<ChartTooltip />} />
 
                           <Line
                             type="monotone"
@@ -895,38 +819,20 @@ export default function AnalystTrendsPage() {
                     <div className={styles.sentimentTotals}>
                       <div>
                         <span>Positive</span>
-                        <strong>
-                          {formatNumber(
-                            positiveTotal,
-                          )}
-                        </strong>
-                        <small className={styles.green}>
-                          ↑ 14.6%
-                        </small>
+                        <strong>{formatNumber(positiveTotal)}</strong>
+                        <small className={styles.green}>↑ 14.6%</small>
                       </div>
 
                       <div>
                         <span>Neutral</span>
-                        <strong>
-                          {formatNumber(
-                            neutralTotal,
-                          )}
-                        </strong>
-                        <small className={styles.orange}>
-                          ↑ 5.9%
-                        </small>
+                        <strong>{formatNumber(neutralTotal)}</strong>
+                        <small className={styles.orange}>↑ 5.9%</small>
                       </div>
 
                       <div>
                         <span>Negative</span>
-                        <strong>
-                          {formatNumber(
-                            negativeTotal,
-                          )}
-                        </strong>
-                        <small className={styles.red}>
-                          ↓ 3.2%
-                        </small>
+                        <strong>{formatNumber(negativeTotal)}</strong>
+                        <small className={styles.red}>↓ 3.2%</small>
                       </div>
                     </div>
                   </div>
@@ -977,17 +883,9 @@ export default function AnalystTrendsPage() {
                 ) : (
                   <>
                     <div className={styles.mediumChart}>
-                      <ResponsiveContainer
-                        width="100%"
-                        height={220}
-                      >
-                        <LineChart
-                          data={themeTrend}
-                        >
-                          <CartesianGrid
-                            vertical={false}
-                            stroke="#edf0f5"
-                          />
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={themeTrend}>
+                          <CartesianGrid vertical={false} stroke="#edf0f5" />
 
                           <XAxis
                             dataKey="date"
@@ -1008,23 +906,19 @@ export default function AnalystTrendsPage() {
                             }}
                           />
 
-                          <Tooltip
-                            content={<ChartTooltip />}
-                          />
+                          <Tooltip content={<ChartTooltip />} />
 
-                          {topThemes.map(
-                            (theme, index) => (
-                              <Line
-                                key={theme.name}
-                                type="monotone"
-                                dataKey={`theme_${index}`}
-                                name={theme.name}
-                                stroke={theme.color}
-                                strokeWidth={2}
-                                dot={false}
-                              />
-                            ),
-                          )}
+                          {topThemes.map((theme, index) => (
+                            <Line
+                              key={theme.name}
+                              type="monotone"
+                              dataKey={`theme_${index}`}
+                              name={theme.name}
+                              stroke={theme.color}
+                              strokeWidth={2}
+                              dot={false}
+                            />
+                          ))}
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -1034,8 +928,7 @@ export default function AnalystTrendsPage() {
                         <span key={theme.name}>
                           <i
                             style={{
-                              background:
-                                theme.color,
+                              background: theme.color,
                             }}
                           />
 
@@ -1053,18 +946,9 @@ export default function AnalystTrendsPage() {
                 ) : (
                   <>
                     <div className={styles.mediumChart}>
-                      <ResponsiveContainer
-                        width="100%"
-                        height={220}
-                      >
-                        <BarChart
-                          data={sourceTrend}
-                          barCategoryGap="28%"
-                        >
-                          <CartesianGrid
-                            vertical={false}
-                            stroke="#edf0f5"
-                          />
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={sourceTrend} barCategoryGap="28%">
+                          <CartesianGrid vertical={false} stroke="#edf0f5" />
 
                           <XAxis
                             dataKey="date"
@@ -1085,40 +969,33 @@ export default function AnalystTrendsPage() {
                             }}
                           />
 
-                          <Tooltip
-                            content={<ChartTooltip />}
-                          />
+                          <Tooltip content={<ChartTooltip />} />
 
-                          {sourceDistribution
-                            .slice(0, 6)
-                            .map((source) => (
-                              <Bar
-                                key={source.key}
-                                dataKey={source.key}
-                                name={source.label}
-                                stackId="source"
-                                fill={source.color}
-                                radius={0}
-                              />
-                            ))}
+                          {sourceDistribution.slice(0, 6).map((source) => (
+                            <Bar
+                              key={source.key}
+                              dataKey={source.key}
+                              name={source.label}
+                              stackId="source"
+                              fill={source.color}
+                              radius={0}
+                            />
+                          ))}
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
 
                     <div className={styles.chartLegend}>
-                      {sourceDistribution
-                        .slice(0, 6)
-                        .map((source) => (
-                          <span key={source.key}>
-                            <i
-                              style={{
-                                background:
-                                  source.color,
-                              }}
-                            />
-                            {source.label}
-                          </span>
-                        ))}
+                      {sourceDistribution.slice(0, 6).map((source) => (
+                        <span key={source.key}>
+                          <i
+                            style={{
+                              background: source.color,
+                            }}
+                          />
+                          {source.label}
+                        </span>
+                      ))}
                     </div>
                   </>
                 )}
@@ -1146,13 +1023,8 @@ export default function AnalystTrendsPage() {
                   <EmptyChart message="No negative trend data." />
                 ) : (
                   <div className={styles.mediumChart}>
-                    <ResponsiveContainer
-                      width="100%"
-                      height={220}
-                    >
-                      <AreaChart
-                        data={negativeTrend}
-                      >
+                    <ResponsiveContainer width="100%" height={220}>
+                      <AreaChart data={negativeTrend}>
                         <defs>
                           <linearGradient
                             id="negativeArea"
@@ -1175,10 +1047,7 @@ export default function AnalystTrendsPage() {
                           </linearGradient>
                         </defs>
 
-                        <CartesianGrid
-                          vertical={false}
-                          stroke="#edf0f5"
-                        />
+                        <CartesianGrid vertical={false} stroke="#edf0f5" />
 
                         <XAxis
                           dataKey="date"
@@ -1199,9 +1068,7 @@ export default function AnalystTrendsPage() {
                           }}
                         />
 
-                        <Tooltip
-                          content={<ChartTooltip />}
-                        />
+                        <Tooltip content={<ChartTooltip />} />
 
                         <Area
                           type="monotone"
@@ -1243,62 +1110,43 @@ export default function AnalystTrendsPage() {
                           </span>
                         </td>
 
-                        <td>
-                          {formatNumber(totalFeedback)}
-                        </td>
+                        <td>{formatNumber(totalFeedback)}</td>
 
                         <td>
                           {formatNumber(
                             Math.max(
-                              totalFeedback -
-                                Math.round(
-                                  totalChange,
-                                ),
+                              totalFeedback - Math.round(totalChange),
                               0,
                             ),
                           )}
                         </td>
 
                         <td className={styles.upText}>
-                          ↑{" "}
-                          {Math.abs(
-                            totalChange,
-                          ).toFixed(1)}
-                          %
+                          ↑ {Math.abs(totalChange).toFixed(1)}%
                         </td>
 
                         <td>
                           <div className={styles.miniTrend}>
-                            {feedbackTrend
-                              .slice(-7)
-                              .map(
-                                (
-                                  point,
-                                  index,
-                                ) => (
-                                  <i
-                                    key={`${point.date}-${index}`}
-                                    style={{
-                                      height: `${Math.max(
-                                        15,
-                                        Math.min(
-                                          100,
-                                          point.total /
-                                            Math.max(
-                                              ...feedbackTrend.map(
-                                                (
-                                                  item,
-                                                ) =>
-                                                  item.total,
-                                              ),
-                                            ) *
-                                              100,
-                                        ),
-                                      )}%`,
-                                    }}
-                                  />
-                                ),
-                              )}
+                            {feedbackTrend.slice(-7).map((point, index) => (
+                              <i
+                                key={`${point.date}-${index}`}
+                                style={{
+                                  height: `${Math.max(
+                                    15,
+                                    Math.min(
+                                      100,
+                                      (point.total /
+                                        Math.max(
+                                          ...feedbackTrend.map(
+                                            (item) => item.total,
+                                          ),
+                                        )) *
+                                        100,
+                                    ),
+                                  )}%`,
+                                }}
+                              />
+                            ))}
                           </div>
                         </td>
                       </tr>
@@ -1311,58 +1159,36 @@ export default function AnalystTrendsPage() {
                           </span>
                         </td>
 
-                        <td>
-                          {formatNumber(
-                            newFeedback,
-                          )}
-                        </td>
+                        <td>{formatNumber(newFeedback)}</td>
 
-                        <td>
-                          {formatNumber(
-                            firstFeedback,
-                          )}
-                        </td>
+                        <td>{formatNumber(firstFeedback)}</td>
 
                         <td className={styles.upText}>
-                          ↑{" "}
-                          {Math.abs(
-                            newFeedbackChange,
-                          ).toFixed(1)}
-                          %
+                          ↑ {Math.abs(newFeedbackChange).toFixed(1)}%
                         </td>
 
                         <td>
                           <div className={styles.miniTrend}>
-                            {feedbackTrend
-                              .slice(-7)
-                              .map(
-                                (
-                                  point,
-                                  index,
-                                ) => (
-                                  <i
-                                    key={`${point.date}-${index}`}
-                                    style={{
-                                      height: `${Math.max(
-                                        15,
-                                        Math.min(
-                                          100,
-                                          point.total /
-                                            Math.max(
-                                              ...feedbackTrend.map(
-                                                (
-                                                  item,
-                                                ) =>
-                                                  item.total,
-                                              ),
-                                            ) *
-                                              100,
-                                        ),
-                                      )}%`,
-                                    }}
-                                  />
-                                ),
-                              )}
+                            {feedbackTrend.slice(-7).map((point, index) => (
+                              <i
+                                key={`${point.date}-${index}`}
+                                style={{
+                                  height: `${Math.max(
+                                    15,
+                                    Math.min(
+                                      100,
+                                      (point.total /
+                                        Math.max(
+                                          ...feedbackTrend.map(
+                                            (item) => item.total,
+                                          ),
+                                        )) *
+                                        100,
+                                    ),
+                                  )}%`,
+                                }}
+                              />
+                            ))}
                           </div>
                         </td>
                       </tr>
@@ -1375,56 +1201,36 @@ export default function AnalystTrendsPage() {
                           </span>
                         </td>
 
-                        <td>
-                          {formatNumber(
-                            negativeTotal,
-                          )}
-                        </td>
+                        <td>{formatNumber(negativeTotal)}</td>
 
-                        <td>
-                          {formatNumber(
-                            negativeTotal,
-                          )}
-                        </td>
+                        <td>{formatNumber(negativeTotal)}</td>
 
-                        <td className={styles.downText}>
-                          ↓ 3.2%
-                        </td>
+                        <td className={styles.downText}>↓ 3.2%</td>
 
                         <td>
                           <div
                             className={`${styles.miniTrend} ${styles.negativeMini}`}
                           >
-                            {negativeTrend
-                              .slice(-7)
-                              .map(
-                                (
-                                  point,
-                                  index,
-                                ) => (
-                                  <i
-                                    key={`${point.date}-${index}`}
-                                    style={{
-                                      height: `${Math.max(
-                                        15,
-                                        Math.min(
-                                          100,
-                                          point.negative /
-                                            Math.max(
-                                              ...negativeTrend.map(
-                                                (
-                                                  item,
-                                                ) =>
-                                                  item.negative,
-                                              ),
-                                            ) *
-                                              100,
-                                        ),
-                                      )}%`,
-                                    }}
-                                  />
-                                ),
-                              )}
+                            {negativeTrend.slice(-7).map((point, index) => (
+                              <i
+                                key={`${point.date}-${index}`}
+                                style={{
+                                  height: `${Math.max(
+                                    15,
+                                    Math.min(
+                                      100,
+                                      (point.negative /
+                                        Math.max(
+                                          ...negativeTrend.map(
+                                            (item) => item.negative,
+                                          ),
+                                        )) *
+                                        100,
+                                    ),
+                                  )}%`,
+                                }}
+                              />
+                            ))}
                           </div>
                         </td>
                       </tr>
@@ -1437,54 +1243,34 @@ export default function AnalystTrendsPage() {
                           </span>
                         </td>
 
-                        <td>
-                          {formatNumber(
-                            positiveTotal,
-                          )}
-                        </td>
+                        <td>{formatNumber(positiveTotal)}</td>
 
-                        <td>
-                          {formatNumber(
-                            positiveTotal,
-                          )}
-                        </td>
+                        <td>{formatNumber(positiveTotal)}</td>
 
-                        <td className={styles.upText}>
-                          ↑ 14.6%
-                        </td>
+                        <td className={styles.upText}>↑ 14.6%</td>
 
                         <td>
                           <div className={styles.miniTrend}>
-                            {feedbackTrend
-                              .slice(-7)
-                              .map(
-                                (
-                                  point,
-                                  index,
-                                ) => (
-                                  <i
-                                    key={`${point.date}-${index}`}
-                                    style={{
-                                      height: `${Math.max(
-                                        15,
-                                        Math.min(
-                                          100,
-                                          point.positive /
-                                            Math.max(
-                                              ...feedbackTrend.map(
-                                                (
-                                                  item,
-                                                ) =>
-                                                  item.positive,
-                                              ),
-                                            ) *
-                                              100,
-                                        ),
-                                      )}%`,
-                                    }}
-                                  />
-                                ),
-                              )}
+                            {feedbackTrend.slice(-7).map((point, index) => (
+                              <i
+                                key={`${point.date}-${index}`}
+                                style={{
+                                  height: `${Math.max(
+                                    15,
+                                    Math.min(
+                                      100,
+                                      (point.positive /
+                                        Math.max(
+                                          ...feedbackTrend.map(
+                                            (item) => item.positive,
+                                          ),
+                                        )) *
+                                        100,
+                                    ),
+                                  )}%`,
+                                }}
+                              />
+                            ))}
                           </div>
                         </td>
                       </tr>
@@ -1497,54 +1283,34 @@ export default function AnalystTrendsPage() {
                           </span>
                         </td>
 
-                        <td>
-                          {formatNumber(
-                            aiClassified,
-                          )}
-                        </td>
+                        <td>{formatNumber(aiClassified)}</td>
 
-                        <td>
-                          {formatNumber(
-                            aiClassified,
-                          )}
-                        </td>
+                        <td>{formatNumber(aiClassified)}</td>
 
-                        <td className={styles.upText}>
-                          ↑ 15.3%
-                        </td>
+                        <td className={styles.upText}>↑ 15.3%</td>
 
                         <td>
                           <div className={styles.miniTrend}>
-                            {feedbackTrend
-                              .slice(-7)
-                              .map(
-                                (
-                                  point,
-                                  index,
-                                ) => (
-                                  <i
-                                    key={`${point.date}-${index}`}
-                                    style={{
-                                      height: `${Math.max(
-                                        15,
-                                        Math.min(
-                                          100,
-                                          point.total /
-                                            Math.max(
-                                              ...feedbackTrend.map(
-                                                (
-                                                  item,
-                                                ) =>
-                                                  item.total,
-                                              ),
-                                            ) *
-                                              100,
-                                        ),
-                                      )}%`,
-                                    }}
-                                  />
-                                ),
-                              )}
+                            {feedbackTrend.slice(-7).map((point, index) => (
+                              <i
+                                key={`${point.date}-${index}`}
+                                style={{
+                                  height: `${Math.max(
+                                    15,
+                                    Math.min(
+                                      100,
+                                      (point.total /
+                                        Math.max(
+                                          ...feedbackTrend.map(
+                                            (item) => item.total,
+                                          ),
+                                        )) *
+                                        100,
+                                    ),
+                                  )}%`,
+                                }}
+                              />
+                            ))}
                           </div>
                         </td>
                       </tr>
@@ -1557,15 +1323,11 @@ export default function AnalystTrendsPage() {
                           </span>
                         </td>
 
-                        <td>
-                          {engagementScore}%
-                        </td>
+                        <td>{engagementScore}%</td>
 
                         <td>64%</td>
 
-                        <td className={styles.upText}>
-                          ↑ 6.3%
-                        </td>
+                        <td className={styles.upText}>↑ 6.3%</td>
 
                         <td>
                           <div className={styles.miniTrend}>
@@ -1602,99 +1364,64 @@ export default function AnalystTrendsPage() {
                 <div className={styles.heatmap}>
                   <div className={styles.heatmapDays}>
                     <span />
-                    {[
-                      "Mon",
-                      "Tue",
-                      "Wed",
-                      "Thu",
-                      "Fri",
-                      "Sat",
-                      "Sun",
-                    ].map((day) => (
-                      <span key={day}>
-                        {day}
-                      </span>
-                    ))}
+                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                      (day) => (
+                        <span key={day}>{day}</span>
+                      ),
+                    )}
                   </div>
 
                   <div className={styles.heatmapBody}>
                     <div className={styles.heatmapHours}>
-                      {[
-                        "12 AM",
-                        "4 AM",
-                        "8 AM",
-                        "12 PM",
-                        "4 PM",
-                        "8 PM",
-                      ].map((hour) => (
-                        <span key={hour}>
-                          {hour}
-                        </span>
-                      ))}
+                      {["12 AM", "4 AM", "8 AM", "12 PM", "4 PM", "8 PM"].map(
+                        (hour) => (
+                          <span key={hour}>{hour}</span>
+                        ),
+                      )}
                     </div>
 
                     <div className={styles.heatmapGrid}>
-                      {Array.from(
-                        { length: 42 },
-                        (_, index) => {
-                          const base =
-                            feedbackTrend[
-                              index %
-                                Math.max(
-                                  feedbackTrend.length,
-                                  1,
-                                )
-                            ]?.total ?? 0;
+                      {Array.from({ length: 42 }, (_, index) => {
+                        const base =
+                          feedbackTrend[
+                            index % Math.max(feedbackTrend.length, 1)
+                          ]?.total ?? 0;
 
-                          const intensity =
-                            totalFeedback > 0
-                              ? Math.min(
-                                  1,
-                                  base /
-                                    Math.max(
-                                      totalFeedback,
-                                      1,
-                                    ) +
-                                    ((index * 17) %
-                                      40) /
-                                      100,
-                                )
-                              : 0;
+                        const intensity =
+                          totalFeedback > 0
+                            ? Math.min(
+                                1,
+                                base / Math.max(totalFeedback, 1) +
+                                  ((index * 17) % 40) / 100,
+                              )
+                            : 0;
 
-                          return (
-                            <i
-                              key={index}
-                              style={{
-                                opacity:
-                                  0.15 +
-                                  intensity * 0.85,
-                              }}
-                              title={`Feedback activity: ${Math.round(
-                                intensity * 100,
-                              )}%`}
-                            />
-                          );
-                        },
-                      )}
+                        return (
+                          <i
+                            key={index}
+                            style={{
+                              opacity: 0.15 + intensity * 0.85,
+                            }}
+                            title={`Feedback activity: ${Math.round(
+                              intensity * 100,
+                            )}%`}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
 
                   <div className={styles.heatmapScale}>
                     <span>Low</span>
                     <div>
-                      {Array.from(
-                        { length: 7 },
-                        (_, index) => (
-                          <i
-                            key={index}
-                            style={{
-                              opacity:
-                                0.15 +
-                                index * 0.14,
-                            }}
-                          />
-                        ),
-                      )}
+                      {Array.from({ length: 7 }, (_, index) => (
+                        <i
+                          key={index}
+                          style={{
+                            opacity: 0.15 + index * 0.14,
+                          }}
+                        />
+                      ))}
                     </div>
                     <span>High</span>
                   </div>
@@ -1721,7 +1448,6 @@ export default function AnalystTrendsPage() {
 
               <label className={styles.filterLabel}>
                 Workspace
-
                 <div className={styles.disabledSelect}>
                   Current Workspace
                   <ChevronDown size={14} />
@@ -1730,144 +1456,78 @@ export default function AnalystTrendsPage() {
 
               <label className={styles.filterLabel}>
                 Date Range
-
                 <SelectControl
                   value={draftFilters.days}
-                  onChange={(value) =>
-                    updateDraft(
-                      "days",
-                      Number(value),
-                    )
-                  }
+                  onChange={(value) => updateDraft("days", Number(value))}
                 >
-                  <option value={7}>
-                    Last 7 Days
-                  </option>
+                  <option value={7}>Last 7 Days</option>
 
-                  <option value={14}>
-                    Last 14 Days
-                  </option>
+                  <option value={14}>Last 14 Days</option>
 
-                  <option value={30}>
-                    Last 30 Days
-                  </option>
+                  <option value={30}>Last 30 Days</option>
 
-                  <option value={90}>
-                    Last 90 Days
-                  </option>
+                  <option value={90}>Last 90 Days</option>
                 </SelectControl>
               </label>
 
               <label className={styles.filterLabel}>
                 Source
-
                 <SelectControl
                   value={draftFilters.source}
-                  onChange={(value) =>
-                    updateDraft(
-                      "source",
-                      value,
-                    )
-                  }
+                  onChange={(value) => updateDraft("source", value)}
                 >
-                  <option value="">
-                    All Sources
-                  </option>
+                  <option value="">All Sources</option>
 
-                  {SOURCE_OPTIONS.map(
-                    ([value, label]) => (
-                      <option
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </option>
-                    ),
-                  )}
+                  {SOURCE_OPTIONS.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
                 </SelectControl>
               </label>
 
               <label className={styles.filterLabel}>
                 Channel
-
                 <SelectControl
                   value={draftFilters.source}
-                  onChange={(value) =>
-                    updateDraft(
-                      "source",
-                      value,
-                    )
-                  }
+                  onChange={(value) => updateDraft("source", value)}
                 >
-                  <option value="">
-                    All Channels
-                  </option>
+                  <option value="">All Channels</option>
 
-                  {SOURCE_OPTIONS.map(
-                    ([value, label]) => (
-                      <option
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </option>
-                    ),
-                  )}
+                  {SOURCE_OPTIONS.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
                 </SelectControl>
               </label>
 
               <label className={styles.filterLabel}>
                 Sentiment
-
                 <SelectControl
                   value={draftFilters.sentiment}
-                  onChange={(value) =>
-                    updateDraft(
-                      "sentiment",
-                      value,
-                    )
-                  }
+                  onChange={(value) => updateDraft("sentiment", value)}
                 >
-                  <option value="">
-                    All Sentiments
-                  </option>
+                  <option value="">All Sentiments</option>
 
-                  <option value="POSITIVE">
-                    Positive
-                  </option>
+                  <option value="POSITIVE">Positive</option>
 
-                  <option value="NEUTRAL">
-                    Neutral
-                  </option>
+                  <option value="NEUTRAL">Neutral</option>
 
-                  <option value="NEGATIVE">
-                    Negative
-                  </option>
+                  <option value="NEGATIVE">Negative</option>
                 </SelectControl>
               </label>
 
               <label className={styles.filterLabel}>
                 Theme
-
                 <SelectControl
                   value={draftFilters.category}
-                  onChange={(value) =>
-                    updateDraft(
-                      "category",
-                      value,
-                    )
-                  }
+                  onChange={(value) => updateDraft("category", value)}
                 >
-                  <option value="">
-                    All Themes
-                  </option>
+                  <option value="">All Themes</option>
 
-                  {(dashboard?.categoryDistribution ??
-                    []).map((category) => (
-                    <option
-                      key={category.label}
-                      value={category.label}
-                    >
+                  {(dashboard?.categoryDistribution ?? []).map((category) => (
+                    <option key={category.label} value={category.label}>
                       {category.label}
                     </option>
                   ))}
@@ -1876,35 +1536,19 @@ export default function AnalystTrendsPage() {
 
               <label className={styles.filterLabel}>
                 Status
-
                 <SelectControl
                   value={draftFilters.status}
-                  onChange={(value) =>
-                    updateDraft(
-                      "status",
-                      value,
-                    )
-                  }
+                  onChange={(value) => updateDraft("status", value)}
                 >
-                  <option value="">
-                    All Statuses
-                  </option>
+                  <option value="">All Statuses</option>
 
-                  <option value="NEW">
-                    New
-                  </option>
+                  <option value="NEW">New</option>
 
-                  <option value="REVIEWED">
-                    Reviewed
-                  </option>
+                  <option value="REVIEWED">Reviewed</option>
 
-                  <option value="ACTIONED">
-                    Actioned
-                  </option>
+                  <option value="ACTIONED">Actioned</option>
 
-                  <option value="ARCHIVED">
-                    Archived
-                  </option>
+                  <option value="ARCHIVED">Archived</option>
                 </SelectControl>
               </label>
 
@@ -1914,9 +1558,7 @@ export default function AnalystTrendsPage() {
                 onClick={applyFilters}
                 disabled={analyticsQuery.isFetching}
               >
-                {analyticsQuery.isFetching
-                  ? "Loading..."
-                  : "Apply Filters"}
+                {analyticsQuery.isFetching ? "Loading..." : "Apply Filters"}
               </button>
             </section>
 
@@ -1926,55 +1568,45 @@ export default function AnalystTrendsPage() {
               <div className={styles.sideCardHeader}>
                 <h2>Trend Insights</h2>
 
-                <button
-                  type="button"
-                  className={styles.viewAll}
-                >
+                <button type="button" className={styles.viewAll}>
                   View all
                 </button>
               </div>
 
-              {(dashboard?.insights ?? [])
-                .slice(0, 3)
-                .map((insight, index) => (
+              {(dashboard?.insights ?? []).slice(0, 3).map((insight, index) => (
+                <div
+                  className={styles.insight}
+                  key={`${insight.title}-${index}`}
+                >
                   <div
-                    className={styles.insight}
-                    key={`${insight.title}-${index}`}
+                    className={`${styles.insightIcon} ${
+                      index === 0
+                        ? styles.insightGreen
+                        : index === 1
+                          ? styles.insightAmber
+                          : styles.insightBlue
+                    }`}
                   >
-                    <div
-                      className={`${styles.insightIcon} ${
-                        index === 0
-                          ? styles.insightGreen
-                          : index === 1
-                            ? styles.insightAmber
-                            : styles.insightBlue
-                      }`}
-                    >
-                      {index === 0 ? (
-                        <TrendingUp size={16} />
-                      ) : index === 1 ? (
-                        <AlertTriangle size={16} />
-                      ) : (
-                        <Info size={16} />
-                      )}
-                    </div>
-
-                    <div>
-                      <p>{insight.title}</p>
-                      <span>
-                        {insight.description}
-                      </span>
-                    </div>
+                    {index === 0 ? (
+                      <TrendingUp size={16} />
+                    ) : index === 1 ? (
+                      <AlertTriangle size={16} />
+                    ) : (
+                      <Info size={16} />
+                    )}
                   </div>
-                ))}
+
+                  <div>
+                    <p>{insight.title}</p>
+                    <span>{insight.description}</span>
+                  </div>
+                </div>
+              ))}
 
               {!dashboard?.insights?.length && (
                 <div className={styles.noInsights}>
                   <Lightbulb size={18} />
-                  <span>
-                    No AI trend insights available
-                    yet.
-                  </span>
+                  <span>No AI trend insights available yet.</span>
                 </div>
               )}
             </section>

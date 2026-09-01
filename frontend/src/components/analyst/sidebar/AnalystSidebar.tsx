@@ -39,7 +39,7 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   {
     label: "Dashboard",
-    href: "/protected/analyst",
+    href: "/protected/analyst/dashboard",
     icon: LayoutDashboard,
   },
   {

@@ -3,7 +3,7 @@ import { Router } from "express";
 
 import { authRouter } from "../modules/auth/auth.routes.js";
 import { feedbackImportRouter } from "../modules/feedback-import/index.js";
-import { feedbackRouter } from "../modules/feedback/feedback.routes.js";
+import  feedbackRouter  from "../modules/feedback/feedback.routes.js";
 import { feedbackInboxRouter } from "../modules/feedback-inbox/feedbackInbox.routes.js";
 import { analyticsRouter } from "../modules/analytics/analytics.routes.js";
 import { askLoopRouter } from "../modules/ask-loop/index.js";
