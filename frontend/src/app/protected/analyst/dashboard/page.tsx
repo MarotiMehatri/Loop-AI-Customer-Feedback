@@ -783,7 +783,7 @@ export default function AnalystDashboardPage() {
     setProfileOpen(false);
 
     window.location.href =
-      "/logout";
+      "/protected/analyst/logout";
   };
 
   /* =======================================================
