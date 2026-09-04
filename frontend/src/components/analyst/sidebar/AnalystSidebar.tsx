@@ -233,15 +233,15 @@ export default function AnalystSidebar({
           <div className={styles.divider} />
 
           {/* Logout */}
-          <button
-            type="button"
+          <Link
+            href="/protected/analyst/logout"
             className={styles.logoutButton}
-            onClick={handleLogout}
+            onClick={onMobileClose}
           >
             <LogOut size={21} strokeWidth={2} />
 
             <span>Logout</span>
-          </button>
+          </Link>
         </div>
       </aside>
     </>

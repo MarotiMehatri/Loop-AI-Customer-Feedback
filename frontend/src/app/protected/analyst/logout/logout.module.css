@@ -1,0 +1,446 @@
+
+.page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(79, 70, 229, 0.08),
+      transparent 42%
+    ),
+    #f8fafc;
+}
+
+.card {
+  width: min(100%, 470px);
+  padding: 42px 38px 34px;
+
+  text-align: center;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+
+  box-shadow:
+    0 24px 70px rgba(15, 23, 42, 0.09),
+    0 6px 20px rgba(15, 23, 42, 0.04);
+}
+
+/* =========================================
+   ICON
+========================================= */
+
+.iconWrapper {
+  width: 72px;
+  height: 72px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.successIcon {
+  background: #ecfdf3;
+  color: #16a34a;
+}
+
+.errorIcon {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+/* =========================================
+   BADGE
+========================================= */
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 11px;
+
+  border-radius: 999px;
+
+  background: #eef2ff;
+  color: #4f46e5;
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.successBadge {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.errorBadge {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+/* =========================================
+   HEADING
+========================================= */
+
+.card h1 {
+  margin: 17px 0 9px;
+
+  color: #111827;
+
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 750;
+
+  letter-spacing: -0.025em;
+}
+
+/* =========================================
+   DESCRIPTION
+========================================= */
+
+.description {
+  max-width: 380px;
+
+  margin: 0 auto;
+
+  color: #6b7280;
+
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* =========================================
+   LOADING BOX
+========================================= */
+
+.loadingBox {
+  margin-top: 27px;
+
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+
+  background: #f9fafb;
+
+  color: #4b5563;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* =========================================
+   SECURITY MESSAGE
+========================================= */
+
+.securityMessage {
+  margin-top: 14px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  padding: 13px 14px;
+
+  text-align: left;
+
+  border: 1px solid #e0e7ff;
+  border-radius: 12px;
+
+  background: #f8faff;
+
+  color: #4b5563;
+
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.securityMessage svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #4f46e5;
+}
+
+/* =========================================
+   SUCCESS MESSAGE
+========================================= */
+
+.successMessage {
+  margin-top: 25px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  padding: 15px;
+
+  text-align: left;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 13px;
+
+  background: #f0fdf4;
+
+  color: #166534;
+}
+
+.successMessage svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.successMessage div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.successMessage strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.successMessage span {
+  color: #4b7a5a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   WARNING MESSAGE
+========================================= */
+
+.warningMessage {
+  margin-top: 25px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  padding: 15px;
+
+  text-align: left;
+
+  border: 1px solid #fed7aa;
+  border-radius: 13px;
+
+  background: #fff7ed;
+
+  color: #c2410c;
+}
+
+.warningMessage svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.warningMessage div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.warningMessage strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.warningMessage span {
+  color: #9a5b28;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   REDIRECT MESSAGE
+========================================= */
+
+.redirectMessage {
+  margin-top: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  color: #6b7280;
+
+  font-size: 13px;
+}
+
+.redirectMessage strong {
+  color: #111827;
+  font-weight: 700;
+}
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.actions {
+  margin-top: 23px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.primaryButton,
+.secondaryButton {
+  width: 100%;
+  min-height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border-radius: 11px;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.primaryButton {
+  border: 1px solid #4f46e5;
+
+  background: #4f46e5;
+  color: #ffffff;
+
+  box-shadow:
+    0 5px 14px rgba(79, 70, 229, 0.2);
+}
+
+.primaryButton:hover {
+  background: #4338ca;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 18px rgba(79, 70, 229, 0.25);
+}
+
+.secondaryButton {
+  border: 1px solid #e5e7eb;
+
+  background: #ffffff;
+  color: #374151;
+}
+
+.secondaryButton:hover {
+  background: #f9fafb;
+
+  border-color: #d1d5db;
+
+  transform: translateY(-1px);
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.2);
+  outline-offset: 2px;
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.footerText {
+  margin: 22px 0 0;
+
+  color: #9ca3af;
+
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================
+   SPINNER
+========================================= */
+
+.spinner {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 520px) {
+  .page {
+    padding: 18px 14px;
+  }
+
+  .card {
+    padding: 34px 22px 28px;
+
+    border-radius: 20px;
+  }
+
+  .iconWrapper {
+    width: 64px;
+    height: 64px;
+
+    border-radius: 18px;
+  }
+
+  .card h1 {
+    font-size: 24px;
+  }
+
+  .description {
+    font-size: 13px;
+  }
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    transition: none;
+  }
+}

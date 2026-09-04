@@ -1,8 +1,14 @@
-
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import { format } from "date-fns";
+
 import {
   Area,
   AreaChart,
@@ -27,9 +33,12 @@ import {
   Download,
   FileBarChart,
   Lightbulb,
+  LogOut,
   MessageSquare,
   Plus,
+  Settings,
   Sparkles,
+  User,
   Users,
 } from "lucide-react";
 
@@ -49,6 +58,10 @@ import { useFeedbackInbox } from "../../../../Features/feedback/hooks/useFeedbac
 import { useAuthStore } from "../../../../store";
 
 import styles from "./dashboard.module.css";
+
+/* =========================================================
+   SOURCE META
+========================================================= */
 
 const SOURCE_META: Record<
   string,
@@ -98,25 +111,25 @@ const SOURCE_META: Record<
   },
 };
 
+/* =========================================================
+   TYPES
+========================================================= */
+
 type LatestFeedback = {
   id: string;
-
   text?: string | null;
-
   content?: string | null;
-
   customerName?: string | null;
-
   source?: string | null;
-
   sentiment?: string | null;
-
   createdAt?: string | null;
-
   feedbackDate?: string | null;
-
   theme?: string | null;
 };
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function numberValue(value: unknown): number {
   const result = Number(value);
@@ -129,7 +142,9 @@ function percentage(value: unknown): number {
 }
 
 function safeDate(value?: string | null): Date | null {
-  if (!value) return null;
+  if (!value) {
+    return null;
+  }
 
   const date = new Date(value);
 
@@ -157,10 +172,10 @@ function formatDateRange(
     return "This week";
   }
 
-  return `${format(
-    startDate,
-    "MMM d",
-  )} – ${format(endDate, "MMM d, yyyy")}`;
+  return `${format(startDate, "MMM d")} – ${format(
+    endDate,
+    "MMM d, yyyy",
+  )}`;
 }
 
 function feedbackText(
@@ -185,9 +200,7 @@ function sourceLabel(
     source
       .replace(/_/g, " ")
       .toLowerCase()
-      .replace(/\b\w/g, (char) =>
-        char.toUpperCase(),
-      )
+      .replace(/\b\w/g, (char) => char.toUpperCase())
   );
 }
 
@@ -208,19 +221,19 @@ function formatFeedbackDate(
   feedback: LatestFeedback,
 ): string {
   const date = safeDate(
-    feedback.feedbackDate ||
-      feedback.createdAt,
+    feedback.feedbackDate || feedback.createdAt,
   );
 
   if (!date) {
     return "—";
   }
 
-  return format(
-    date,
-    "MMM d, yyyy h:mm a",
-  );
+  return format(date, "MMM d, yyyy h:mm a");
 }
+
+/* =========================================================
+   CARD
+========================================================= */
 
 function Card({
   title,
@@ -229,11 +242,8 @@ function Card({
   className = "",
 }: {
   title: string;
-
   action?: React.ReactNode;
-
   children: React.ReactNode;
-
   className?: string;
 }) {
   return (
@@ -251,6 +261,10 @@ function Card({
   );
 }
 
+/* =========================================================
+   METRIC CARD
+========================================================= */
+
 function MetricCard({
   icon,
   label,
@@ -260,20 +274,15 @@ function MetricCard({
   down = false,
 }: {
   icon: React.ReactNode;
-
   label: string;
-
   value: string;
-
   change: string;
-
   tone:
     | "purple"
     | "red"
     | "green"
     | "blue"
     | "orange";
-
   down?: boolean;
 }) {
   return (
@@ -305,6 +314,10 @@ function MetricCard({
   );
 }
 
+/* =========================================================
+   EMPTY CHART
+========================================================= */
+
 function EmptyChart({
   message,
 }: {
@@ -317,12 +330,15 @@ function EmptyChart({
       <strong>{message}</strong>
 
       <span>
-        Data will appear here when feedback
-        is available.
+        Data will appear here when feedback is available.
       </span>
     </div>
   );
 }
+
+/* =========================================================
+   LOADING CHART
+========================================================= */
 
 function LoadingChart() {
   return (
@@ -338,29 +354,92 @@ function LoadingChart() {
   );
 }
 
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
 export default function AnalystDashboardPage() {
+  /* =======================================================
+     AUTH
+  ======================================================= */
+
   const user = useAuthStore(
     (state) => state.user,
   );
 
+  /* =======================================================
+     STATE
+  ======================================================= */
+
   const [days, setDays] = useState(7);
 
-  /*
-   * ------------------------------------------------
-   * ANALYTICS
-   * ------------------------------------------------
-   */
+  const [profileOpen, setProfileOpen] =
+    useState(false);
+
+  const profileRef =
+    useRef<HTMLDivElement>(null);
+
+  /* =======================================================
+     PROFILE DROPDOWN
+  ======================================================= */
+
+  useEffect(() => {
+    const handleClickOutside = (
+      event: MouseEvent,
+    ) => {
+      const target = event.target as Node;
+
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(target)
+      ) {
+        setProfileOpen(false);
+      }
+    };
+
+    const handleEscape = (
+      event: KeyboardEvent,
+    ) => {
+      if (event.key === "Escape") {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside,
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside,
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+    };
+  }, []);
+
+  /* =======================================================
+     ANALYTICS
+  ======================================================= */
 
   const analyticsQuery = useAnalytics({
     days,
     groupBy: "day",
   });
 
-  /*
-   * ------------------------------------------------
-   * STATUS COUNTS
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     STATUS COUNTS
+  ======================================================= */
 
   const newQuery =
     useInboxStatusCount("NEW");
@@ -374,36 +453,26 @@ export default function AnalystDashboardPage() {
   const archivedQuery =
     useInboxStatusCount("ARCHIVED");
 
-  /*
-   * ------------------------------------------------
-   * AI CLASSIFICATION
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     AI CLASSIFICATION
+  ======================================================= */
 
   const classifiedQuery =
     useClassificationsCount();
 
-  /*
-   * ------------------------------------------------
-   * LATEST FEEDBACK
-   *
-   * IMPORTANT:
-   * This comes from the inbox endpoint.
-   * We do NOT depend on analytics.latestFeedback.
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     LATEST FEEDBACK
+  ======================================================= */
 
-  const latestQuery = useFeedbackInbox({
-    page: 1,
+  const latestQuery =
+    useFeedbackInbox({
+      page: 1,
+      limit: 5,
+    });
 
-    limit: 5,
-  });
-
-  /*
-   * ------------------------------------------------
-   * DASHBOARD DATA
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     DASHBOARD DATA
+  ======================================================= */
 
   const dashboard =
     analyticsQuery.data;
@@ -430,11 +499,9 @@ export default function AnalystDashboardPage() {
   const topTheme =
     dashboard?.topThemes?.[0];
 
-  /*
-   * ------------------------------------------------
-   * LATEST FEEDBACK
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     LATEST FEEDBACK
+  ======================================================= */
 
   const latestFeedback =
     useMemo<LatestFeedback[]>(() => {
@@ -453,8 +520,7 @@ export default function AnalystDashboardPage() {
             null,
 
           content:
-            item.content ??
-            null,
+            item.content ?? null,
 
           customerName:
             item.customerName ??
@@ -463,20 +529,16 @@ export default function AnalystDashboardPage() {
             null,
 
           source:
-            item.source ??
-            null,
+            item.source ?? null,
 
           sentiment:
-            item.sentiment ??
-            null,
+            item.sentiment ?? null,
 
           createdAt:
-            item.createdAt ??
-            null,
+            item.createdAt ?? null,
 
           feedbackDate:
-            item.feedbackDate ??
-            null,
+            item.feedbackDate ?? null,
 
           theme:
             item.theme?.name ??
@@ -485,16 +547,13 @@ export default function AnalystDashboardPage() {
         }));
     }, [latestQuery.data]);
 
-  /*
-   * ------------------------------------------------
-   * AI COVERAGE
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     AI COVERAGE
+  ======================================================= */
 
-  const classified =
-    numberValue(
-      classifiedQuery.data,
-    );
+  const classified = numberValue(
+    classifiedQuery.data,
+  );
 
   const aiCoverage =
     total > 0
@@ -506,61 +565,45 @@ export default function AnalystDashboardPage() {
         )
       : 0;
 
-  /*
-   * ------------------------------------------------
-   * FEEDBACK TREND
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     FEEDBACK TREND
+  ======================================================= */
 
   const feedbackTrend =
     useMemo(() => {
       return (
         dashboard?.feedbackTrend ?? []
       ).map((point) => ({
-        date: shortDate(
-          point.period,
-        ),
-
-        total: numberValue(
-          point.total,
-        ),
+        date: shortDate(point.period),
+        total: numberValue(point.total),
       }));
     }, [dashboard]);
 
-  /*
-   * ------------------------------------------------
-   * SENTIMENT TREND
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     SENTIMENT TREND
+  ======================================================= */
 
   const sentimentTrend =
     useMemo(() => {
       return (
         dashboard?.feedbackTrend ?? []
       ).map((point) => ({
-        date: shortDate(
-          point.period,
-        ),
-
+        date: shortDate(point.period),
         positive: numberValue(
           point.positive,
         ),
-
         neutral: numberValue(
           point.neutral,
         ),
-
         negative: numberValue(
           point.negative,
         ),
       }));
     }, [dashboard]);
 
-  /*
-   * ------------------------------------------------
-   * SOURCES
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     SOURCES
+  ======================================================= */
 
   const sources =
     useMemo(() => {
@@ -569,8 +612,7 @@ export default function AnalystDashboardPage() {
         []
       ).map((item) => ({
         name:
-          SOURCE_META[item.key]
-            ?.label ??
+          SOURCE_META[item.key]?.label ??
           item.label ??
           item.key,
 
@@ -578,22 +620,17 @@ export default function AnalystDashboardPage() {
           item.percentage,
         ),
 
-        count: numberValue(
-          item.count,
-        ),
+        count: numberValue(item.count),
 
         color:
-          SOURCE_META[item.key]
-            ?.color ??
+          SOURCE_META[item.key]?.color ??
           "#98a2b3",
       }));
     }, [dashboard]);
 
-  /*
-   * ------------------------------------------------
-   * THEMES
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     THEMES
+  ======================================================= */
 
   const themes =
     useMemo(() => {
@@ -610,18 +647,15 @@ export default function AnalystDashboardPage() {
             theme.count,
           ),
 
-          percentage:
-            percentage(
-              theme.percentage,
-            ),
+          percentage: percentage(
+            theme.percentage,
+          ),
         }));
     }, [dashboard]);
 
-  /*
-   * ------------------------------------------------
-   * STATUS
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     STATUS
+  ======================================================= */
 
   const statusRows =
     useMemo(
@@ -674,11 +708,9 @@ export default function AnalystDashboardPage() {
       0,
     ) || 1;
 
-  /*
-   * ------------------------------------------------
-   * INSIGHTS
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     INSIGHTS
+  ======================================================= */
 
   const insights =
     useMemo(() => {
@@ -688,19 +720,15 @@ export default function AnalystDashboardPage() {
         .slice(0, 3)
         .map((item) => ({
           title: item.title,
-
           description:
             item.description,
-
           type: item.type,
         }));
     }, [dashboard]);
 
-  /*
-   * ------------------------------------------------
-   * DATE RANGE
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     DATE RANGE
+  ======================================================= */
 
   const range =
     formatDateRange(
@@ -708,106 +736,118 @@ export default function AnalystDashboardPage() {
       dashboard?.range?.endDate,
     );
 
-  /*
-   * ------------------------------------------------
-   * ACTIONS
-   * ------------------------------------------------
-   */
+  /* =======================================================
+     ACTIONS
+  ======================================================= */
 
-  const handleAddFeedback =
-    () => {
-      window.location.href =
-        "/protected/analyst/add-feedback";
-    };
+  const handleAddFeedback = () => {
+    window.location.href =
+      "/protected/analyst/add-feedback";
+  };
 
-  const handleCreateReport =
-    () => {
-      window.location.href =
-        "/protected/analyst/reports";
-    };
+  const handleCreateReport = () => {
+    window.location.href =
+      "/protected/analyst/reports";
+  };
 
-  const handleAskAI =
-    () => {
-      window.location.href =
-        "/protected/analyst/ask-loop";
-    };
+  const handleAskAI = () => {
+    window.location.href =
+      "/protected/analyst/ask-loop";
+  };
 
-  const handleViewInbox =
-    () => {
-      window.location.href =
-        "/protected/analyst/inbox";
-    };
+  const handleViewInbox = () => {
+    window.location.href =
+      "/protected/analyst/inbox";
+  };
 
-  /*
-   * ------------------------------------------------
-   * EXPORT
-   * ------------------------------------------------
-   */
+  const handleViewThemes = () => {
+    window.location.href =
+      "/protected/analyst/themes";
+  };
 
-  const handleExport =
-    async () => {
-      try {
-        const response =
-          await apiClient.get(
-            "/analytics/export",
-            {
-              params: {
-                format: "csv",
-                days,
-                groupBy: "day",
-              },
+  const handleProfile = () => {
+    setProfileOpen(false);
 
-              responseType: "blob",
+    window.location.href =
+      "/protected/analyst/profile";
+  };
+
+  const handleSettings = () => {
+    setProfileOpen(false);
+
+    window.location.href =
+      "/protected/analyst/settings";
+  };
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+
+    window.location.href =
+      "/logout";
+  };
+
+  /* =======================================================
+     EXPORT
+  ======================================================= */
+
+  const handleExport = async () => {
+    try {
+      const response =
+        await apiClient.get(
+          "/analytics/export",
+          {
+            params: {
+              format: "csv",
+              days,
+              groupBy: "day",
             },
-          );
 
-        const blob =
-          new Blob(
-            [
-              response.data as BlobPart,
-            ],
-            {
-              type:
-                "text/csv;charset=utf-8",
-            },
-          );
-
-        const url =
-          URL.createObjectURL(
-            blob,
-          );
-
-        const anchor =
-          document.createElement(
-            "a",
-          );
-
-        anchor.href = url;
-
-        anchor.download =
-          `loop-analytics-${Date.now()}.csv`;
-
-        document.body.appendChild(
-          anchor,
+            responseType: "blob",
+          },
         );
 
-        anchor.click();
+      const blob = new Blob(
+        [response.data as BlobPart],
+        {
+          type:
+            "text/csv;charset=utf-8",
+        },
+      );
 
-        anchor.remove();
+      const url =
+        URL.createObjectURL(blob);
 
-        URL.revokeObjectURL(
-          url,
-        );
+      const anchor =
+        document.createElement("a");
 
-        toast.success(
-          "Analytics CSV exported.",
-        );
-      } catch (error) {
-        toast.error(
-          getErrorMessage(error),
-        );
-      }
-    };
+      anchor.href = url;
+
+      anchor.download =
+        `loop-analytics-${Date.now()}.csv`;
+
+      document.body.appendChild(
+        anchor,
+      );
+
+      anchor.click();
+
+      anchor.remove();
+
+      URL.revokeObjectURL(url);
+
+      toast.success(
+        "Analytics CSV exported.",
+      );
+    } catch (error) {
+      toast.error(
+        getErrorMessage(error),
+      );
+    }
+  };
+
+  /* =======================================================
+     LOADING
+  ======================================================= */
 
   const loading =
     analyticsQuery.isLoading;
@@ -815,18 +855,18 @@ export default function AnalystDashboardPage() {
   const latestLoading =
     latestQuery.isLoading;
 
+  /* =======================================================
+     RENDER
+  ======================================================= */
+
   return (
     <main className={styles.page}>
-      {/* =========================================
+      {/* ===================================================
           HEADER
-      ========================================== */}
+      =================================================== */}
 
-      <header
-        className={styles.topbar}
-      >
-        <div
-          className={styles.heading}
-        >
+      <header className={styles.topbar}>
+        <div className={styles.heading}>
           <div
             className={
               styles.headingTitle
@@ -839,9 +879,7 @@ export default function AnalystDashboardPage() {
 
           <p>
             Welcome back,{" "}
-            {user?.name ??
-              "there"}
-            ! 👋
+            {user?.name ?? "there"}! 👋
           </p>
         </div>
 
@@ -850,20 +888,18 @@ export default function AnalystDashboardPage() {
             styles.topActions
           }
         >
+          {/* DATE */}
           <div
             className={
               styles.dateButton
             }
           >
-            <span>
-              {range}
-            </span>
+            <span>{range}</span>
 
-            <CalendarDays
-              size={16}
-            />
+            <CalendarDays size={16} />
           </div>
 
+          {/* NOTIFICATIONS */}
           <button
             type="button"
             className={
@@ -884,68 +920,265 @@ export default function AnalystDashboardPage() {
             )}
           </button>
 
+          {/* =================================================
+              PROFILE
+          ================================================= */}
+
           <div
             className={
-              styles.headerUser
+              styles.profileWrapper
             }
+            ref={profileRef}
           >
-            <span
-              className={
-                styles.avatar
-              }
-            >
-              {(user?.name ??
-                "LOOP")
-                .split(" ")
-                .map(
-                  (part) =>
-                    part[0],
+            <button
+              type="button"
+              className={`${styles.headerUser} ${
+                profileOpen
+                  ? styles.headerUserActive
+                  : ""
+              }`}
+              onClick={() =>
+                setProfileOpen(
+                  (previous) =>
+                    !previous,
                 )
-                .join("")
-                .slice(0, 2)
-                .toUpperCase()}
-            </span>
+              }
+              aria-expanded={
+                profileOpen
+              }
+              aria-haspopup="menu"
+            >
+              <span
+                className={
+                  styles.avatar
+                }
+              >
+                {(user?.name ??
+                  "LOOP")
+                  .split(" ")
+                  .map(
+                    (part) =>
+                      part[0],
+                  )
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </span>
 
-            <div>
-              <strong>
-                {user?.name ??
-                  "LOOP User"}
-              </strong>
+              <span
+                className={
+                  styles.userIdentity
+                }
+              >
+                <strong>
+                  {user?.name ??
+                    "LOOP User"}
+                </strong>
 
-              <small>
-                {user?.role
-                  ? user.role
-                      .charAt(0)
-                      .toUpperCase() +
-                    user.role
-                      .slice(1)
-                      .toLowerCase()
-                  : "Analyst"}
-              </small>
-            </div>
+                <small>
+                  {user?.role
+                    ? user.role
+                        .charAt(
+                          0,
+                        )
+                        .toUpperCase() +
+                      user.role
+                        .slice(1)
+                        .toLowerCase()
+                    : "Analyst"}
+                </small>
+              </span>
 
-            <ChevronDown
-              size={15}
-            />
+              <ChevronDown
+                size={15}
+                className={
+                  profileOpen
+                    ? styles.chevronOpen
+                    : ""
+                }
+              />
+            </button>
+
+            {/* PROFILE DROPDOWN */}
+            {profileOpen && (
+              <div
+                className={
+                  styles.profileDropdown
+                }
+                role="menu"
+              >
+                {/* PROFILE HEADER */}
+                <div
+                  className={
+                    styles.profileDropdownHeader
+                  }
+                >
+                  <span
+                    className={
+                      styles.dropdownAvatar
+                    }
+                  >
+                    {(user?.name ??
+                      "LOOP")
+                      .split(" ")
+                      .map(
+                        (part) =>
+                          part[0],
+                      )
+                      .join("")
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </span>
+
+                  <div>
+                    <strong>
+                      {user?.name ??
+                        "LOOP User"}
+                    </strong>
+
+                    <small>
+                      {user?.role
+                        ? user.role
+                            .charAt(
+                              0,
+                            )
+                            .toUpperCase() +
+                          user.role
+                            .slice(1)
+                            .toLowerCase()
+                        : "Analyst"}
+                    </small>
+                  </div>
+                </div>
+
+                <div
+                  className={
+                    styles.dropdownDivider
+                  }
+                />
+
+                {/* PROFILE */}
+                <button
+                  type="button"
+                  className={
+                    styles.dropdownItem
+                  }
+                  onClick={
+                    handleProfile
+                  }
+                  role="menuitem"
+                >
+                  <span
+                    className={
+                      styles.dropdownIcon
+                    }
+                  >
+                    <User
+                      size={16}
+                    />
+                  </span>
+
+                  <span>
+                    <strong>
+                      Profile
+                    </strong>
+
+                    <small>
+                      View your profile
+                    </small>
+                  </span>
+                </button>
+
+                {/* SETTINGS */}
+                <button
+                  type="button"
+                  className={
+                    styles.dropdownItem
+                  }
+                  onClick={
+                    handleSettings
+                  }
+                  role="menuitem"
+                >
+                  <span
+                    className={
+                      styles.dropdownIcon
+                    }
+                  >
+                    <Settings
+                      size={16}
+                    />
+                  </span>
+
+                  <span>
+                    <strong>
+                      Settings
+                    </strong>
+
+                    <small>
+                      Manage your
+                      account
+                    </small>
+                  </span>
+                </button>
+
+                <div
+                  className={
+                    styles.dropdownDivider
+                  }
+                />
+
+                {/* LOGOUT */}
+                <button
+                  type="button"
+                  className={`${styles.dropdownItem} ${styles.logoutItem}`}
+                  onClick={
+                    handleLogout
+                  }
+                  role="menuitem"
+                >
+                  <span
+                    className={`${styles.dropdownIcon} ${styles.logoutIcon}`}
+                  >
+                    <LogOut
+                      size={16}
+                    />
+                  </span>
+
+                  <span>
+                    <strong>
+                      Log out
+                    </strong>
+
+                    <small>
+                      Sign out of
+                      LOOP
+                    </small>
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* =========================================
+      {/* ===================================================
           CONTENT
-      ========================================== */}
+      =================================================== */}
 
       <section
-        className={styles.content}
+        className={
+          styles.content
+        }
       >
         <div
           className={
             styles.mainColumn
           }
         >
-          {/* =====================================
+          {/* =================================================
               METRICS
-          ====================================== */}
+          ================================================= */}
 
           <section
             className={
@@ -995,9 +1228,7 @@ export default function AnalystDashboardPage() {
 
             <MetricCard
               icon={
-                <Plus
-                  size={20}
-                />
+                <Plus size={20} />
               }
               label="New Feedback"
               value={
@@ -1015,9 +1246,7 @@ export default function AnalystDashboardPage() {
 
             <MetricCard
               icon={
-                <Users
-                  size={20}
-                />
+                <Users size={20} />
               }
               label="Unique Customers"
               value="—"
@@ -1047,9 +1276,9 @@ export default function AnalystDashboardPage() {
             />
           </section>
 
-          {/* =====================================
+          {/* =================================================
               EMPTY STATE
-          ====================================== */}
+          ================================================= */}
 
           {!loading &&
             total === 0 && (
@@ -1088,17 +1317,16 @@ export default function AnalystDashboardPage() {
               </section>
             )}
 
-          {/* =====================================
-              ROW 1
-              FEEDBACK OVER TIME
-              SENTIMENT DISTRIBUTION
-          ====================================== */}
+          {/* =================================================
+              FEEDBACK + SENTIMENT
+          ================================================= */}
 
           <section
             className={
               styles.gridTwo
             }
           >
+            {/* FEEDBACK OVER TIME */}
             <Card
               title="Feedback Over Time"
               action={
@@ -1107,9 +1335,7 @@ export default function AnalystDashboardPage() {
                     styles.periodSelect
                   }
                   value={days}
-                  onChange={(
-                    event,
-                  ) =>
+                  onChange={(event) =>
                     setDays(
                       Number(
                         event.target
@@ -1140,9 +1366,7 @@ export default function AnalystDashboardPage() {
                 <LoadingChart />
               ) : feedbackTrend.length ===
                 0 ? (
-                <EmptyChart
-                  message="No feedback trend yet"
-                />
+                <EmptyChart message="No feedback trend yet" />
               ) : (
                 <div
                   className={
@@ -1185,9 +1409,7 @@ export default function AnalystDashboardPage() {
                       </defs>
 
                       <CartesianGrid
-                        vertical={
-                          false
-                        }
+                        vertical={false}
                         stroke="#ececf2"
                       />
 
@@ -1243,13 +1465,12 @@ export default function AnalystDashboardPage() {
               )}
             </Card>
 
+            {/* SENTIMENT DISTRIBUTION */}
             <Card title="Sentiment Distribution">
               {loading ? (
                 <LoadingChart />
               ) : total === 0 ? (
-                <EmptyChart
-                  message="No sentiment data yet"
-                />
+                <EmptyChart message="No sentiment data yet" />
               ) : (
                 <div
                   className={
@@ -1270,15 +1491,18 @@ export default function AnalystDashboardPage() {
                           data={[
                             {
                               name: "Positive",
-                              value: positive,
+                              value:
+                                positive,
                             },
                             {
                               name: "Neutral",
-                              value: neutral,
+                              value:
+                                neutral,
                             },
                             {
                               name: "Negative",
-                              value: negative,
+                              value:
+                                negative,
                             },
                           ]}
                           dataKey="value"
@@ -1372,27 +1596,24 @@ export default function AnalystDashboardPage() {
             </Card>
           </section>
 
-          {/* =====================================
-              ROW 2
-              SOURCE
-              TOP THEMES
-              SENTIMENT TREND
-          ====================================== */}
+          {/* =================================================
+              SOURCE / THEMES / SENTIMENT
+          ================================================= */}
 
           <section
             className={
               styles.gridThree
             }
           >
+            {/* SOURCE */}
             <Card title="Feedback by Source">
               {loading ||
-              sources.length === 0 ? (
+              sources.length ===
+                0 ? (
                 loading ? (
                   <LoadingChart />
                 ) : (
-                  <EmptyChart
-                    message="No source data yet"
-                  />
+                  <EmptyChart message="No source data yet" />
                 )
               ) : (
                 <div
@@ -1411,9 +1632,7 @@ export default function AnalystDashboardPage() {
                     >
                       <PieChart>
                         <Pie
-                          data={
-                            sources
-                          }
+                          data={sources}
                           dataKey="value"
                           innerRadius={
                             47
@@ -1480,6 +1699,7 @@ export default function AnalystDashboardPage() {
               )}
             </Card>
 
+            {/* THEMES */}
             <Card
               title="Top Themes"
               action={
@@ -1488,9 +1708,8 @@ export default function AnalystDashboardPage() {
                   className={
                     styles.textButton
                   }
-                  onClick={() =>
-                    (window.location.href =
-                      "/protected/analyst/themes")
+                  onClick={
+                    handleViewThemes
                   }
                 >
                   View all
@@ -1501,9 +1720,7 @@ export default function AnalystDashboardPage() {
                 <LoadingChart />
               ) : themes.length ===
                 0 ? (
-                <EmptyChart
-                  message="No themes discovered yet"
-                />
+                <EmptyChart message="No themes discovered yet" />
               ) : (
                 <div
                   className={
@@ -1511,9 +1728,7 @@ export default function AnalystDashboardPage() {
                   }
                 >
                   {themes.map(
-                    (
-                      theme,
-                    ) => (
+                    (theme) => (
                       <div
                         key={
                           theme.id
@@ -1566,6 +1781,7 @@ export default function AnalystDashboardPage() {
               )}
             </Card>
 
+            {/* SENTIMENT TREND */}
             <Card
               title="Sentiment Trend"
               action={
@@ -1574,9 +1790,7 @@ export default function AnalystDashboardPage() {
                     styles.periodSelect
                   }
                   value={days}
-                  onChange={(
-                    event,
-                  ) =>
+                  onChange={(event) =>
                     setDays(
                       Number(
                         event.target
@@ -1607,9 +1821,7 @@ export default function AnalystDashboardPage() {
                 <LoadingChart />
               ) : sentimentTrend.length ===
                 0 ? (
-                <EmptyChart
-                  message="No sentiment trend yet"
-                />
+                <EmptyChart message="No sentiment trend yet" />
               ) : (
                 <>
                   <div
@@ -1627,9 +1839,7 @@ export default function AnalystDashboardPage() {
                         }
                       >
                         <CartesianGrid
-                          vertical={
-                            false
-                          }
+                          vertical={false}
                           stroke="#ececf2"
                         />
 
@@ -1670,9 +1880,7 @@ export default function AnalystDashboardPage() {
                           dataKey="positive"
                           name="Positive"
                           stroke="#16a34a"
-                          strokeWidth={
-                            2
-                          }
+                          strokeWidth={2}
                           dot={false}
                         />
 
@@ -1681,9 +1889,7 @@ export default function AnalystDashboardPage() {
                           dataKey="neutral"
                           name="Neutral"
                           stroke="#f59e0b"
-                          strokeWidth={
-                            2
-                          }
+                          strokeWidth={2}
                           dot={false}
                         />
 
@@ -1692,9 +1898,7 @@ export default function AnalystDashboardPage() {
                           dataKey="negative"
                           name="Negative"
                           stroke="#ef2b36"
-                          strokeWidth={
-                            2
-                          }
+                          strokeWidth={2}
                           dot={false}
                         />
                       </LineChart>
@@ -1738,15 +1942,16 @@ export default function AnalystDashboardPage() {
             </Card>
           </section>
 
-          {/* =====================================
+          {/* =================================================
               STATUS + AI
-          ====================================== */}
+          ================================================= */}
 
           <section
             className={
               styles.gridTwo
             }
           >
+            {/* STATUS */}
             <Card title="Feedback Status Breakdown">
               <div
                 className={
@@ -1769,8 +1974,7 @@ export default function AnalystDashboardPage() {
                           (value /
                             statusTotal) *
                             100,
-                          value >
-                            0
+                          value > 0
                             ? 1
                             : 0,
                         )}%`,
@@ -1786,14 +1990,9 @@ export default function AnalystDashboardPage() {
                 }
               >
                 {statusRows.map(
-                  ([
-                    label,
-                    value,
-                  ]) => (
+                  ([label, value]) => (
                     <div
-                      key={
-                        label
-                      }
+                      key={label}
                     >
                       <span>
                         {label}
@@ -1810,6 +2009,7 @@ export default function AnalystDashboardPage() {
               </div>
             </Card>
 
+            {/* AI */}
             <Card title="AI Classification Overview">
               <div
                 className={
@@ -1826,10 +2026,7 @@ export default function AnalystDashboardPage() {
                 >
                   <div>
                     <strong>
-                      {
-                        aiCoverage
-                      }
-                      %
+                      {aiCoverage}%
                     </strong>
 
                     <span>
@@ -1860,11 +2057,7 @@ export default function AnalystDashboardPage() {
                       {classified.toLocaleString(
                         "en-IN",
                       )}{" "}
-                      (
-                      {
-                        aiCoverage
-                      }
-                      %)
+                      ({aiCoverage}%)
                     </strong>
                   </p>
 
@@ -1886,10 +2079,9 @@ export default function AnalystDashboardPage() {
             </Card>
           </section>
 
-          {/* =====================================
+          {/* =================================================
               LATEST FEEDBACK
-              THIS IS NOW INDEPENDENT FROM ANALYTICS
-          ====================================== */}
+          ================================================= */}
 
           <section
             className={`${styles.card} ${styles.latestCard}`}
@@ -1942,14 +2134,14 @@ export default function AnalystDashboardPage() {
                 />
 
                 <strong>
-                  Failed to load
-                  latest feedback.
+                  Failed to load latest
+                  feedback.
                 </strong>
 
                 <span>
                   Check the
-                  feedback-inbox
-                  API request.
+                  feedback-inbox API
+                  request.
                 </span>
               </div>
             ) : latestFeedback.length ===
@@ -2019,9 +2211,7 @@ export default function AnalystDashboardPage() {
 
                   <tbody>
                     {latestFeedback.map(
-                      (
-                        item,
-                      ) => (
+                      (item) => (
                         <tr
                           key={
                             item.id
@@ -2032,11 +2222,9 @@ export default function AnalystDashboardPage() {
                               styles.feedbackCell
                             }
                           >
-                            {
-                              feedbackText(
-                                item,
-                              )
-                            }
+                            {feedbackText(
+                              item,
+                            )}
                           </td>
 
                           <td>
@@ -2046,10 +2234,8 @@ export default function AnalystDashboardPage() {
                           </td>
 
                           <td>
-                            {
-                              item.customerName ??
-                              "—"
-                            }
+                            {item.customerName ??
+                              "—"}
                           </td>
 
                           <td>
@@ -2060,8 +2246,7 @@ export default function AnalystDashboardPage() {
                                     item.sentiment ??
                                     "UNKNOWN"
                                   }`
-                                ] ??
-                                ""
+                                ] ?? ""
                               }`}
                             >
                               {sentimentLabel(
@@ -2090,15 +2275,16 @@ export default function AnalystDashboardPage() {
           </section>
         </div>
 
-        {/* =======================================
+        {/* =================================================
             RIGHT RAIL
-        ======================================== */}
+        ================================================= */}
 
         <aside
           className={
             styles.rail
           }
         >
+          {/* FILTERS */}
           <section
             className={
               styles.filterCard
@@ -2109,9 +2295,7 @@ export default function AnalystDashboardPage() {
                 styles.filterHeader
               }
             >
-              <h2>
-                Filters
-              </h2>
+              <h2>Filters</h2>
 
               <button
                 type="button"
@@ -2138,9 +2322,7 @@ export default function AnalystDashboardPage() {
 
               <select
                 value={days}
-                onChange={(
-                  event,
-                ) =>
+                onChange={(event) =>
                   setDays(
                     Number(
                       event.target
@@ -2228,8 +2410,7 @@ export default function AnalystDashboardPage() {
             </button>
           </section>
 
-          {/* TOP THEMES RAIL */}
-
+          {/* TOP THEMES */}
           <section
             className={
               styles.railCard
@@ -2246,9 +2427,8 @@ export default function AnalystDashboardPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  (window.location.href =
-                    "/protected/analyst/themes")
+                onClick={
+                  handleViewThemes
                 }
               >
                 View all
@@ -2271,9 +2451,7 @@ export default function AnalystDashboardPage() {
                 </span>
               ) : (
                 themes.map(
-                  (
-                    theme,
-                  ) => (
+                  (theme) => (
                     <div
                       key={
                         theme.id
@@ -2301,7 +2479,6 @@ export default function AnalystDashboardPage() {
           </section>
 
           {/* AI INSIGHTS */}
-
           <section
             className={
               styles.railCard
@@ -2386,7 +2563,6 @@ export default function AnalystDashboardPage() {
           </section>
 
           {/* QUICK ACTIONS */}
-
           <section
             className={
               styles.railCard
