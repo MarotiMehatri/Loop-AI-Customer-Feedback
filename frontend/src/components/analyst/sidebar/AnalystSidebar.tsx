@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -5,27 +6,28 @@ import { usePathname } from "next/navigation";
 import {
   BarChart3,
   ChevronDown,
+  Database,
   FileBarChart,
   FileDown,
-  FileText,
   Inbox,
   LayoutDashboard,
   LogOut,
   Menu,
-  MessageSquare,
   Network,
-  Settings2,
+  PanelLeftClose,
+  PanelLeftOpen,
   Sparkles,
   Star,
   TrendingUp,
   Users,
   X,
-  Database,
 } from "lucide-react";
 
 import styles from "./AnalystSidebar.module.css";
 
 interface AnalystSidebarProps {
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
 }
@@ -90,31 +92,29 @@ const navigationItems: NavigationItem[] = [
 ];
 
 export default function AnalystSidebar({
+  collapsed,
+  onCollapsedChange,
   mobileOpen = false,
   onMobileClose,
 }: AnalystSidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/analyst") {
-      return pathname === "/analyst";
-    }
-
-    return pathname === href || pathname.startsWith(`${href}/`);
+    return (
+      pathname === href ||
+      pathname.startsWith(`${href}/`)
+    );
   };
 
-  const handleLogout = () => {
-    // Clear authentication data if your application stores it locally.
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
-
-    window.location.href = "/login";
+  const handleCollapse = () => {
+    onCollapsedChange(!collapsed);
   };
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* =====================================================
+          MOBILE OVERLAY
+      ====================================================== */}
       {mobileOpen && (
         <button
           type="button"
@@ -124,43 +124,94 @@ export default function AnalystSidebar({
         />
       )}
 
+      {/* =====================================================
+          SIDEBAR
+      ====================================================== */}
       <aside
-        className={`${styles.sidebar} ${
-          mobileOpen ? styles.sidebarMobileOpen : ""
-        }`}
+        className={[
+          styles.sidebar,
+          collapsed ? styles.sidebarCollapsed : "",
+          mobileOpen ? styles.sidebarMobileOpen : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
-        {/* =========================
+        {/* ===================================================
             BRAND
-        ========================== */}
+        ==================================================== */}
         <div className={styles.brandSection}>
-          <Link href="/analyst" className={styles.brand}>
+          <Link
+            href="/protected/analyst/dashboard"
+            className={styles.brand}
+            onClick={onMobileClose}
+            aria-label="LOOP Analyst Dashboard"
+          >
             <span className={styles.logoMark}>
               <span className={styles.logoLoop}>∞</span>
             </span>
 
-            <span className={styles.logoText}>LOOP</span>
+            {!collapsed && (
+              <span className={styles.logoText}>
+                LOOP
+              </span>
+            )}
           </Link>
 
-          <p className={styles.brandSubtitle}>
-            AI Customer Feedback
-            <br />
-            Intelligence Platform
-          </p>
+          {!collapsed && (
+            <p className={styles.brandSubtitle}>
+              AI Customer Feedback
+              <br />
+              Intelligence Platform
+            </p>
+          )}
 
+          {/* Desktop collapse */}
+          <button
+            type="button"
+            className={styles.collapseButton}
+            onClick={handleCollapse}
+            aria-label={
+              collapsed
+                ? "Expand sidebar"
+                : "Collapse sidebar"
+            }
+            title={
+              collapsed
+                ? "Expand sidebar"
+                : "Collapse sidebar"
+            }
+          >
+            {collapsed ? (
+              <PanelLeftOpen size={18} />
+            ) : (
+              <PanelLeftClose size={18} />
+            )}
+          </button>
+
+          {/* Mobile close */}
           <button
             type="button"
             className={styles.mobileCloseButton}
             onClick={onMobileClose}
             aria-label="Close navigation"
           >
-            <X size={23} />
+            <X size={22} />
           </button>
         </div>
 
-        {/* =========================
+        {/* ===================================================
             NAVIGATION
-        ========================== */}
-        <nav className={styles.navigation} aria-label="Analyst navigation">
+        ==================================================== */}
+        <nav
+          className={styles.navigation}
+          aria-label="Analyst navigation"
+        >
+          {!collapsed && (
+            <span className={styles.sectionLabel}>
+              WORKSPACE
+            </span>
+          )}
+
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -169,78 +220,185 @@ export default function AnalystSidebar({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`${styles.navItem} ${
-                  active ? styles.navItemActive : ""
-                }`}
+                className={[
+                  styles.navItem,
+                  active
+                    ? styles.navItemActive
+                    : "",
+                  collapsed
+                    ? styles.navItemCollapsed
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 onClick={onMobileClose}
+                title={
+                  collapsed
+                    ? item.label
+                    : undefined
+                }
+                aria-current={
+                  active ? "page" : undefined
+                }
               >
                 <span className={styles.navIcon}>
-                  <Icon size={21} strokeWidth={2} />
+                  <Icon
+                    size={20}
+                    strokeWidth={2}
+                  />
                 </span>
 
-                <span className={styles.navLabel}>{item.label}</span>
+                {!collapsed && (
+                  <span className={styles.navLabel}>
+                    {item.label}
+                  </span>
+                )}
+
+                {active && (
+                  <span
+                    className={styles.activeIndicator}
+                  />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* =========================
-            BOTTOM AREA
-        ========================== */}
+        {/* ===================================================
+            SIDEBAR BOTTOM
+        ==================================================== */}
         <div className={styles.sidebarBottom}>
           {/* Workspace */}
-          <button type="button" className={styles.workspaceCard}>
-            <div className={styles.workspaceContent}>
-              <span className={styles.workspaceLabel}>
-                Current Workspace
+          {!collapsed ? (
+            <button
+              type="button"
+              className={styles.workspaceCard}
+            >
+              <span className={styles.workspaceLogo}>
+                AC
               </span>
 
-              <span className={styles.workspaceName}>Acme Corp</span>
-            </div>
+              <span className={styles.workspaceContent}>
+                <span className={styles.workspaceLabel}>
+                  Current Workspace
+                </span>
 
-            <ChevronDown
-              size={19}
-              className={styles.workspaceArrow}
-            />
-          </button>
+                <span className={styles.workspaceName}>
+                  Acme Corp
+                </span>
+              </span>
+
+              <ChevronDown
+                size={17}
+                className={styles.workspaceArrow}
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.collapsedWorkspace}
+              title="Current Workspace: Acme Corp"
+              aria-label="Current Workspace: Acme Corp"
+            >
+              AC
+            </button>
+          )}
 
           {/* Upgrade */}
-          <button type="button" className={styles.upgradeButton}>
-            <span className={styles.crownIcon}>
-              <Star size={20} fill="currentColor" />
-            </span>
+          {!collapsed ? (
+            <button
+              type="button"
+              className={styles.upgradeButton}
+            >
+              <span className={styles.crownIcon}>
+                <Star
+                  size={17}
+                  fill="currentColor"
+                />
+              </span>
 
-            <span>Upgrade Plan</span>
-          </button>
+              <span>Upgrade Plan</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.collapsedUpgrade}
+              title="Upgrade Plan"
+              aria-label="Upgrade Plan"
+            >
+              <Star
+                size={18}
+                fill="currentColor"
+              />
+            </button>
+          )}
 
           <div className={styles.divider} />
 
-          {/* User */}
-          <button type="button" className={styles.profileCard}>
-            <span className={styles.avatar}>AT</span>
+          {/* Profile */}
+          {!collapsed ? (
+            <button
+              type="button"
+              className={styles.profileCard}
+            >
+              <span className={styles.avatar}>
+                AT
+              </span>
 
-            <span className={styles.profileInfo}>
-              <span className={styles.profileName}>Alex Thompson</span>
-              <span className={styles.profileRole}>Analyst</span>
-            </span>
+              <span className={styles.profileInfo}>
+                <span className={styles.profileName}>
+                  Alex Thompson
+                </span>
 
-            <ChevronDown
-              size={18}
-              className={styles.profileArrow}
-            />
-          </button>
+                <span className={styles.profileRole}>
+                  Analyst
+                </span>
+              </span>
+
+              <ChevronDown
+                size={17}
+                className={styles.profileArrow}
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              className={styles.collapsedProfile}
+              title="Alex Thompson · Analyst"
+              aria-label="Alex Thompson · Analyst"
+            >
+              AT
+            </button>
+          )}
 
           <div className={styles.divider} />
 
           {/* Logout */}
           <Link
             href="/protected/analyst/logout"
-            className={styles.logoutButton}
+            className={[
+              styles.logoutButton,
+              collapsed
+                ? styles.logoutCollapsed
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             onClick={onMobileClose}
+            title={
+              collapsed
+                ? "Logout"
+                : undefined
+            }
           >
-            <LogOut size={21} strokeWidth={2} />
+            <LogOut
+              size={20}
+              strokeWidth={2}
+            />
 
-            <span>Logout</span>
+            {!collapsed && (
+              <span>Logout</span>
+            )}
           </Link>
         </div>
       </aside>
@@ -248,12 +406,10 @@ export default function AnalystSidebar({
   );
 }
 
-/**
- * Mobile menu button.
- *
- * Keep this separate so the Analyst layout/header can
- * control opening the sidebar on small screens.
- */
+/* =========================================================
+   MOBILE SIDEBAR TRIGGER
+========================================================= */
+
 export function AnalystSidebarTrigger({
   onClick,
 }: {
@@ -265,8 +421,9 @@ export function AnalystSidebarTrigger({
       className={styles.sidebarTrigger}
       onClick={onClick}
       aria-label="Open navigation"
+      title="Open navigation"
     >
-      <Menu size={26} />
+      <Menu size={24} />
     </button>
   );
 }

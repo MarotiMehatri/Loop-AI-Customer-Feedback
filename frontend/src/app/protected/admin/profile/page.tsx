@@ -7,11 +7,17 @@ import { apiClient } from "../../../../lib/api/api-client";
 import { getErrorMessage } from "../../../../lib/api/api-error";
 import { useAuthStore } from "../../../../store";
 
-import ui from "../_components/admin.module.css";
+import styles from "./profile.module.css";
 
 function initials(name?: string | null): string {
   if (!name) return "LU";
-  return name.trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }
 
 interface Profile {
@@ -53,9 +59,14 @@ export default function ProfilePage() {
     apiClient
       .get<{ data: Profile }>("/profile")
       .then(async ({ data }) => {
-        const loadedProfile = data.data.name === "Alex Thompson"
-          ? (await apiClient.patch<{ data: Profile }>("/profile", { name: "Rutika Pujari" })).data.data
-          : data.data;
+        const loadedProfile =
+          data.data.name === "Alex Thompson"
+            ? (
+                await apiClient.patch<{ data: Profile }>("/profile", {
+                  name: "Rutika Pujari",
+                })
+              ).data.data
+            : data.data;
         setProfile(loadedProfile);
         setName(loadedProfile.name);
         setJobTitle(loadedProfile.jobTitle ?? "");
@@ -64,7 +75,14 @@ export default function ProfilePage() {
         setPhone(loadedProfile.phone ?? "");
         setBio(loadedProfile.bio ?? "");
         setTimezone(loadedProfile.timezone ?? "Asia/Kolkata");
-        if (authUser) updateUser({ ...authUser, name: loadedProfile.name, email: loadedProfile.email, role: loadedProfile.role as "ADMIN" | "ANALYST" | "VIEWER", avatarUrl: loadedProfile.avatarUrl });
+        if (authUser)
+          updateUser({
+            ...authUser,
+            name: loadedProfile.name,
+            email: loadedProfile.email,
+            role: loadedProfile.role as "ADMIN" | "ANALYST" | "VIEWER",
+            avatarUrl: loadedProfile.avatarUrl,
+          });
       })
       .catch(() => undefined);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentional: load profile once on mount
@@ -83,7 +101,14 @@ export default function ProfilePage() {
         timezone: timezone || null,
       });
       setProfile(data.data);
-      if (authUser) updateUser({ ...authUser, name: data.data.name, email: data.data.email, role: data.data.role as "ADMIN" | "ANALYST" | "VIEWER", avatarUrl: data.data.avatarUrl });
+      if (authUser)
+        updateUser({
+          ...authUser,
+          name: data.data.name,
+          email: data.data.email,
+          role: data.data.role as "ADMIN" | "ANALYST" | "VIEWER",
+          avatarUrl: data.data.avatarUrl,
+        });
       toast.success("Profile updated");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -95,90 +120,230 @@ export default function ProfilePage() {
   const changePassword = async (event: React.FormEvent) => {
     event.preventDefault();
     try {
-      await apiClient.patch("/profile/password", { currentPassword, newPassword });
-      setCurrentPassword(""); setNewPassword("");
+      await apiClient.patch("/profile/password", {
+        currentPassword,
+        newPassword,
+      });
+      setCurrentPassword("");
+      setNewPassword("");
       toast.success("Password updated");
-    } catch (error) { toast.error(getErrorMessage(error)); }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
   const uploadAvatar = async (file?: File) => {
     if (!file) return;
-    const form = new FormData(); form.append("avatar", file);
-    try { const { data } = await apiClient.patch<{ data: Profile }>("/profile/avatar", form, { headers: { "Content-Type": "multipart/form-data" } }); setProfile(data.data); toast.success("Profile photo updated"); }
-    catch (error) { toast.error(getErrorMessage(error)); }
+    const form = new FormData();
+    form.append("avatar", file);
+    try {
+      const { data } = await apiClient.patch<{ data: Profile }>(
+        "/profile/avatar",
+        form,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      setProfile(data.data);
+      toast.success("Profile photo updated");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
   return (
-    
-      <div className={ui.body}>
-        <div className={ui.grid2}>
-          <section className={ui.card}>
-            <header>
+    <div className={styles.body}>
+      <div className={styles.grid2}>
+        <section className={styles.card}>
+          <header>
+            <div>
+              <h2>Profile information</h2>
+              <p>Your public profile details</p>
+            </div>
+          </header>
+          <form onSubmit={handleSave}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- avatar may be an uploaded blob/data URL */}
+              {profile?.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt="Profile"
+                  className={styles.avatar}
+                  style={{ width: 56, height: 56, objectFit: "cover" }}
+                />
+              ) : (
+                <span
+                  className={styles.avatar}
+                  style={{ width: 56, height: 56, fontSize: 17 }}
+                >
+                  {profile ? initials(profile.name) : "?"}
+                </span>
+              )}
               <div>
-                <h2>Profile information</h2>
-                <p>Your public profile details</p>
+                <b style={{ fontSize: 15 }}>
+                  {profile?.name ?? "Rutika Pujari"}
+                </b>
+                <p
+                  style={{ margin: "2px 0 0", fontSize: 12, color: "#667085" }}
+                >
+                  {profile?.email}
+                </p>
+                <span className={`${styles.badge} ${styles.new}`}>
+                  {profile?.role ?? ""}
+                </span>
               </div>
-            </header>
-            <form onSubmit={handleSave}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element -- avatar may be an uploaded blob/data URL */}
-                {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="Profile" className={ui.avatar} style={{ width: 56, height: 56, objectFit: "cover" }} /> : <span className={ui.avatar} style={{ width: 56, height: 56, fontSize: 17 }}>{profile ? initials(profile.name) : "?"}</span>}
-                <div>
-                  <b style={{ fontSize: 15 }}>{profile?.name ?? "Rutika Pujari"}</b>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "#667085" }}>{profile?.email}</p>
-                  <span className={`${ui.badge} ${ui.new}`}>{profile?.role ?? ""}</span>
-                </div>
-                <label className={ui.ghost} style={{ marginLeft: "auto", cursor: "pointer" }}>Upload photo<input type="file" accept="image/*" hidden onChange={(event) => void uploadAvatar(event.target.files?.[0])} /></label>
-              </div>
-              <label className={ui.field}>
-                Full name
-                <input className={ui.input} value={name} onChange={(e) => setName(e.target.value)} required />
+              <label
+                className={styles.ghost}
+                style={{ marginLeft: "auto", cursor: "pointer" }}
+              >
+                Upload photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) =>
+                    void uploadAvatar(event.target.files?.[0])
+                  }
+                />
               </label>
-              <label className={ui.field}>
-                Job title
-                <input className={ui.input} value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
-              </label>
-              <label className={ui.field}>
-                Department
-                <input className={ui.input} value={department} onChange={(e) => setDepartment(e.target.value)} />
-              </label>
-              <label className={ui.field}>
-                Location
-                <input className={ui.input} value={location} onChange={(e) => setLocation(e.target.value)} />
-              </label>
-              <label className={ui.field}>Phone number<input className={ui.input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+91 00000 00000" /></label>
-              <label className={ui.field}>Timezone<select className={ui.input} value={timezone} onChange={(e) => setTimezone(e.target.value)}><option value="Asia/Kolkata">Asia/Kolkata (IST)</option><option value="UTC">UTC</option><option value="America/New_York">America/New York</option></select></label>
-              <label className={ui.field}>About you<textarea className={ui.input} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Tell your team a little about yourself" style={{ minHeight: 82, resize: "vertical" }} /></label>
-              <button className={ui.primary} type="submit" disabled={saving}>
-                {saving ? "Saving…" : "Save changes"}
-              </button>
-            </form>
-          </section>
+            </div>
+            <label className={styles.field}>
+              Full name
+              <input
+                className={styles.input}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </label>
+            <label className={styles.field}>
+              Job title
+              <input
+                className={styles.input}
+                value={jobTitle}
+                onChange={(e) => setJobTitle(e.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Department
+              <input
+                className={styles.input}
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Location
+              <input
+                className={styles.input}
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+            </label>
+            <label className={styles.field}>
+              Phone number
+              <input
+                className={styles.input}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 00000 00000"
+              />
+            </label>
+            <label className={styles.field}>
+              Timezone
+              <select
+                className={styles.input}
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+              >
+                <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">America/New York</option>
+              </select>
+            </label>
+            <label className={styles.field}>
+              About you
+              <textarea
+                className={styles.input}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell your team a little about yourself"
+                style={{ minHeight: 82, resize: "vertical" }}
+              />
+            </label>
+            <button className={styles.primary} type="submit" disabled={saving}>
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+          </form>
+        </section>
 
-          <section className={ui.card}>
-            <header>
-              <div>
-                <h2>Preferences</h2>
-                <p>Notification preferences for your account</p>
-              </div>
-            </header>
-            <div className={ui.stack}>
-              {profile && [
-                ["emailNotifications", "Email notifications", "Product and account updates via email"],
-                ["pushNotifications", "Push notifications", "Real-time alerts in the browser"],
-                ["reportNotifications", "Report notifications", "When generated reports are ready"],
-                ["weeklySummary", "Weekly summary", "A digest of the week's feedback every Monday"],
+        <section className={styles.card}>
+          <header>
+            <div>
+              <h2>Preferences</h2>
+              <p>Notification preferences for your account</p>
+            </div>
+          </header>
+          <div className={styles.stack}>
+            {profile &&
+              [
+                [
+                  "emailNotifications",
+                  "Email notifications",
+                  "Product and account updates via email",
+                ],
+                [
+                  "pushNotifications",
+                  "Push notifications",
+                  "Real-time alerts in the browser",
+                ],
+                [
+                  "reportNotifications",
+                  "Report notifications",
+                  "When generated reports are ready",
+                ],
+                [
+                  "weeklySummary",
+                  "Weekly summary",
+                  "A digest of the week's feedback every Monday",
+                ],
               ].map(([key, label, description]) => (
-                <label key={key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #f2f2f6" }}>
+                <label
+                  key={key}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "10px 0",
+                    borderBottom: "1px solid #f2f2f6",
+                  }}
+                >
                   <input
                     type="checkbox"
                     style={{ width: 17, height: 17, accentColor: "#5b2cf0" }}
-                    checked={Boolean(profile.preferences?.[key as keyof Profile["preferences"]])}
+                    checked={Boolean(
+                      profile.preferences?.[
+                        key as keyof Profile["preferences"]
+                      ],
+                    )}
                     onChange={async (event) => {
-                      const optimistic = { ...profile, preferences: { ...profile.preferences!, [key]: event.target.checked } };
+                      const optimistic = {
+                        ...profile,
+                        preferences: {
+                          ...profile.preferences!,
+                          [key]: event.target.checked,
+                        },
+                      };
                       setProfile(optimistic as Profile);
                       try {
-                        await apiClient.patch("/profile/preferences", { [key]: event.target.checked });
+                        await apiClient.patch("/profile/preferences", {
+                          [key]: event.target.checked,
+                        });
                         toast.success(`${label} updated`);
                       } catch (error) {
                         toast.error(getErrorMessage(error));
@@ -187,23 +352,53 @@ export default function ProfilePage() {
                   />
                   <div>
                     <b style={{ fontSize: 13 }}>{label}</b>
-                    <p style={{ margin: 0, fontSize: 11, color: "#98a2b3" }}>{description}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: "#98a2b3" }}>
+                      {description}
+                    </p>
                   </div>
                 </label>
               ))}
+          </div>
+        </section>
+        <section className={styles.card}>
+          <header>
+            <div>
+              <h2>Security</h2>
+              <p>Change your account password</p>
             </div>
-          </section>
-          <section className={ui.card}>
-            <header><div><h2>Security</h2><p>Change your account password</p></div></header>
-            <form onSubmit={changePassword}>
-              <label className={ui.field}>Current password<input className={ui.input} type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
-              <label className={ui.field}>New password<input className={ui.input} type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} minLength={8} required /></label>
-              <p className={ui.muted} style={{ fontSize: 11 }}>Use at least 8 characters, including uppercase, lowercase and a number.</p>
-              <button className={ui.primary} type="submit">Update password</button>
-            </form>
-          </section>
-        </div>
+          </header>
+          <form onSubmit={changePassword}>
+            <label className={styles.field}>
+              Current password
+              <input
+                className={styles.input}
+                type="password"
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                required
+              />
+            </label>
+            <label className={styles.field}>
+              New password
+              <input
+                className={styles.input}
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                minLength={8}
+                required
+              />
+            </label>
+            <p className={styles.muted} style={{ fontSize: 11 }}>
+              Use at least 8 characters, including uppercase, lowercase and a
+              number.
+            </p>
+            <button className={styles.primary} type="submit">
+              Update password
+            </button>
+          </form>
+        </section>
       </div>
-    
+    </div>
   );
 }

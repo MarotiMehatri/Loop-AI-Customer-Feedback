@@ -1,37 +1,31 @@
+
 /* =========================================================
-   LOOP — ANALYST LAYOUT
-   Modern AI Customer Feedback Intelligence Platform
+   ANALYST LAYOUT
+   LOOP — AI Customer Feedback Platform
 ========================================================= */
 
 .layout {
-  --sidebar-width: 272px;
-  --page-bg: #f7f8fc;
-  --surface: #ffffff;
-  --border: #eaecf0;
-  --text: #101828;
-  --muted: #667085;
-  --primary: #5b2cf0;
-  --primary-dark: #4720cf;
+  --sidebar-width: 264px;
 
   position: relative;
-  display: flex;
-  width: 100%;
+
   min-height: 100vh;
+  min-height: 100dvh;
+
+  width: 100%;
 
   background:
     radial-gradient(
-      circle at 82% -10%,
-      rgba(91, 44, 240, 0.07),
-      transparent 30%
+      circle at 80% 0%,
+      rgba(99, 102, 241, 0.055),
+      transparent 28%
     ),
     radial-gradient(
       circle at 20% 100%,
-      rgba(91, 44, 240, 0.035),
-      transparent 28%
+      rgba(139, 92, 246, 0.04),
+      transparent 30%
     ),
-    var(--page-bg);
-
-  color: var(--text);
+    #f7f8fc;
 }
 
 /* =========================================================
@@ -41,43 +35,49 @@
 .mainArea {
   position: relative;
 
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-
   min-width: 0;
   min-height: 100vh;
+  min-height: 100dvh;
 
   margin-left: var(--sidebar-width);
 
   transition:
-    margin-left 220ms ease,
-    width 220ms ease;
+    margin-left 260ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  overflow-x: hidden;
 }
 
 /* =========================================================
-   CONTENT
+   COLLAPSED SIDEBAR
+========================================================= */
+
+.layoutCollapsed {
+  --sidebar-width: 78px;
+}
+
+.mainAreaCollapsed {
+  margin-left: 78px;
+}
+
+/* =========================================================
+   PAGE CONTENT
 ========================================================= */
 
 .content {
   position: relative;
 
-  flex: 1;
   width: 100%;
   min-width: 0;
 
-  padding: 0;
-
-  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/*
-   Gives pages a clean stacking context and prevents
-   accidental overflow from charts/tables.
-*/
-
-.content > * {
+.contentInner {
+  width: 100%;
   min-width: 0;
+
+  padding: 24px;
 }
 
 /* =========================================================
@@ -89,81 +89,195 @@
 
   position: sticky;
   top: 0;
-  z-index: 50;
 
-  align-items: center;
-  justify-content: space-between;
+  z-index: 90;
 
   width: 100%;
   height: 64px;
+
+  align-items: center;
+  justify-content: space-between;
 
   padding: 0 18px;
 
   background: rgba(255, 255, 255, 0.88);
 
-  border-bottom: 1px solid rgba(234, 236, 240, 0.9);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
 
   box-shadow:
-    0 1px 3px rgba(16, 24, 40, 0.025),
-    0 8px 24px rgba(16, 24, 40, 0.025);
+    0 1px 3px rgba(15, 23, 42, 0.03),
+    0 8px 30px rgba(15, 23, 42, 0.025);
 
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 
 /* =========================================================
-   MOBILE LOGO
+   MOBILE HEADER LEFT
 ========================================================= */
 
-.mobileLogo {
+.mobileHeaderLeft {
   display: flex;
+
   align-items: center;
-  gap: 9px;
+  gap: 12px;
 
-  color: #15121f;
-
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.045em;
-}
-
-.mobileLogoIcon {
-  display: grid;
-  place-items: center;
-
-  width: 31px;
-  height: 31px;
-
-  border-radius: 10px;
-
-  background: linear-gradient(135deg, #6f45f5, #5b2cf0 55%, #4820d2);
-
-  color: #ffffff;
-
-  font-family: Arial, sans-serif;
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 1;
-
-  box-shadow: 0 5px 14px rgba(91, 44, 240, 0.22);
+  min-width: 0;
 }
 
 /* =========================================================
-   RESPONSIVE TABLET
+   MOBILE BRAND
 ========================================================= */
 
-@media (max-width: 1200px) {
-  .layout {
-    --sidebar-width: 248px;
+.mobileBrand {
+  display: flex;
+
+  align-items: center;
+  gap: 9px;
+
+  min-width: 0;
+}
+
+.mobileBrandIcon {
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  width: 34px;
+  height: 34px;
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #6366f1 0%,
+      #7c3aed 55%,
+      #8b5cf6 100%
+    );
+
+  color: #ffffff;
+
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+
+  box-shadow:
+    0 7px 18px rgba(99, 102, 241, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.mobileBrandText {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+}
+
+.mobileBrandName {
+  color: #111827;
+
+  font-size: 15px;
+  font-weight: 850;
+
+  line-height: 1.1;
+
+  letter-spacing: -0.035em;
+}
+
+.mobileBrandSubtitle {
+  margin-top: 2px;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* =========================================================
+   MOBILE LIVE STATUS
+========================================================= */
+
+.mobileStatus {
+  display: flex;
+
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 9px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+
+  background: rgba(248, 250, 252, 0.85);
+
+  color: #64748b;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* =========================================================
+   LARGE DESKTOP
+========================================================= */
+
+@media (min-width: 1400px) {
+  .contentInner {
+    padding: 28px 32px;
   }
 }
 
 /* =========================================================
-   MOBILE / TABLET
+   DESKTOP / TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+  .layout {
+    --sidebar-width: 78px;
+  }
+
+  .mainArea {
+    margin-left: 78px;
+  }
+
+  .mainAreaCollapsed {
+    margin-left: 78px;
+  }
+
+  .contentInner {
+    padding: 22px;
+  }
+}
+
+/* =========================================================
+   MOBILE
 ========================================================= */
 
 @media (max-width: 900px) {
-  .mainArea {
+  .layout {
+    --sidebar-width: 0px;
+  }
+
+  .mainArea,
+  .mainAreaCollapsed {
+    width: 100%;
+
     margin-left: 0;
   }
 
@@ -173,76 +287,82 @@
 
   .content {
     min-height: calc(100vh - 64px);
+    min-height: calc(100dvh - 64px);
+  }
+
+  .contentInner {
+    padding: 18px;
   }
 }
 
 /* =========================================================
-   SMALL TABLET
+   SMALL MOBILE
 ========================================================= */
 
 @media (max-width: 640px) {
   .mobileHeader {
     height: 60px;
+
     padding: 0 14px;
   }
 
-  .mobileLogo {
-    font-size: 17px;
-  }
-
-  .mobileLogoIcon {
-    width: 30px;
-    height: 30px;
+  .mobileBrandIcon {
+    width: 31px;
+    height: 31px;
 
     border-radius: 9px;
+
     font-size: 20px;
+  }
+
+  .mobileBrandName {
+    font-size: 14px;
+  }
+
+  .mobileBrandSubtitle {
+    font-size: 9px;
+  }
+
+  .mobileStatus {
+    padding: 5px 8px;
+
+    font-size: 10px;
   }
 
   .content {
     min-height: calc(100vh - 60px);
+    min-height: calc(100dvh - 60px);
+  }
+
+  .contentInner {
+    padding: 14px;
   }
 }
 
 /* =========================================================
-   MOBILE
+   VERY SMALL MOBILE
 ========================================================= */
 
-@media (max-width: 480px) {
+@media (max-width: 420px) {
   .mobileHeader {
     padding: 0 12px;
   }
 
-  .mobileLogo {
-    gap: 8px;
-    font-size: 16px;
+  .mobileStatus span:last-child {
+    display: none;
   }
 
-  .mobileLogoIcon {
-    width: 29px;
-    height: 29px;
+  .contentInner {
+    padding: 12px;
   }
 }
 
 /* =========================================================
-   LARGE DESKTOP
-========================================================= */
-
-@media (min-width: 1600px) {
-  .layout {
-    --sidebar-width: 286px;
-  }
-}
-
-/* =========================================================
-   ACCESSIBILITY
+   REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-  .layout,
-  .mainArea,
-  .mobileHeader,
-  .mobileLogo,
-  .mobileLogoIcon {
+  .mainArea {
     transition: none;
   }
 }
